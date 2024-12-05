@@ -1,6 +1,6 @@
 # PhoenixTestPlaywright
 
-**TODO: Add description**
+A Playwright driver that executes your PhoenixTest cases in an actual browser.
 
 ## Installation
 
@@ -18,4 +18,3 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/phoenix_test_playwright>.
-
