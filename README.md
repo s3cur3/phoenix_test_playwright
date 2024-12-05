@@ -1,3 +1,5 @@
+![Hex.pm Version](https://img.shields.io/hexpm/v/phoenix_test_playwright)
+
 # PhoenixTestPlaywright
 
 Execute PhoenixTest cases in an actual browser via Playwright.
