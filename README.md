@@ -1,6 +1,6 @@
 # PhoenixTestPlaywright
 
-A Playwright driver that executes your PhoenixTest cases in an actual browser.
+Execute PhoenixTest cases in an actual browser via Playwright.
 
 ## Installation
 

@@ -4,7 +4,7 @@ defmodule PhoenixTestPlaywright.MixProject do
   @version "0.1.0"
   @source_url "https://github.com/ftes/phoenix_test_playwright"
   @description """
-  A Playwright driver that executes your PhoenixTest cases in an actual browser.
+  Execute PhoenixTest cases in an actual browser via Playwright.
   """
 
   def project do
