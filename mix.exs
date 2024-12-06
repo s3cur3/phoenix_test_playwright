@@ -33,7 +33,8 @@ defmodule PhoenixTestPlaywright.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_test, "~> 0.4.2", only: :test, runtime: false}
+      {:phoenix_test, "~> 0.4.2", only: :test, runtime: false},
+      {:ex_doc, "~> 0.35.1", only: :dev, runtime: false}
     ]
   end
 
@@ -49,11 +50,7 @@ defmodule PhoenixTestPlaywright.MixProject do
 
   defp docs do
     [
-      main: "PhoenixTest",
-      extras: [
-        "CHANGELOG.md": [title: "Changelog"],
-        "upgrade_guides.md": [title: "Upgrade Guides"]
-      ]
+      main: "PhoenixTest.Playwright"
     ]
   end
 
