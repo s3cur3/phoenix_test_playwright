@@ -1,7 +1,7 @@
 defmodule PhoenixTestPlaywright.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.1.2"
   @source_url "https://github.com/ftes/phoenix_test_playwright"
   @description """
   Execute PhoenixTest cases in an actual browser via Playwright.
@@ -33,8 +33,12 @@ defmodule PhoenixTestPlaywright.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_test, "~> 0.4.2", only: :test, runtime: false},
-      {:ex_doc, "~> 0.35.1", only: :dev, runtime: false}
+      {:esbuild, "~> 0.8", only: :test, runtime: false},
+      {:ex_doc, "~> 0.35.1", only: :dev, runtime: false},
+      {:phoenix, "~> 1.7"},
+      {:phoenix_live_view, "~> 0.20"},
+      {:phoenix_test, "0.4.2", runtime: false},
+      {:plug_cowboy, "~> 2.7", only: :test, runtime: false}
     ]
   end
 
@@ -56,7 +60,9 @@ defmodule PhoenixTestPlaywright.MixProject do
 
   defp aliases do
     [
-      setup: ["deps.get"]
+      setup: ["deps.get", "assets.setup", "assets.build"],
+      "assets.setup": ["esbuild.install --if-missing"],
+      "assets.build": ["esbuild default"]
     ]
   end
 end
