@@ -50,7 +50,7 @@ defmodule PhoenixTest.Playwright.Port do
   end
 
   defp deserialize(json) do
-    case Jason.decode(json) do
+    case Phoenix.json_library().decode(json) do
       {:ok, data} -> atom_keys(data)
       error -> decode_error(json, error)
     end
@@ -64,7 +64,7 @@ defmodule PhoenixTest.Playwright.Port do
   end
 
   defp serialize(message) do
-    Jason.encode!(message)
+    Phoenix.json_library().encode!(message)
   end
 
   defp atom_keys(map) when is_map(map) do

@@ -26,7 +26,10 @@ defmodule PhoenixTest.Playwright.Selector do
   def concat(left, right), do: "#{left} >> #{right}"
 
   def unquote(:and)(left, :none), do: left
-  def unquote(:and)(left, right), do: concat(left, "internal:and=#{Jason.encode!(right)}")
+
+  def unquote(:and)(left, right),
+    do: concat(left, "internal:and=#{Phoenix.json_library().encode!(right)}")
+
   defdelegate _and(left, right), to: __MODULE__, as: :and
 
   def text(nil, _opts), do: :none
