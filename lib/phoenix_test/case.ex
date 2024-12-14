@@ -78,7 +78,8 @@ defmodule PhoenixTest.Case do
     end
 
     def new_session(%{browser_id: browser_id} = context) do
-      context_id = Browser.new_context(browser_id)
+      params = if ua = checkout_ecto_repos(context[:async]), do: %{userAgent: ua}, else: %{}
+      context_id = Browser.new_context(browser_id, params)
       subscribe(context_id)
 
       page_id = BrowserContext.new_page(context_id)

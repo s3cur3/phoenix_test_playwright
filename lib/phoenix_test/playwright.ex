@@ -1,5 +1,5 @@
 defmodule PhoenixTest.Playwright do
-  @moduledoc """
+  @moduledoc ~S"""
   > #### Warning {: .warning}
   >
   > This driver is experimental.
@@ -7,16 +7,13 @@ defmodule PhoenixTest.Playwright do
 
   Execute PhoenixTest cases in an actual browser via [Playwright](https://playwright.dev/).
 
-
   ## Setup
-
-
   1. Add to `mix.exs` deps: `{:phoenix_test_playwright, "~> 0.1", only: :test, runtime: false}`
   2. Install Playwright: `npm --prefix assets i -D playwright`
   3. Install browsers: `npm --prefix assets exec playwright install --with-deps`
   4. Add to `config/test.exs`: `config :phoenix_test, otp_app: :your_app, playwright: [cli: "assets/node_modules/playwright/cli.js"]`
-  5. Add to `test/test_helpers.exs`: `Application.put_env(:phoenix_test, :base_url, YourAppWeb.Endpoint.url())`
-
+  5. Add to `config/test.exs`: `config :your_app, YourAppWeb.Endpoint, server: true`
+  6. Add to `test/test_helpers.exs`: `Application.put_env(:phoenix_test, :base_url, YourAppWeb.Endpoint.url())`
 
   ## Usage
   ```elixir
@@ -35,25 +32,12 @@ defmodule PhoenixTest.Playwright do
   As shown above, you can use `m:ExUnit.Case#module-parameterized-tests` parameterized tests
   to run tests concurrently in different browsers.
 
-
-  ## Known limitations and inconsistencies
-
-  - `PhoenixTest.select/4` option `exact_option` is not supported
-  - Playwright driver is less strict than `Live` and `Static` drivers. It does not raise errors
-    - when visiting a page that returns a `404` status
-    - when interactive elements such as forms and buttons are missing essential attributes (`phx-click`, `phx-submit`, `action`)
-  - A few small bugs
-
-  See tests tagged with [`@tag playwright: false`](https://github.com/search?q=repo%3Agermsvel%2Fphoenix_test%20%22%40tag%20playwright%3A%20false%22&type=code)
-  for details.
-
-
   ## Configuration
-
   In `config/test.exs`:
 
   ```elixir
   config :phoenix_test,
+    otp_app: :your_app,
     playwright: [
       cli: "assets/node_modules/playwright/cli.js",
       browser: [browser: :chromium, headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true)],
@@ -63,15 +47,112 @@ defmodule PhoenixTest.Playwright do
     timeout_ms: 2000
   ```
 
-  ## Ecto SQL.Sandbox
+  ## Common problems
+  - LiveView not connected: add `assert_has("body .phx-connected")` to test after `visit`ing (or otherwise navigating to) a LiveView
+  - LiveComponent not connected: add `data-connected={connected?(@socket)}` to template and `assert_has("#my-component[data-connected]")` to test
 
+  ## Ecto SQL.Sandbox
   `PhoenixTest.Case` automatically takes care of this.
   It passes a user agent referencing your Ecto repos.
   This allows for [concurrent browser tests](https://hexdocs.pm/phoenix_ecto/main.html#concurrent-browser-tests).
 
+  Make sure to follow the advanced set up instructions if necessary:
+  - [with LiveViews](https://hexdocs.pm/phoenix_ecto/Phoenix.Ecto.SQL.Sandbox.html#module-acceptance-tests-with-liveviews)
+  - [with Channels](https://hexdocs.pm/phoenix_ecto/Phoenix.Ecto.SQL.Sandbox.html#module-acceptance-tests-with-channels)
+
   ```elixir
   defmodule MyTest do
     use PhoenixTest.Case, async: true
+  ```
+
+  ## Advanced assertions
+  ```elixir
+  def assert_has_value(session, label, value, opts \\ []) do
+    opts = Keyword.validate!(opts, exact: true)
+
+    assert_found(session,
+      selector: Selector.label(label, opts),
+      expression: "to.have.value",
+      expectedText: [%{string: value}]
+    )
+  end
+
+  def assert_has_selected(session, label, value, opts \\ []) do
+    opts = Keyword.validate!(opts, exact: true)
+
+    assert_found(session,
+      selector: label |> Selector.label(opts) |> Selector.concat("option[selected]"),
+      expression: "to.have.text",
+      expectedText: [%{string: value}]
+    )
+  end
+
+  def assert_is_chosen(session, label, opts \\ []) do
+    opts = Keyword.validate!(opts, exact: true)
+
+    assert_found(session,
+      selector: Selector.label(label, opts),
+      expression: "to.have.attribute",
+      expressionArg: "checked"
+    )
+  end
+
+  def assert_is_editable(session, label, opts \\ []) do
+    opts = Keyword.validate!(opts, exact: true)
+
+    assert_found(session,
+      selector: Selector.label(label, opts),
+      expression: "to.be.editable"
+    )
+  end
+
+  def refute_is_editable(session, label, opts \\ []) do
+    opts = Keyword.validate!(opts, exact: true)
+
+    assert_found(
+      session,
+      [
+        selector: Selector.label(label, opts),
+        expression: "to.be.editable"
+      ],
+      is_not: true
+    )
+  end
+
+  def assert_found(session, params, opts \\ []) do
+    is_not = Keyword.get(opts, :is_not, false)
+    params = Enum.into(params, %{isNot: is_not})
+
+    unwrap(session, fn frame_id ->
+      {:ok, found} = Frame.expect(frame_id, params)
+      if is_not, do: refute(found), else: assert(found)
+    end)
+  end
+
+  def assert_download(session, name, contains: content) do
+    assert_receive({:playwright, %{method: "download"} = download_msg}, 2000)
+    artifact_guid = download_msg.params.artifact.guid
+    assert_receive({:playwright, %{method: "__create__", params: %{guid: ^artifact_guid}} = artifact_msg}, 2000)
+    download_path = artifact_msg.params.initializer.absolutePath
+    wait_for_file(download_path)
+
+    assert download_msg.params.suggestedFilename =~ name
+    assert File.read!(download_path) =~ content
+
+    session
+  end
+
+  defp wait_for_file(path, remaining_ms \\ 2000, wait_for_ms \\ 100)
+  defp wait_for_file(path, remaining_ms, _) when remaining_ms <= 0, do: flunk("File #{path} does not exist")
+
+  defp wait_for_file(path, remaining_ms, wait_for_ms) do
+    if File.exists?(path) do
+      :ok
+    else
+      Process.sleep(wait_for_ms)
+      wait_for_file(path, remaining_ms - wait_for_ms, wait_for_ms)
+    end
+  end
   ```
   """
 
@@ -369,6 +450,8 @@ defmodule PhoenixTest.Playwright do
   end
 
   def open_browser(session, open_fun \\ &OpenBrowser.open_with_system_cmd/1) do
+    # Await any pending navigation
+    Process.sleep(100)
     {:ok, html} = Frame.content(session.frame_id)
 
     fixed_html =
