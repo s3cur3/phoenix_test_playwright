@@ -7,6 +7,10 @@ defmodule PhoenixTest.Playwright do
 
   Execute PhoenixTest cases in an actual browser via [Playwright](https://playwright.dev/).
 
+  ## Example
+  Refer to the accompanying example repo for a full example:
+  https://github.com/ftes/phoenix_test_playwright_example/commits/playwright
+
   ## Setup
   1. Add to `mix.exs` deps: `{:phoenix_test_playwright, "~> 0.1", only: :test, runtime: false}`
   2. Install Playwright: `npm --prefix assets i -D playwright`
