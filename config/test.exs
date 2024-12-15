@@ -12,7 +12,16 @@ config :phoenix_test_playwright, PhoenixTest.Endpoint,
 config :phoenix_test,
   endpoint: PhoenixTest.Endpoint,
   otp_app: :phoenix_test_playwright,
-  playwright: [cli: "priv/static/assets/node_modules/playwright/cli.js"]
+  playwright: [
+    cli: "priv/static/assets/node_modules/playwright/cli.js",
+    browser: [
+      browser: :chromium,
+      headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true)
+    ],
+    trace: System.get_env("PLAYWRIGHT_TRACE", "false") in ~w(t true),
+    trace_dir: "tmp"
+  ],
+  timeout_ms: 2000
 
 config :esbuild,
   version: "0.17.11",

@@ -116,7 +116,7 @@ defmodule PhoenixTest.Case do
     if @includes_ecto do
       def checkout_ecto_repos(async?) do
         otp_app = Application.fetch_env!(:phoenix_test, :otp_app)
-        repos = Application.fetch_env!(otp_app, :ecto_repos)
+        repos = Application.get_env(otp_app, :ecto_repos, [])
 
         repos
         |> Enum.map(&checkout_ecto_repo(&1, async?))

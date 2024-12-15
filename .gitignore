@@ -26,7 +26,7 @@ phoenix_test-*.tar
 /tmp/
 
 # Ignore assets that are produced by build tools.
-/priv/static/assets/
+/priv/static/assets/*
 
 !/priv/static/assets/app.css
 !/priv/static/assets/package.json

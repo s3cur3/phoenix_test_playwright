@@ -14,6 +14,9 @@ on:
 permissions:
   contents: read
 
+env:
+  MIX_ENV: test
+
 jobs:
   build:
     name: Build and test
@@ -30,10 +33,17 @@ jobs:
         uses: actions/cache@v3
         with:
           path: deps
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-
+          key: ${{ runner.os }}-mix-deps-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-deps-
       - name: Install dependencies
         run: mix deps.get
+      - name: Restore build cache
+        uses: actions/cache@v3
+        with:
+          path: _build
+          key: ${{ runner.os }}-mix-build-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-build-
       - name: Check Formatting
         run: mix format --check-formatted
       - name: Compiles without warnings
@@ -45,4 +55,11 @@ jobs:
       - name: Install chromium browser
         run: npm exec --prefix priv/static/assets playwright install chromium --with-deps --only-shell
       - name: Run tests
-        run: mix test --warnings-as-errors
+        run: "mix test --warnings-as-errors --max-cases 1 || if [[ $? = 2 ]]; then PLAYWRIGHT_TRACE=true mix test --max-cases 1 --failed; else false; fi"
+      - name: Upload failure traces
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: Traces
+          path: ./tmp
+          if-no-files-found: ignore
