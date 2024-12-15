@@ -25,6 +25,7 @@ defmodule PhoenixTest.Playwright do
     use PhoenixTest.Case, async: true
     @moduletag :playwright
 
+    @tag trace: :open
     test "heading", %{conn: conn} do
       conn
       |> visit("/")
@@ -51,7 +52,14 @@ defmodule PhoenixTest.Playwright do
     timeout_ms: 2000
   ```
 
+  ## Playwright Traces
+  You can enable [trace](https://playwright.dev/docs/trace-viewer-intro) recording in different ways:
+  - Environment variable, see [Configuration](#module-configuration)
+  - ExUnit `@tag :trace`
+  - ExUnit `@tag trace: :open` to open the trace viewer automatically after completion
+
   ## Common problems
+  - Test failures in CI (timeouts): Try less concurrency, e.g. `mix test --max-cases 1` for GitHub CI shared runners
   - LiveView not connected: add `assert_has("body .phx-connected")` to test after `visit`ing (or otherwise navigating to) a LiveView
   - LiveComponent not connected: add `data-connected={connected?(@socket)}` to template and `assert_has("#my-component[data-connected]")` to test
 

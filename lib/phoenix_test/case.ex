@@ -29,7 +29,7 @@ defmodule PhoenixTest.Case do
   ]
 
   setup_all context do
-    trace = Application.fetch_env!(:phoenix_test, :playwright)[:trace]
+    trace = Map.get(context, :trace, Application.fetch_env!(:phoenix_test, :playwright)[:trace])
 
     case context do
       %{playwright: true} ->
@@ -75,6 +75,7 @@ defmodule PhoenixTest.Case do
 
     alias PhoenixTest.Playwright.Browser
     alias PhoenixTest.Playwright.BrowserContext
+    alias PhoenixTest.Playwright.Port
 
     @includes_ecto Code.ensure_loaded?(Ecto.Adapters.SQL.Sandbox) &&
                      Code.ensure_loaded?(Phoenix.Ecto.SQL.Sandbox)
@@ -103,7 +104,7 @@ defmodule PhoenixTest.Case do
       frame_id = initializer(page_id).mainFrame.guid
       on_exit(fn -> post(guid: context_id, method: "close") end)
 
-      if context[:trace] do
+      if trace = context[:trace] do
         BrowserContext.start_tracing(context_id)
 
         dir = :phoenix_test |> Application.fetch_env!(:playwright) |> Keyword.fetch!(:trace_dir)
@@ -117,7 +118,14 @@ defmodule PhoenixTest.Case do
 
         path = Path.join(dir, file)
 
-        on_exit(fn -> BrowserContext.stop_tracing(context_id, path) end)
+        on_exit(fn ->
+          BrowserContext.stop_tracing(context_id, path)
+
+          if trace == :open do
+            cli_path = Path.join(File.cwd!(), Port.cli_path())
+            System.cmd(cli_path, ["show-trace", path])
+          end
+        end)
       end
 
       PhoenixTest.Playwright.build(context_id, page_id, frame_id)

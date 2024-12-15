@@ -11,13 +11,13 @@ defmodule PhoenixTest.Playwright.Port do
     :buffer
   ]
 
-  def open(config \\ []) do
+  def cli_path(config \\ []) do
     config = :phoenix_test |> Application.fetch_env!(:playwright) |> Keyword.merge(config)
-    cli = Keyword.fetch!(config, :cli)
+    path = Keyword.fetch!(config, :cli)
 
-    if !File.exists?(cli) do
+    if !File.exists?(path) do
       msg = """
-      Could not find playwright CLI at #{cli}.
+      Could not find playwright CLI at #{path}.
 
       To resolve this please
       1. Install playwright, e.g. `npm i playwright`
@@ -27,6 +27,11 @@ defmodule PhoenixTest.Playwright.Port do
       raise ArgumentError, msg
     end
 
+    path
+  end
+
+  def open(config \\ []) do
+    cli = cli_path(config)
     cmd = "run-driver"
     port = Port.open({:spawn, "#{cli} #{cmd}"}, [:binary])
 
