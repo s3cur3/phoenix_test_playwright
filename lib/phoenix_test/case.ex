@@ -7,10 +7,13 @@ defmodule PhoenixTest.Case do
   use ExUnit.CaseTemplate
 
   alias PhoenixTest.Case
+  alias PhoenixTest.Playwright
 
   using opts do
     quote do
-      import PhoenixTest, except: [visit: 2]
+      import PhoenixTest,
+        except: [click_button: 2, click_button: 3, click_link: 2, click_link: 3, visit: 2]
+
       import PhoenixTest.Case
 
       setup do
@@ -51,13 +54,20 @@ defmodule PhoenixTest.Case do
     end
   end
 
-  def visit(%PhoenixTest.Playwright{} = session, path) do
-    PhoenixTest.Playwright.visit(session, path)
+  # Workaround for https://github.com/germsvel/phoenix_test/pull/149
+  def visit(%Playwright{} = session, path) do
+    Playwright.visit(session, path)
   end
 
   def visit(conn, path) do
     PhoenixTest.visit(conn, path)
   end
+
+  # Workaround for https://github.com/germsvel/phoenix_test/pull/151
+  defdelegate click_link(session, selector, text), to: Playwright
+  defdelegate click_button(session, selector, text), to: Playwright
+  def click_link(session, text), do: Playwright.click_link(session, :by_role, text)
+  def click_button(session, text), do: Playwright.click_button(session, :by_role, text)
 
   defmodule Playwright do
     @moduledoc false
@@ -110,7 +120,7 @@ defmodule PhoenixTest.Case do
         on_exit(fn -> BrowserContext.stop_tracing(context_id, path) end)
       end
 
-      PhoenixTest.Playwright.build(page_id, frame_id)
+      PhoenixTest.Playwright.build(context_id, page_id, frame_id)
     end
 
     if @includes_ecto do

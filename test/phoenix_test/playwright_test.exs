@@ -1,6 +1,5 @@
-defmodule PhoenixTest.LiveTest do
+defmodule PhoenixTest.PlaywrightTest do
   use PhoenixTest.Case, async: true
-  import PhoenixTest.TestHelpers
   alias ExUnit.AssertionError
 
   @moduletag :playwright
@@ -29,7 +28,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises error when there are multiple links with same text", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Found more than one/, fn ->
+      assert_raise AssertionError, ~r/Found more than one/, fn ->
         conn
         |> visit("/live/index")
         |> click_link("Multiple links")
@@ -37,7 +36,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error when link element can't be found with given text", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Could not find element/, fn ->
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
         |> visit("/live/index")
         |> click_link("No link")
@@ -54,7 +53,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error when there are no buttons on page", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Could not find an element/, fn ->
+      assert_raise AssertionError, ~r/Could not find/, fn ->
         conn
         |> visit("/live/page_2")
         |> click_button("Show tab")
@@ -82,7 +81,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises when data is not in scoped HTML", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Could not find element with label "User Name"/, fn ->
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
         |> visit("/live/index")
         |> within("#email-form", fn session ->
@@ -140,9 +139,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error when element can't be found with label", %{conn: conn} do
-      msg = ~r/Could not find element with label "Non-existent Email Label"./
-
-      assert_raise ArgumentError, msg, fn ->
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
         |> visit("/live/index")
         |> fill_in("Non-existent Email Label", with: "some@example.com")
@@ -150,9 +147,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error when label is found but no corresponding input is found", %{conn: conn} do
-      msg = ~r/Found label but can't find labeled element whose `id` matches/
-
-      assert_raise ArgumentError, msg, fn ->
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
         |> visit("/live/index")
         |> fill_in("Email (no input)", with: "some@example.com")
@@ -412,7 +407,7 @@ defmodule PhoenixTest.LiveTest do
     test "provides an escape hatch that gives access to the underlying frame", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> unwrap(fn frame_id ->
+      |> unwrap(fn %{frame_id: frame_id} ->
         selector = PhoenixTest.Playwright.Selector.role("link", "Navigate link", exact: true)
         {:ok, _} = PhoenixTest.Playwright.Frame.click(frame_id, selector)
       end)
@@ -441,12 +436,10 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error if the element cannot be found at all", %{conn: conn} do
-      conn = visit(conn, "/page/index")
-
-      msg = ~r/Could not find any elements with selector "#nonexistent-id"/
-
-      assert_raise AssertionError, msg, fn ->
-        assert_has(conn, "#nonexistent-id")
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
+        conn
+        |> visit("/page/index")
+        |> assert_has("#nonexistent-id")
       end
     end
 
@@ -494,12 +487,10 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error if the element cannot be found at all", %{conn: conn} do
-      conn = visit(conn, "/page/index")
-
-      msg = ~r/Could not find any elements with selector "#nonexistent-id"/
-
-      assert_raise AssertionError, msg, fn ->
-        assert_has(conn, "#nonexistent-id", text: "Main page")
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
+        conn
+        |> visit("/page/index")
+        |> assert_has("#nonexistent-id", text: "Main page")
       end
     end
 
@@ -513,31 +504,17 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error if count is more than expected count", %{conn: conn} do
-      session = visit(conn, "/page/index")
+      session = conn |> visit("/page/index")
 
-      msg =
-        ignore_whitespace("""
-        Expected 1 elements with ".multiple_links".
-
-        But found 2:
-        """)
-
-      assert_raise AssertionError, msg, fn ->
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
         assert_has(session, ".multiple_links", count: 1)
       end
     end
 
     test "raises an error if count is less than expected count", %{conn: conn} do
-      session = visit(conn, "/page/index")
+      session = conn |> visit("/page/index")
 
-      msg =
-        ignore_whitespace("""
-        Expected 2 elements with "h1".
-
-        But found 1:
-        """)
-
-      assert_raise AssertionError, msg, fn ->
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
         assert_has(session, "h1", count: 2)
       end
     end
@@ -550,18 +527,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises if `exact` text doesn't match", %{conn: conn} do
-      msg =
-        ignore_whitespace("""
-        Could not find any elements with selector "h1" and text "Main".
-
-        Found these elements matching the selector "h1":
-
-        <h1 id="title" class="title" data-role="title">
-          Main page
-        </h1>
-        """)
-
-      assert_raise AssertionError, msg, fn ->
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
         |> visit("/page/index")
         |> assert_has("h1", text: "Main", exact: true)
@@ -569,12 +535,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises if it cannot find element at `at` position", %{conn: conn} do
-      msg =
-        ignore_whitespace("""
-        Could not find any elements with selector "#multiple-items li" and text "Aragorn" at position 2
-        """)
-
-      assert_raise AssertionError, msg, fn ->
+      assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
         |> visit("/page/index")
         |> assert_has("#multiple-items li", at: 2, text: "Aragorn")
@@ -606,18 +567,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises if element is found", %{conn: conn} do
-      msg =
-        ignore_whitespace("""
-        Expected not to find any elements with selector "h1".
-
-        But found 1:
-
-        <h1 id="title" class="title" data-role="title">
-          Main page
-        </h1>
-        """)
-
-      assert_raise AssertionError, msg, fn ->
+      assert_raise AssertionError, ~r/Found element/, fn ->
         conn
         |> visit("/page/index")
         |> refute_has("h1")
@@ -625,45 +575,26 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error if multiple elements are found", %{conn: conn} do
-      conn = visit(conn, "/page/index")
-
-      msg =
-        ignore_whitespace("""
-        Expected not to find any elements with selector ".multiple_links".
-
-        But found 2:
-        """)
-
-      assert_raise AssertionError, msg, fn ->
-        refute_has(conn, ".multiple_links")
+      assert_raise AssertionError, ~r/Found element/, fn ->
+        conn
+        |> visit("/page/index")
+        |> refute_has(".multiple_links")
       end
     end
 
     test "raises if there is one element and count is 1", %{conn: conn} do
-      conn = visit(conn, "/page/index")
-
-      msg =
-        ignore_whitespace("""
-        Expected not to find 1 elements with selector "h1".
-        """)
-
-      assert_raise AssertionError, msg, fn ->
-        refute_has(conn, "h1", count: 1)
+      assert_raise AssertionError, ~r/Found element/, fn ->
+        conn
+        |> visit("/page/index")
+        |> refute_has("h1", count: 1)
       end
     end
 
     test "raises if there are the same number of elements as refuted", %{conn: conn} do
-      conn = visit(conn, "/page/index")
-
-      msg =
-        ignore_whitespace("""
-        Expected not to find 2 elements with selector ".multiple_links".
-
-        But found 2:
-        """)
-
-      assert_raise AssertionError, msg, fn ->
-        refute_has(conn, ".multiple_links", count: 2)
+      assert_raise AssertionError, ~r/Found element/, fn ->
+        conn
+        |> visit("/page/index")
+        |> refute_has(".multiple_links", count: 2)
       end
     end
   end
@@ -679,44 +610,18 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error if one element is found", %{conn: conn} do
-      conn = visit(conn, "/page/index")
-
-      msg =
-        ignore_whitespace("""
-        Expected not to find any elements with selector "#title" and text "Main page".
-
-        But found 1:
-
-        <h1 id="title" class="title" data-role="title">
-          Main page
-        </h1>
-        """)
-
-      assert_raise AssertionError, msg, fn ->
-        refute_has(conn, "#title", text: "Main page")
+      assert_raise AssertionError, ~r/Found element/, fn ->
+        conn
+        |> visit("/page/index")
+        |> refute_has("#title", text: "Main page")
       end
     end
 
     test "raises an error if multiple elements are found", %{conn: conn} do
-      conn = visit(conn, "/page/index")
-
-      msg =
-        ignore_whitespace("""
-        Expected not to find any elements with selector ".multiple_links" and text "Multiple links".
-
-        But found 2:
-
-        <a class="multiple_links" href="/page/page_3">
-          Multiple links
-        </a>
-
-        <a class="multiple_links" href="/page/page_4">
-          Multiple links
-        </a>
-        """)
-
-      assert_raise AssertionError, msg, fn ->
-        refute_has(conn, ".multiple_links", text: "Multiple links")
+      assert_raise AssertionError, ~r/Found element/, fn ->
+        conn
+        |> visit("/page/index")
+        |> refute_has(".multiple_links", text: "Multiple links")
       end
     end
 
@@ -727,18 +632,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises if `exact` text makes refutation false", %{conn: conn} do
-      msg =
-        ignore_whitespace("""
-        Expected not to find any elements with selector "h1" and text "Main".
-
-        But found 1:
-
-        <h1 id="title" class="title" data-role="title">
-          Main page
-        </h1>
-        """)
-
-      assert_raise AssertionError, msg, fn ->
+      assert_raise AssertionError, ~r/Found element/, fn ->
         conn
         |> visit("/page/index")
         |> refute_has("h1", text: "Main", exact: false)

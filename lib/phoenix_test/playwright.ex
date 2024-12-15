@@ -9,7 +9,7 @@ defmodule PhoenixTest.Playwright do
 
   ## Example
   Refer to the accompanying example repo for a full example:
-  https://github.com/ftes/phoenix_test_playwright_example/commits/playwright
+  https://github.com/ftes/phoenix_test_playwright_example/commits/main
 
   ## Setup
   1. Add to `mix.exs` deps: `{:phoenix_test_playwright, "~> 0.1", only: :test, runtime: false}`
@@ -160,24 +160,22 @@ defmodule PhoenixTest.Playwright do
   ```
   """
 
-  alias PhoenixTest.Assertions
-  alias PhoenixTest.Element.Button
-  alias PhoenixTest.Element.Link
+  import ExUnit.Assertions
+
   alias PhoenixTest.OpenBrowser
   alias PhoenixTest.Playwright.Connection
   alias PhoenixTest.Playwright.Frame
   alias PhoenixTest.Playwright.Selector
-  alias PhoenixTest.Query
 
   require Logger
 
-  defstruct [:page_id, :frame_id, :last_input_selector, within: :none]
+  defstruct [:context_id, :page_id, :frame_id, :last_input_selector, within: :none]
 
   @endpoint Application.compile_env(:phoenix_test, :endpoint)
-  @default_timeout_ms 2000
+  @default_timeout_ms 1000
 
-  def build(page_id, frame_id) do
-    %__MODULE__{page_id: page_id, frame_id: frame_id}
+  def build(context_id, page_id, frame_id) do
+    %__MODULE__{context_id: context_id, page_id: page_id, frame_id: frame_id}
   end
 
   def retry(fun, backoff_ms \\ [100, 250, 500, timeout()])
@@ -204,37 +202,54 @@ defmodule PhoenixTest.Playwright do
   end
 
   def assert_has(session, "title") do
-    retry(fn -> Assertions.assert_has(session, "title") end)
+    retry(fn -> assert render_page_title(session) != nil end)
   end
 
   def assert_has(session, selector), do: assert_has(session, selector, [])
 
   def assert_has(session, "title", opts) do
-    retry(fn -> Assertions.assert_has(session, "title", opts) end)
+    text = Keyword.fetch!(opts, :text)
+    exact = Keyword.get(opts, :exact, false)
+
+    if exact do
+      retry(fn -> assert render_page_title(session) == text end)
+    else
+      retry(fn -> assert render_page_title(session) =~ text end)
+    end
+
+    session
   end
 
   def assert_has(session, selector, opts) do
     if !found?(session, selector, opts) do
-      Assertions.assert_has(session, selector, opts) ||
-        raise(fallback_error("Could not find element."))
+      flunk("Could not find element #{selector} #{inspect(opts)}")
     end
 
     session
   end
 
   def refute_has(session, "title") do
-    retry(fn -> Assertions.refute_has(session, "title") end)
+    retry(fn -> assert render_page_title(session) == nil end)
   end
 
   def refute_has(session, selector), do: refute_has(session, selector, [])
 
   def refute_has(session, "title", opts) do
-    retry(fn -> Assertions.refute_has(session, "title", opts) end)
+    text = Keyword.fetch!(opts, :text)
+    exact = Keyword.get(opts, :exact, false)
+
+    if exact do
+      retry(fn -> refute render_page_title(session) == text end)
+    else
+      retry(fn -> refute render_page_title(session) =~ text end)
+    end
+
+    session
   end
 
   def refute_has(session, selector, opts) do
     if found?(session, selector, opts) do
-      Assertions.refute_has(session, selector, opts) || raise(fallback_error("Found element."))
+      flunk("Found element #{selector} #{inspect(opts)}")
     end
 
     session
@@ -292,7 +307,7 @@ defmodule PhoenixTest.Playwright do
   def click(session, selector) do
     session.frame_id
     |> Frame.click(selector)
-    |> handle_response(fn -> :no_error end)
+    |> handle_response()
 
     session
   end
@@ -300,23 +315,27 @@ defmodule PhoenixTest.Playwright do
   def click(session, selector, text, opts \\ []) do
     opts = Keyword.validate!(opts, exact: false)
 
-    selector = Selector.concat(selector, Selector.text(text, opts))
+    selector =
+      session
+      |> maybe_within()
+      |> Selector.concat(selector)
+      |> Selector.concat(Selector.text(text, opts))
 
     session.frame_id
     |> Frame.click(selector)
-    |> handle_response(fn -> :no_error end)
+    |> handle_response()
 
     session
   end
 
-  def click_link(session, orig_selector, text, opts \\ []) do
+  def click_link(session, selector, text, opts \\ []) do
     opts = Keyword.validate!(opts, exact: false)
 
     selector =
       session
       |> maybe_within()
       |> Selector.concat(
-        case orig_selector do
+        case selector do
           :by_role -> Selector.link(text, opts)
           css -> css |> Selector.css() |> Selector.concat(Selector.text(text, opts))
         end
@@ -325,19 +344,19 @@ defmodule PhoenixTest.Playwright do
 
     session.frame_id
     |> Frame.click(selector)
-    |> handle_response(fn -> Link.find!(render_html(session), to_string(orig_selector), text) end)
+    |> handle_response()
 
     session
   end
 
-  def click_button(session, orig_selector, text, opts \\ []) do
+  def click_button(session, selector, text, opts \\ []) do
     opts = Keyword.validate!(opts, exact: false)
 
     selector =
       session
       |> maybe_within()
       |> Selector.concat(
-        case orig_selector do
+        case selector do
           :by_role -> Selector.button(text, opts)
           css -> css |> Selector.css() |> Selector.concat(Selector.text(text, opts))
         end
@@ -346,9 +365,7 @@ defmodule PhoenixTest.Playwright do
 
     session.frame_id
     |> Frame.click(selector)
-    |> handle_response(fn ->
-      Button.find!(render_html(session), to_string(orig_selector), text)
-    end)
+    |> handle_response()
 
     session
   end
@@ -406,9 +423,7 @@ defmodule PhoenixTest.Playwright do
 
     selector
     |> fun.(%{timeout: timeout(opts)})
-    |> handle_response(fn ->
-      Query.find_by_label!(render_html(session), input_selector, label, opts)
-    end)
+    |> handle_response()
 
     %{session | last_input_selector: selector}
   end
@@ -416,20 +431,18 @@ defmodule PhoenixTest.Playwright do
   defp maybe_within(session) do
     case session.within do
       :none -> Selector.none()
-      selector -> Selector.css(selector)
+      selector -> selector
     end
   end
 
-  defp handle_response(result, error_fun) do
+  defp handle_response(result) do
     case result do
       {:error, %{error: %{error: %{name: "TimeoutError"}}} = error} ->
-        Logger.error(error)
-        error_fun.() || raise(fallback_error("Could not find element."))
+        flunk("Could not find element:\n#{inspect(error)}")
 
       {:error,
        %{error: %{error: %{name: "Error", message: "Error: strict mode violation" <> _}}} = error} ->
-        Logger.error(error)
-        error_fun.() || raise(fallback_error("Found more than one element."))
+        flunk("Found more than one element:\n#{inspect(error)}")
 
       {:error,
        %{
@@ -442,10 +455,6 @@ defmodule PhoenixTest.Playwright do
       {:ok, result} ->
         result
     end
-  end
-
-  defp fallback_error(msg) do
-    raise ExUnit.AssertionError, message: msg
   end
 
   def submit(session) do
@@ -472,7 +481,7 @@ defmodule PhoenixTest.Playwright do
   end
 
   def unwrap(session, fun) do
-    fun.(session.frame_id)
+    fun.(Map.take(session, ~w(context_id page_id frame_id)a))
     session
   end
 
