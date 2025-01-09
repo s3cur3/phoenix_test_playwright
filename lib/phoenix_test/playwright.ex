@@ -336,7 +336,7 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
-  def click_link(session, selector, text, opts \\ []) do
+  def click_link(session, selector \\ nil, text, opts \\ []) do
     opts = Keyword.validate!(opts, exact: false)
 
     selector =
@@ -344,7 +344,7 @@ defmodule PhoenixTest.Playwright do
       |> maybe_within()
       |> Selector.concat(
         case selector do
-          :by_role -> Selector.link(text, opts)
+          nil -> Selector.link(text, opts)
           css -> css |> Selector.css() |> Selector.concat(Selector.text(text, opts))
         end
       )
@@ -357,7 +357,7 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
-  def click_button(session, selector, text, opts \\ []) do
+  def click_button(session, selector \\ nil, text, opts \\ []) do
     opts = Keyword.validate!(opts, exact: false)
 
     selector =
@@ -365,7 +365,7 @@ defmodule PhoenixTest.Playwright do
       |> maybe_within()
       |> Selector.concat(
         case selector do
-          :by_role -> Selector.button(text, opts)
+          nil -> Selector.button(text, opts)
           css -> css |> Selector.css() |> Selector.concat(Selector.text(text, opts))
         end
       )
@@ -385,48 +385,52 @@ defmodule PhoenixTest.Playwright do
     |> Map.put(:within, :none)
   end
 
-  def fill_in(session, input_selector, label, opts) do
+  def fill_in(session, css_selector \\ nil, label, opts) do
     {value, opts} = Keyword.pop!(opts, :with)
     fun = &Frame.fill(session.frame_id, &1, to_string(value), &2)
-    input(session, input_selector, label, opts, fun)
+    input(session, css_selector, label, opts, fun)
   end
 
-  def select(session, input_selector, option_labels, opts) do
+  def select(session, css_selector \\ nil, option_labels, opts) do
     if opts[:exact_option] != true, do: raise("exact_option not implemented")
 
     {label, opts} = Keyword.pop!(opts, :from)
     options = option_labels |> List.wrap() |> Enum.map(&%{label: &1})
     fun = &Frame.select_option(session.frame_id, &1, options, &2)
-    input(session, input_selector, label, opts, fun)
+    input(session, css_selector, label, opts, fun)
   end
 
-  def check(session, input_selector, label, opts) do
+  def check(session, css_selector \\ nil, label, opts) do
     fun = &Frame.check(session.frame_id, &1, &2)
-    input(session, input_selector, label, opts, fun)
+    input(session, css_selector, label, opts, fun)
   end
 
-  def uncheck(session, input_selector, label, opts) do
+  def uncheck(session, css_selector \\ nil, label, opts) do
     fun = &Frame.uncheck(session.frame_id, &1, &2)
-    input(session, input_selector, label, opts, fun)
+    input(session, css_selector, label, opts, fun)
   end
 
-  def choose(session, input_selector, label, opts) do
+  def choose(session, css_selector \\ nil, label, opts) do
     fun = &Frame.check(session.frame_id, &1, &2)
-    input(session, input_selector, label, opts, fun)
+    input(session, css_selector, label, opts, fun)
   end
 
-  def upload(session, input_selector, label, paths, opts) do
+  def upload(session, css_selector \\ nil, label, paths, opts) do
     paths = paths |> List.wrap() |> Enum.map(&Path.expand/1)
     fun = &Frame.set_input_files(session.frame_id, &1, paths, &2)
-    input(session, input_selector, label, opts, fun)
+    input(session, css_selector, label, opts, fun)
   end
 
-  defp input(session, input_selector, label, opts, fun) do
+  defp input(session, css_selector, label, opts, fun) do
     selector =
       session
       |> maybe_within()
-      |> Selector.concat(Selector.css(input_selector))
-      |> Selector.and(Selector.label(label, opts))
+      |> Selector.concat(
+        case css_selector do
+          nil -> Selector.label(label, opts)
+          css -> css |> Selector.css() |> Selector.and(Selector.label(label, opts))
+        end
+      )
       |> Selector.build()
 
     selector
@@ -518,15 +522,23 @@ defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
   defdelegate visit(session, path), to: Playwright
   defdelegate render_page_title(session), to: Playwright
   defdelegate render_html(session), to: Playwright
-  defdelegate click_link(session, selector, text), to: Playwright
-  defdelegate click_button(session, selector, text), to: Playwright
   defdelegate within(session, selector, fun), to: Playwright
-  defdelegate fill_in(session, input_selector, label, opts), to: Playwright
-  defdelegate select(session, input_selector, option, opts), to: Playwright
-  defdelegate check(session, input_selector, label, opts), to: Playwright
-  defdelegate uncheck(session, input_selector, label, opts), to: Playwright
-  defdelegate choose(session, input_selector, label, opts), to: Playwright
-  defdelegate upload(session, input_selector, label, path, opts), to: Playwright
+  defdelegate click_link(session, text), to: Playwright
+  defdelegate click_link(session, selector, text), to: Playwright
+  defdelegate click_button(session, text), to: Playwright
+  defdelegate click_button(session, selector, text), to: Playwright
+  defdelegate fill_in(session, label, opts), to: Playwright
+  defdelegate fill_in(session, selector, label, opts), to: Playwright
+  defdelegate select(session, selector, option, opts), to: Playwright
+  defdelegate select(session, option, opts), to: Playwright
+  defdelegate check(session, selector, label, opts), to: Playwright
+  defdelegate check(session, label, opts), to: Playwright
+  defdelegate uncheck(session, selector, label, opts), to: Playwright
+  defdelegate uncheck(session, label, opts), to: Playwright
+  defdelegate choose(session, selector, label, opts), to: Playwright
+  defdelegate choose(session, label, opts), to: Playwright
+  defdelegate upload(session, selector, label, path, opts), to: Playwright
+  defdelegate upload(session, label, path, opts), to: Playwright
   defdelegate submit(session), to: Playwright
   defdelegate open_browser(session), to: Playwright
   defdelegate open_browser(session, open_fun), to: Playwright

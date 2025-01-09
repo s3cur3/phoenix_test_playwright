@@ -11,9 +11,7 @@ defmodule PhoenixTest.Case do
 
   using opts do
     quote do
-      import PhoenixTest,
-        except: [click_button: 2, click_button: 3, click_link: 2, click_link: 3, visit: 2]
-
+      import PhoenixTest
       import PhoenixTest.Case
 
       setup do
@@ -53,21 +51,6 @@ defmodule PhoenixTest.Case do
         [conn: Phoenix.ConnTest.build_conn()]
     end
   end
-
-  # Workaround for https://github.com/germsvel/phoenix_test/pull/149
-  def visit(%Playwright{} = session, path) do
-    Playwright.visit(session, path)
-  end
-
-  def visit(conn, path) do
-    PhoenixTest.visit(conn, path)
-  end
-
-  # Workaround for https://github.com/germsvel/phoenix_test/pull/151
-  defdelegate click_link(session, selector, text), to: Playwright
-  defdelegate click_button(session, selector, text), to: Playwright
-  def click_link(session, text), do: Playwright.click_link(session, :by_role, text)
-  def click_button(session, text), do: Playwright.click_button(session, :by_role, text)
 
   defmodule Playwright do
     @moduledoc false
@@ -110,11 +93,11 @@ defmodule PhoenixTest.Case do
         dir = :phoenix_test |> Application.fetch_env!(:playwright) |> Keyword.fetch!(:trace_dir)
         File.mkdir_p!(dir)
 
-        "Elixir." <> case = to_string(context.case)
+        "Elixir." <> module = to_string(context.module)
         session_id = System.unique_integer([:positive, :monotonic])
 
         file =
-          String.replace("#{case}.#{context.test}_#{session_id}.zip", ~r/[^a-zA-Z0-9 \.]/, "_")
+          String.replace("#{module}.#{context.test}_#{session_id}.zip", ~r/[^a-zA-Z0-9 \.]/, "_")
 
         path = Path.join(dir, file)
 

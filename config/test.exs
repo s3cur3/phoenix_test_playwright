@@ -24,7 +24,7 @@ config :phoenix_test,
   timeout_ms: 2000
 
 config :esbuild,
-  version: "0.17.11",
+  version: "0.24.2",
   default: [
     args: ~w(js/app.js --bundle --target=es2017 --outdir=../../priv/static/assets),
     cd: Path.expand("../test/assets", __DIR__),
