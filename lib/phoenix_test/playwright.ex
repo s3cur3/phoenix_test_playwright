@@ -15,7 +15,7 @@ defmodule PhoenixTest.Playwright do
   1. Add to `mix.exs` deps: `{:phoenix_test_playwright, "~> 0.1", only: :test, runtime: false}`
   2. Install Playwright: `npm --prefix assets i -D playwright`
   3. Install browsers: `npm --prefix assets exec playwright install --with-deps`
-  4. Add to `config/test.exs`: `config :phoenix_test, otp_app: :your_app, playwright: [cli: "assets/node_modules/playwright/cli.js"]`
+  4. Add to `config/test.exs`: `config :phoenix_test, otp_app: :your_app, playwright: [cli: "assets/node_modules/playwright/cli.js"]` (for more options, see [Configuration](#module-configuration) below)
   5. Add to `config/test.exs`: `config :your_app, YourAppWeb.Endpoint, server: true`
   6. Add to `test/test_helpers.exs`: `Application.put_env(:phoenix_test, :base_url, YourAppWeb.Endpoint.url())`
 
@@ -38,7 +38,7 @@ defmodule PhoenixTest.Playwright do
   to run tests concurrently in different browsers.
 
   ## Configuration
-  In `config/test.exs`:
+  In `config/runtime.test.exs`:
 
   ```elixir
   config :phoenix_test,
@@ -47,10 +47,20 @@ defmodule PhoenixTest.Playwright do
       cli: "assets/node_modules/playwright/cli.js",
       browser: [browser: :chromium, headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true)],
       trace: System.get_env("PLAYWRIGHT_TRACE", "false") in ~w(t true),
-      trace_dir: "tmp"
+      trace_dir: "tmp",
+      js_logger:
+        # Default to true if you like seeing log messages for errors during test
+        if System.get_env("PLAYWRIGHT_LOG_JS_MESSSAGES", "false") in ~w(t true) do
+          :default
+        else
+          nil
+        end
     ],
     timeout_ms: 2000
   ```
+
+  JavaScript console messages are are written to standard IO and standard error by default.
+  You can set the `:js_logger` config to `nil` to silence them.
 
   ## Playwright Traces
   You can enable [trace](https://playwright.dev/docs/trace-viewer-intro) recording in different ways:
