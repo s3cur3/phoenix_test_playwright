@@ -36,8 +36,12 @@ defmodule PhoenixTest.Case do
         opts = Keyword.merge(@playwright_opts, global_browser_config)
         [browser_id: Case.Playwright.launch_browser(opts), trace: trace]
 
-      %{playwright: opts} when is_list(opts) ->
-        opts = Keyword.merge(@playwright_opts, global_browser_config)
+      %{playwright: context_browser_config} when is_list(context_browser_config) ->
+        opts =
+          @playwright_opts
+          |> Keyword.merge(global_browser_config)
+          |> Keyword.merge(context_browser_config)
+
         [browser_id: Case.Playwright.launch_browser(opts), trace: trace]
 
       _ ->

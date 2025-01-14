@@ -52,6 +52,22 @@ defmodule PhoenixTest.Playwright do
     timeout_ms: 2000
   ```
 
+  Note that the same options you pass to `:playwright` in your global configuration can also
+  be passed to the `@tag` in your test module. Thus, you might set the global default to
+  `headless: false`, then override it for a single module by setting up your test like this:
+
+  ```elixir
+  defmodule DebuggingFeatureTest do
+    use PhoenixTest.Case, async: true
+
+    # Run this module's tests in a headed browser, with a 1000 millisecond
+    # pause between browser interactions.
+    @moduletag playwright: [headless: false, slowMo: 1_000]
+
+    ...
+  end
+  ```
+
   ## Playwright Traces
   You can enable [trace](https://playwright.dev/docs/trace-viewer-intro) recording in different ways:
   - Environment variable, see [Configuration](#module-configuration)
