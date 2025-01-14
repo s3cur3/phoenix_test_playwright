@@ -38,7 +38,7 @@ defmodule PhoenixTest.Playwright do
   to run tests concurrently in different browsers.
 
   ## Configuration
-  In `config/runtime.test.exs`:
+  In `config/test.exs`:
 
   ```elixir
   config :phoenix_test,
@@ -52,8 +52,6 @@ defmodule PhoenixTest.Playwright do
         # Default to true if you like seeing log messages for errors during test
         if System.get_env("PLAYWRIGHT_LOG_JS_MESSSAGES", "false") in ~w(t true) do
           :default
-        else
-          nil
         end
     ],
     timeout_ms: 2000
