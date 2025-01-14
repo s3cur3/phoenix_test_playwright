@@ -42,7 +42,23 @@ defmodule PhoenixTest.Playwright.Selector do
   def at(at), do: "nth=#{at}"
 
   def link(text, opts), do: role("link", text, opts)
-  def button(text, opts), do: role("button", text, opts)
+
+  def button(text, opts) do
+    if opts[:exact] do
+      role("button", text, opts)
+    else
+      "css=" <>
+        Enum.join(
+          [
+            "button:has-text(\"#{text}\")",
+            "input[type=button]:has-text(\"#{text}\")",
+            "[role=button]:has-text(\"#{text}\")"
+          ],
+          ","
+        )
+    end
+  end
+
   def menuitem(text, opts), do: role("menuitem", text, opts)
   def role(role, text, opts), do: "internal:role=#{role}[name=\"#{text}\"#{exact_suffix(opts)}]"
 
