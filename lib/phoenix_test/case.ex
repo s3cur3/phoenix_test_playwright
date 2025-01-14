@@ -93,7 +93,11 @@ defmodule PhoenixTest.Case do
       if trace = context[:trace] do
         BrowserContext.start_tracing(context_id)
 
-        dir = :phoenix_test |> Application.fetch_env!(:playwright) |> Keyword.fetch!(:trace_dir)
+        dir =
+          :phoenix_test
+          |> Application.fetch_env!(:playwright)
+          |> Keyword.get(:trace_dir, "tmp")
+
         File.mkdir_p!(dir)
 
         "Elixir." <> module = to_string(context.module)
@@ -129,7 +133,11 @@ defmodule PhoenixTest.Case do
       end
 
       defp checkout_ecto_repo(repo, async?) do
-        :ok = Ecto.Adapters.SQL.Sandbox.checkout(repo)
+        case Ecto.Adapters.SQL.Sandbox.checkout(repo) do
+          :ok -> :ok
+          {:already, :allowed} -> :ok
+        end
+
         unless async?, do: Ecto.Adapters.SQL.Sandbox.mode(repo, {:shared, self()})
 
         repo
