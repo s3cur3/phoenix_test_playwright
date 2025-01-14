@@ -315,7 +315,7 @@ defmodule PhoenixTest.Playwright do
   def click(session, selector) do
     session.frame_id
     |> Frame.click(selector)
-    |> handle_response()
+    |> handle_response(selector)
 
     session
   end
@@ -331,7 +331,7 @@ defmodule PhoenixTest.Playwright do
 
     session.frame_id
     |> Frame.click(selector)
-    |> handle_response()
+    |> handle_response(selector)
 
     session
   end
@@ -352,7 +352,7 @@ defmodule PhoenixTest.Playwright do
 
     session.frame_id
     |> Frame.click(selector)
-    |> handle_response()
+    |> handle_response(selector)
 
     session
   end
@@ -373,7 +373,7 @@ defmodule PhoenixTest.Playwright do
 
     session.frame_id
     |> Frame.click(selector)
-    |> handle_response()
+    |> handle_response(selector)
 
     session
   end
@@ -435,7 +435,7 @@ defmodule PhoenixTest.Playwright do
 
     selector
     |> fun.(%{timeout: timeout(opts)})
-    |> handle_response()
+    |> handle_response(selector)
 
     %{session | last_input_selector: selector}
   end
@@ -447,14 +447,33 @@ defmodule PhoenixTest.Playwright do
     end
   end
 
-  defp handle_response(result) do
+  defp handle_response(result, debug_selector) do
     case result do
-      {:error, %{error: %{error: %{name: "TimeoutError"}}} = error} ->
-        flunk("Could not find element:\n#{inspect(error)}")
+      {:error, %{error: %{error: %{name: "TimeoutError"} = pw_error}} = error} ->
+        base_error_header = "Could not find element with selector #{debug_selector}"
+
+        playwright_message = pw_error[:message]
+
+        error_header =
+          case is_binary(playwright_message) &&
+                 Regex.scan(~r/Timeout (\d+)ms exceeded./, playwright_message) do
+            [[_, timeout_ms]] -> base_error_header <> " within #{String.to_integer(timeout_ms)}ms"
+            _ -> base_error_header
+          end
+
+        more_info =
+          case error[:log] do
+            log when is_list(log) -> "Playwright log:\n" <> Enum.join(log, "\n")
+            _ -> inspect(error, pretty: true)
+          end
+
+        flunk("#{error_header}\n#{more_info}")
 
       {:error,
        %{error: %{error: %{name: "Error", message: "Error: strict mode violation" <> _}}} = error} ->
-        flunk("Found more than one element:\n#{inspect(error)}")
+        flunk(
+          "Found more than one element matching selector #{debug_selector}:\n#{inspect(error)}"
+        )
 
       {:error,
        %{
