@@ -23,6 +23,9 @@ defmodule PhoenixTest.IndexLive do
     <button phx-click="change-page-title">Change page title</button>
 
     <button phx-click="show-tab">Show tab</button>
+    <button phx-click="show-tab" class="substring-match">Also shows the tab (with some additional text {Enum.random(1..100)})</button>
+    <input type="button" value="Input that displays the tab (with additional text)" class="substring-match" phx-click="show-tab" />
+    <div role="button" phx-click="show-tab" class="substring-match">*Also* shows that same tab (with additional text)</div>
 
     <div :if={@show_tab} id="tab">
       <h2>Tab title</h2>
