@@ -59,6 +59,26 @@ defmodule PhoenixTest.PlaywrightTest do
         |> click_button("Show tab")
       end
     end
+
+    test "inexact match matches partial text", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> click_button("Also shows the tab")
+      |> assert_has("#tab", text: "Tab title")
+    end
+
+    test "exact match does not match partial text", %{conn: conn} do
+      assert_raise AssertionError, ~r/Could not find/, fn ->
+        conn
+        |> visit("/live/index")
+        |> PhoenixTest.Playwright.click_button(nil, "Also shows the tab", exact: true)
+      end
+
+      conn
+      |> visit("/live/index")
+      |> PhoenixTest.Playwright.click_button(nil, "Show tab", exact: true)
+      |> assert_has("#tab", text: "Tab title")
+    end
   end
 
   describe "within/3" do

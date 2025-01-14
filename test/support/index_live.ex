@@ -23,6 +23,7 @@ defmodule PhoenixTest.IndexLive do
     <button phx-click="change-page-title">Change page title</button>
 
     <button phx-click="show-tab">Show tab</button>
+    <button phx-click="show-tab">Also shows the tab (with some additional text {Enum.random(1..100)})</button>
 
     <div :if={@show_tab} id="tab">
       <h2>Tab title</h2>
