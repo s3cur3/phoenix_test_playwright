@@ -19,7 +19,15 @@ defmodule PhoenixTestPlaywright.MixProject do
       name: "PhoenixTestPlaywright",
       source_url: @source_url,
       docs: docs(),
-      aliases: aliases()
+      aliases: aliases(),
+      preferred_cli_env: [
+        setup: :test,
+        check: :test,
+        "assets.setup": :test,
+        "assets.build": :test,
+        esbuild: :test,
+        "esbuild.install": :test
+      ]
     ]
   end
 
@@ -64,8 +72,18 @@ defmodule PhoenixTestPlaywright.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "assets.setup", "assets.build"],
-      "assets.setup": ["esbuild.install --if-missing"],
-      "assets.build": ["esbuild default"]
+      "assets.setup": [
+        "esbuild.install --if-missing",
+        "cmd npm install --prefix priv/static/assets",
+        "cmd npm exec --prefix priv/static/assets playwright install chromium --with-deps --only-shell"
+      ],
+      "assets.build": ["esbuild default"],
+      check: [
+        "format --check-formatted",
+        "compile --warnings-as-errors",
+        "assets.build",
+        "test --warnings-as-errors --max-cases 1"
+      ]
     ]
   end
 end
