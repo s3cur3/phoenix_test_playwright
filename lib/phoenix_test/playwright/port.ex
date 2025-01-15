@@ -21,7 +21,7 @@ defmodule PhoenixTest.Playwright.Port do
 
       To resolve this please
       1. Install playwright, e.g. `npm i playwright`
-      2. Configure the path correctly, e.g. in `config/text.exs`: `config :phoenix_test, playwright: [cli: "assets/node_modules/playwright/cli.js"]`
+      2. Configure the path correctly, e.g. in `config/test.exs`: `config :phoenix_test, playwright: [cli: "assets/node_modules/playwright/cli.js"]`
       """
 
       raise ArgumentError, msg
