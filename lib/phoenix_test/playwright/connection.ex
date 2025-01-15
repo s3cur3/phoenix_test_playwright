@@ -158,14 +158,20 @@ defmodule PhoenixTest.Playwright.Connection do
   defp log_js_error(state, _), do: state
 
   defp log_console(state, %{method: "console"} = msg) do
-    level =
-      case msg.params.type do
-        "error" -> :error
-        "debug" -> :debug
-        _ -> :info
-      end
+    config = Application.get_env(:phoenix_test, :playwright)
+    js_logger = Access.get(config, :js_logger, :default)
 
-    Logger.log(level, "Javascript console: #{msg.params.text}")
+    if js_logger == :default do
+      level =
+        case msg.params.type do
+          "error" -> :error
+          "debug" -> :debug
+          _ -> :info
+        end
+
+      Logger.log(level, "Javascript console: #{msg.params.text}")
+    end
+
     state
   end
 
