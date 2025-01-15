@@ -27,14 +27,21 @@ defmodule PhoenixTest.Case do
   ]
 
   setup_all context do
-    trace = Map.get(context, :trace, Application.fetch_env!(:phoenix_test, :playwright)[:trace])
+    global_config = Application.fetch_env!(:phoenix_test, :playwright)
+    global_browser_config = List.wrap(global_config[:browser])
+    trace = Map.get(context, :trace, global_config[:trace])
 
     case context do
       %{playwright: true} ->
-        [browser_id: Case.Playwright.launch_browser(@playwright_opts), trace: trace]
+        opts = Keyword.merge(@playwright_opts, global_browser_config)
+        [browser_id: Case.Playwright.launch_browser(opts), trace: trace]
 
-      %{playwright: opts} when is_list(opts) ->
-        opts = Keyword.merge(@playwright_opts, opts)
+      %{playwright: context_browser_config} when is_list(context_browser_config) ->
+        opts =
+          @playwright_opts
+          |> Keyword.merge(global_browser_config)
+          |> Keyword.merge(context_browser_config)
+
         [browser_id: Case.Playwright.launch_browser(opts), trace: trace]
 
       _ ->
