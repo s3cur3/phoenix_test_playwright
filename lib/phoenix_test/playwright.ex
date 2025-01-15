@@ -59,7 +59,7 @@ defmodule PhoenixTest.Playwright do
 
   JavaScript console messages are are written to standard IO and standard error by default.
   You can set the `:js_logger` config to `nil` to silence them.
-  
+
   Note that the same options you pass to `:playwright` in your global configuration can also
   be passed to the `@tag` in your test module. Thus, you might set the global default to
   `headless: false`, then override it for a single module by setting up your test like this:
