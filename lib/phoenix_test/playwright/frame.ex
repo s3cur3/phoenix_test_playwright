@@ -25,6 +25,7 @@ defmodule PhoenixTest.Playwright.Frame do
   end
 
   def screenshot(frame_id, path, opts \\ []) do
+    # Playwright options: https://playwright.dev/docs/api/class-page#page-screenshot
     params =
       opts
       |> Keyword.validate!(full_page: true, omit_background: false)
