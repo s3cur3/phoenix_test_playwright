@@ -1,9 +1,12 @@
 defmodule PhoenixTest.Playwright.Port do
   @moduledoc """
   Start a Playwright node.js server and communicate with it via a `Port`.
+
+  A single `Port` response can contain multiple Playwright messages and/or a fraction of a message.
+  The remaining fraction is stored in `buffer` and continiued in the next `Port` response.
   """
 
-  alias PhoenixTest.Playwright.Message
+  alias PhoenixTest.Playwright.Serialization
 
   defstruct [
     :port,
@@ -39,51 +42,55 @@ defmodule PhoenixTest.Playwright.Port do
   end
 
   def post(state, msg) do
-    frame = serialize(msg)
+    frame = to_json(msg)
     length = byte_size(frame)
     padding = <<length::utf32-little>>
+
     Port.command(state.port, padding <> frame)
   end
 
   def parse(%{port: port} = state, {port, {:data, data}}) do
-    parsed = Message.parse(data, state.remaining, state.buffer, [])
-    %{frames: frames, buffer: buffer, remaining: remaining} = parsed
+    {remaining, buffer, frames} = parse(data, state.remaining, state.buffer, [])
     state = %{state | buffer: buffer, remaining: remaining}
-    msgs = Enum.map(frames, &deserialize/1)
+    msgs = Enum.map(frames, &from_json/1)
 
     {state, msgs}
   end
 
-  defp deserialize(json) do
-    case Phoenix.json_library().decode(json) do
-      {:ok, data} -> atom_keys(data)
-      error -> decode_error(json, error)
-    end
+  defp parse(data, remaining, buffer, frames)
+
+  defp parse(<<head::unsigned-little-integer-size(32)>>, 0, "", frames) do
+    {head, "", frames}
   end
 
-  defp decode_error(json, error) do
-    msg =
-      "error: #{inspect(error)}; #{inspect(json: Enum.join(for <<c::utf8 <- json>>, do: <<c::utf8>>))}"
-
-    raise ArgumentError, message: msg
+  defp parse(<<head::unsigned-little-integer-size(32), data::binary>>, 0, "", frames) do
+    parse(data, head, "", frames)
   end
 
-  defp serialize(message) do
-    Phoenix.json_library().encode!(message)
+  defp parse(<<data::binary>>, remaining, buffer, frames) when byte_size(data) == remaining do
+    {0, "", frames ++ [buffer <> data]}
   end
 
-  defp atom_keys(map) when is_map(map) do
-    Map.new(map, fn
-      {k, v} when is_map(v) ->
-        {String.to_atom(k), atom_keys(v)}
-
-      {k, list} when is_list(list) ->
-        {String.to_atom(k), Enum.map(list, fn v -> atom_keys(v) end)}
-
-      {k, v} ->
-        {String.to_atom(k), v}
-    end)
+  defp parse(<<data::binary>>, remaining, buffer, frames) when byte_size(data) > remaining do
+    <<frame::size(remaining)-binary, tail::binary>> = data
+    parse(tail, 0, "", frames ++ [buffer <> frame])
   end
 
-  defp atom_keys(other), do: other
+  defp parse(<<data::binary>>, remaining, buffer, frames) when byte_size(data) < remaining do
+    {remaining - byte_size(data), buffer <> data, frames}
+  end
+
+  def to_json(msg) do
+    msg
+    |> Map.update(:method, nil, &Serialization.camelize/1)
+    |> Serialization.deep_key_camelize()
+    |> Phoenix.json_library().encode!()
+  end
+
+  def from_json(frame) do
+    frame
+    |> Phoenix.json_library().decode!()
+    |> Serialization.deep_key_underscore()
+    |> Map.update(:method, nil, &Serialization.underscore/1)
+  end
 end

@@ -23,7 +23,7 @@ defmodule PhoenixTest.Case do
   @playwright_opts [
     browser: :chromium,
     headless: true,
-    slowMo: 0
+    slow_mo: 0
   ]
 
   setup_all context do
@@ -74,25 +74,25 @@ defmodule PhoenixTest.Case do
       ensure_started()
       browser = Keyword.fetch!(opts, :browser)
       browser_id = launch_browser(browser, opts)
-      on_exit(fn -> post(guid: browser_id, method: "close") end)
+      on_exit(fn -> post(guid: browser_id, method: :close) end)
       browser_id
     end
 
     def new_session(%{browser_id: browser_id} = context) do
-      params = if ua = checkout_ecto_repos(context[:async]), do: %{userAgent: ua}, else: %{}
+      params = if ua = checkout_ecto_repos(context[:async]), do: %{user_agent: ua}, else: %{}
       context_id = Browser.new_context(browser_id, params)
       subscribe(context_id)
 
       page_id = BrowserContext.new_page(context_id)
 
       post(%{
-        method: :updateSubscription,
+        method: :update_subscription,
         guid: page_id,
-        params: %{event: "console", enabled: true}
+        params: %{event: :console, enabled: true}
       })
 
-      frame_id = initializer(page_id).mainFrame.guid
-      on_exit(fn -> post(guid: context_id, method: "close") end)
+      frame_id = initializer(page_id).main_frame.guid
+      on_exit(fn -> post(guid: context_id, method: :close) end)
 
       if trace = context[:trace] do
         BrowserContext.start_tracing(context_id)

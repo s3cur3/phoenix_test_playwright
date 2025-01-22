@@ -50,7 +50,7 @@ defmodule PhoenixTest.Playwright.Connection do
   def launch_browser(type, opts) do
     types = initializer("Playwright")
     type_id = Map.fetch!(types, type).guid
-    resp = post(guid: type_id, method: "launch", params: Map.new(opts))
+    resp = post(guid: type_id, method: :launch, params: Map.new(opts))
     resp.result.browser.guid
   end
 
@@ -92,7 +92,7 @@ defmodule PhoenixTest.Playwright.Connection do
   @impl GenServer
   def init(config) do
     port = PlaywrightPort.open(config)
-    msg = %{guid: "", params: %{sdkLanguage: "javascript"}, method: "initialize", metadata: %{}}
+    msg = %{guid: "", params: %{sdk_language: :javascript}, method: :initialize, metadata: %{}}
     PlaywrightPort.post(port, msg)
 
     {:ok, %__MODULE__{port: port}}
@@ -150,14 +150,14 @@ defmodule PhoenixTest.Playwright.Connection do
     |> notify_subscribers(msg)
   end
 
-  defp log_js_error(state, %{method: "pageError"} = msg) do
+  defp log_js_error(state, %{method: :page_error} = msg) do
     Logger.error("Javascript error: #{inspect(msg.params.error)}")
     state
   end
 
   defp log_js_error(state, _), do: state
 
-  defp log_console(state, %{method: "console"} = msg) do
+  defp log_console(state, %{method: :console} = msg) do
     config = Application.get_env(:phoenix_test, :playwright)
     js_logger = Access.get(config, :js_logger, :default)
 
@@ -177,14 +177,14 @@ defmodule PhoenixTest.Playwright.Connection do
 
   defp log_console(state, _), do: state
 
-  defp handle_started(state, %{method: "__create__", params: %{type: "Playwright"}}) do
+  defp handle_started(state, %{method: :__create__, params: %{type: "Playwright"}}) do
     for from <- state.awaiting_started, do: GenServer.reply(from, :ok)
     %{state | status: :started, awaiting_started: :none}
   end
 
   defp handle_started(state, _), do: state
 
-  defp add_guid_ancestors(state, %{method: "__create__"} = msg) do
+  defp add_guid_ancestors(state, %{method: :__create__} = msg) do
     child = msg.params.guid
     parent = msg.guid
     parent_ancestors = Map.get(state.guid_ancestors, parent, [])
@@ -194,7 +194,7 @@ defmodule PhoenixTest.Playwright.Connection do
 
   defp add_guid_ancestors(state, _), do: state
 
-  defp add_initializer(state, %{method: "__create__"} = msg) do
+  defp add_initializer(state, %{method: :__create__} = msg) do
     Map.update!(state, :initializers, &Map.put(&1, msg.params.guid, msg.params.initializer))
   end
 

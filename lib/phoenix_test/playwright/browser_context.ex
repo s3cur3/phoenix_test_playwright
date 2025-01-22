@@ -14,7 +14,7 @@ defmodule PhoenixTest.Playwright.BrowserContext do
   Open a new browser page and return its `guid`.
   """
   def new_page(context_id) do
-    resp = post(guid: context_id, method: "newPage")
+    resp = post(guid: context_id, method: :new_page)
     resp.result.page.guid
   end
 
@@ -24,8 +24,8 @@ defmodule PhoenixTest.Playwright.BrowserContext do
   def start_tracing(context_id, opts \\ []) do
     opts = Keyword.validate!(opts, screenshots: true, snapshots: true, sources: true)
     tracing_id = initializer(context_id).tracing.guid
-    post(method: :tracingStart, guid: tracing_id, params: Map.new(opts))
-    post(method: :tracingStartChunk, guid: tracing_id)
+    post(method: :tracing_start, guid: tracing_id, params: Map.new(opts))
+    post(method: :tracing_start_chunk, guid: tracing_id)
     :ok
   end
 
@@ -38,11 +38,11 @@ defmodule PhoenixTest.Playwright.BrowserContext do
   """
   def stop_tracing(context_id, output_path) do
     tracing_id = initializer(context_id).tracing.guid
-    resp = post(method: :tracingStopChunk, guid: tracing_id, params: %{mode: "archive"})
+    resp = post(method: :tracing_stop_chunk, guid: tracing_id, params: %{mode: :archive})
     zip_id = resp.result.artifact.guid
-    zip_path = initializer(zip_id).absolutePath
+    zip_path = initializer(zip_id).absolute_path
     File.cp!(zip_path, output_path)
-    post(method: :tracingStop, guid: tracing_id)
+    post(method: :tracing_stop, guid: tracing_id)
     :ok
   end
 end

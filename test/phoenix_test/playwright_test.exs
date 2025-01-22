@@ -1,5 +1,6 @@
 defmodule PhoenixTest.PlaywrightTest do
   use PhoenixTest.Case, async: true
+  alias PhoenixTest.Playwright
   alias ExUnit.AssertionError
 
   @moduletag :playwright
@@ -9,6 +10,14 @@ defmodule PhoenixTest.PlaywrightTest do
       conn
       |> visit("/live/index")
       |> assert_has("h1", text: "LiveView main page")
+    end
+  end
+
+  describe "render_html/2" do
+    test "doesn't fail", %{conn: conn} do
+      assert conn
+             |> visit("/live/index")
+             |> Playwright.render_html() =~ "<body"
     end
   end
 
@@ -409,8 +418,8 @@ defmodule PhoenixTest.PlaywrightTest do
       conn
       |> visit("/live/index")
       |> unwrap(fn %{frame_id: frame_id} ->
-        selector = PhoenixTest.Playwright.Selector.role("link", "Navigate link", exact: true)
-        {:ok, _} = PhoenixTest.Playwright.Frame.click(frame_id, selector)
+        selector = Playwright.Selector.role("link", "Navigate link", exact: true)
+        {:ok, _} = Playwright.Frame.click(frame_id, selector)
       end)
       |> assert_has("h1", text: "LiveView page 2")
     end
