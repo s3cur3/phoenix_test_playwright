@@ -70,7 +70,7 @@ defmodule PhoenixTest.Playwright do
 
     # Run this module's tests in a headed browser, with a 1000 millisecond
     # pause between browser interactions.
-    @moduletag playwright: [headless: false, slowMo: 1_000]
+    @moduletag playwright: [headless: false, slow_mo: 1_000]
 
     ...
   end
@@ -157,7 +157,7 @@ defmodule PhoenixTest.Playwright do
 
   def assert_found(session, params, opts \\ []) do
     is_not = Keyword.get(opts, :is_not, false)
-    params = Enum.into(params, %{isNot: is_not})
+    params = Enum.into(params, %{is_not: is_not})
 
     unwrap(session, fn frame_id ->
       {:ok, found} = Frame.expect(frame_id, params)
@@ -166,9 +166,9 @@ defmodule PhoenixTest.Playwright do
   end
 
   def assert_download(session, name, contains: content) do
-    assert_receive({:playwright, %{method: "download"} = download_msg}, 2000)
+    assert_receive({:playwright, %{method: :download} = download_msg}, 2000)
     artifact_guid = download_msg.params.artifact.guid
-    assert_receive({:playwright, %{method: "__create__", params: %{guid: ^artifact_guid}} = artifact_msg}, 2000)
+    assert_receive({:playwright, %{method: :__create__, params: %{guid: ^artifact_guid}} = artifact_msg}, 2000)
     download_path = artifact_msg.params.initializer.absolutePath
     wait_for_file(download_path)
 
@@ -302,7 +302,7 @@ defmodule PhoenixTest.Playwright do
       params =
         %{
           expression: "to.have.count",
-          expectedNumber: opts[:count],
+          expected_number: opts[:count],
           selector: Selector.build(selector),
           timeout: timeout(opts)
         }
@@ -545,7 +545,7 @@ defmodule PhoenixTest.Playwright do
     resp =
       session.frame_id
       |> Connection.received()
-      |> Enum.find(&match?(%{method: "navigated", params: %{url: _}}, &1))
+      |> Enum.find(&match?(%{method: :navigated, params: %{url: _}}, &1))
 
     if resp == nil, do: raise(ArgumentError, "Could not find current path.")
 

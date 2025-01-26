@@ -27,13 +27,13 @@ defmodule PhoenixTest.Playwright.Frame do
   def evaluate(frame_id, js, opts \\ []) do
     params =
       opts
-      |> Enum.into(%{expression: js, isFunction: false, arg: nil})
-      |> Map.update!(:arg, &Serialization.serialize/1)
+      |> Enum.into(%{expression: js, is_function: false, arg: nil})
+      |> Map.update!(:arg, &Serialization.serialize_arg/1)
 
-    [guid: frame_id, method: :evaluateExpression, params: params]
+    [guid: frame_id, method: :evaluate_expression, params: params]
     |> post()
     |> unwrap_response(& &1.result.value)
-    |> Serialization.deserialize()
+    |> Serialization.deserialize_arg()
   end
 
   def press(frame_id, selector, key) do
@@ -49,7 +49,7 @@ defmodule PhoenixTest.Playwright.Frame do
   end
 
   def expect(frame_id, params) do
-    params = Enum.into(params, %{isNot: false})
+    params = Enum.into(params, %{is_not: false})
 
     [guid: frame_id, method: :expect, params: params]
     |> post()
@@ -57,7 +57,7 @@ defmodule PhoenixTest.Playwright.Frame do
   end
 
   def wait_for_selector(frame_id, params) do
-    [guid: frame_id, method: :waitForSelector, params: params]
+    [guid: frame_id, method: :wait_for_selector, params: params]
     |> post()
     |> unwrap_response(& &1.result.element)
   end
@@ -65,7 +65,7 @@ defmodule PhoenixTest.Playwright.Frame do
   def inner_html(frame_id, selector) do
     params = %{selector: selector}
 
-    [guid: frame_id, method: :innerHTML, params: params]
+    [guid: frame_id, method: "innerHTML", params: params]
     |> post()
     |> unwrap_response(& &1.result.value)
   end
@@ -89,7 +89,7 @@ defmodule PhoenixTest.Playwright.Frame do
     params = %{selector: selector, options: options, strict: true}
     params = Enum.into(opts, params)
 
-    [guid: frame_id, method: :selectOption, params: params]
+    [guid: frame_id, method: :select_option, params: params]
     |> post()
     |> unwrap_response(& &1)
   end
@@ -113,16 +113,16 @@ defmodule PhoenixTest.Playwright.Frame do
   end
 
   def set_input_files(frame_id, selector, paths, opts \\ []) do
-    params = %{selector: selector, localPaths: paths, strict: true}
+    params = %{selector: selector, local_paths: paths, strict: true}
     params = Enum.into(opts, params)
 
-    [guid: frame_id, method: :setInputFiles, params: params]
+    [guid: frame_id, method: :set_input_files, params: params]
     |> post()
     |> unwrap_response(& &1)
   end
 
   def click(frame_id, selector, opts \\ []) do
-    params = %{selector: selector, waitUntil: "load", strict: true}
+    params = %{selector: selector, wait_until: :load, strict: true}
     params = Enum.into(opts, params)
 
     [guid: frame_id, method: :click, params: params]

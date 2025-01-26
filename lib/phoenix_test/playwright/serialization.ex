@@ -3,18 +3,26 @@ defmodule PhoenixTest.Playwright.Serialization do
 
   require Logger
 
-  def serialize(nil) do
+  def camelize(input), do: input |> to_string() |> Phoenix.Naming.camelize(:lower)
+  def underscore(string), do: Phoenix.Naming.underscore(string) |> String.to_atom()
+
+  def deep_key_camelize(input), do: deep_key_transform(input, &camelize/1)
+  def deep_key_underscore(input), do: deep_key_transform(input, &underscore/1)
+
+  def serialize_arg(nil) do
     %{value: %{v: "undefined"}, handles: []}
   end
 
-  def deserialize({:ok, value}) do
-    deserialize(value)
-  end
-
-  def deserialize(value) when is_map(value) do
+  def deserialize_arg(value) do
     case value do
+      {:ok, value} ->
+        deserialize_arg(value)
+
+      list when is_list(list) ->
+        Enum.map(list, &deserialize_arg/1)
+
       %{a: list} ->
-        Enum.map(list, &deserialize/1)
+        Enum.map(list, &deserialize_arg/1)
 
       %{b: boolean} ->
         boolean
@@ -24,8 +32,8 @@ defmodule PhoenixTest.Playwright.Serialization do
 
       %{o: object} ->
         object
-        |> Map.new(fn item -> {item.k, deserialize(item.v)} end)
-        |> deep_atomize_keys()
+        |> Map.new(fn item -> {item.k, deserialize_arg(item.v)} end)
+        |> deep_key_transform(&underscore/1)
 
       %{s: string} ->
         string
@@ -41,26 +49,25 @@ defmodule PhoenixTest.Playwright.Serialization do
     end
   end
 
-  def deserialize(value) when is_list(value) do
-    Enum.map(value, &deserialize(&1))
+  defp deep_key_transform(input, fun) when is_function(fun, 1) do
+    case input do
+      list when is_list(list) ->
+        Enum.map(list, &deep_key_transform(&1, fun))
+
+      map when is_map(map) ->
+        Map.new(map, fn
+          {k, v} when is_map(v) ->
+            {fun.(k), deep_key_transform(v, fun)}
+
+          {k, list} when is_list(list) ->
+            {fun.(k), Enum.map(list, fn v -> deep_key_transform(v, fun) end)}
+
+          {k, v} ->
+            {fun.(k), v}
+        end)
+
+      other ->
+        other
+    end
   end
-
-  defp deep_atomize_keys(map) when is_map(map) do
-    Map.new(map, fn
-      {k, v} when is_map(v) ->
-        {to_atom(k), deep_atomize_keys(v)}
-
-      {k, list} when is_list(list) ->
-        {to_atom(k), Enum.map(list, fn v -> deep_atomize_keys(v) end)}
-
-      {k, v} ->
-        {to_atom(k), v}
-    end)
-  end
-
-  defp deep_atomize_keys(other), do: other
-
-  defp to_atom(nil), do: raise(ArgumentError, message: "Unable to convert nil into an atom")
-  defp to_atom(s) when is_binary(s), do: String.to_atom(s)
-  defp to_atom(a) when is_atom(a), do: a
 end
