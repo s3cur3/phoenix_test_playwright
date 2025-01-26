@@ -123,6 +123,41 @@ defmodule PhoenixTest.Case do
         end)
       end
 
+      global_config =
+        case Application.fetch_env!(:phoenix_test, :playwright) do
+          kw_list when is_list(kw_list) -> kw_list
+          _ -> []
+        end
+
+      local_config =
+        case context[:playwright] do
+          kw_list when is_list(kw_list) -> kw_list
+          _ -> []
+        end
+
+      screenshot? =
+        case local_config[:screenshot] do
+          bool when is_boolean(bool) -> bool
+          _ -> global_config[:screenshot]
+        end
+
+      if screenshot? do
+        on_exit(fn ->
+          time = :erlang.system_time(:second) |> to_string()
+
+          safe_test_name =
+            context.test
+            |> to_string()
+            |> String.replace([" ", "/"], "_")
+
+          file_name = "#{safe_test_name}_#{time}.png"
+
+          PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file_name,
+            screenshot_dir: local_config[:screenshot_dir]
+          )
+        end)
+      end
+
       PhoenixTest.Playwright.build(context_id, page_id, frame_id)
     end
 

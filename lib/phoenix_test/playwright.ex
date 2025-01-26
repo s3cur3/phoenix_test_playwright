@@ -47,6 +47,7 @@ defmodule PhoenixTest.Playwright do
       cli: "assets/node_modules/playwright/cli.js",
       browser: [browser: :chromium, headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true)],
       screenshot_dir: "screenshots",
+      screenshot: System.get_env("PLAYWRIGHT_SCREENSHOT", "false") in ~w(t true),
       trace: System.get_env("PLAYWRIGHT_TRACE", "false") in ~w(t true),
       trace_dir: "tmp",
       js_logger:
@@ -82,6 +83,31 @@ defmodule PhoenixTest.Playwright do
   - Environment variable, see [Configuration](#module-configuration)
   - ExUnit `@tag :trace`
   - ExUnit `@tag trace: :open` to open the trace viewer automatically after completion
+
+  ## Screenshots
+  You can take screenshots manually by calling `PhoenixTest.Playwright.screenshot/2` with
+  the filename you want to write to. By default, the entire page will be captured,
+  not just the current viewport.
+
+  You can use the `:screenshot_dir` option in the config (see [Configuration](#module-configuration))
+  to set the default directory the screenshots will be saved to. By default, it will be `screenshots`
+  in your project root.
+
+  ### Automatic screenshots
+  You can configure the test runner to automatically take a screenshot of the final state of
+  each test by setting the `:screenshot` config to true (see [Configuration](#module-configuration)
+  above). This is primarily useful for debugging failed tests when loading a full
+  [trace](#module-playwright-traces) is more than you need.
+
+  If you're using the same setup described in [Configuration](#module-configuration), you might
+  set your CI to run with both `PLAYWRIGHT_SCREENSHOT=true` and `PLAYWRIGHT_TRACE=true` when
+  retrying failed tests—something like:
+
+      mix test || if [[ $? = 2 ]]; then PLAYWRIGHT_TRACE=true PLAYWRIGHT_SCREENSHOT=true mix test --failed; else false; fi
+
+  Alternatively, you can set a single test or test module to automatically take screenshots of
+  the final state by overriding the global config with `@tag playwright: [screenshot: true]` or
+  `@moduletag playwright: [screenshot: true]`.
 
   ## Common problems
   - Test failures in CI (timeouts): Try less concurrency, e.g. `mix test --max-cases 1` for GitHub CI shared runners
@@ -248,9 +274,27 @@ defmodule PhoenixTest.Playwright do
     only the current viewport will be captured. Defaults to true.
   - `:omit_background` (boolean): Whether to omit the background, allowing screenshots
     to be captured with transparency. Only applicable to PNG images. Defaults to false.
+
+  ## Examples
+
+      # By default, writes to screenshots/my-screenshot.png within your project root
+      > PhoenixTest.Playwright.screenshot(session, "my-screenshot.png")
+
+      # Writes to screenshots/my-test/my-screenshot.jpg by default
+      > PhoenixTest.Playwright.screenshot(session, "my-test/my-screenshot.jpg")
   """
   def screenshot(session, file_path, opts \\ [full_page: true]) do
-    Frame.screenshot(session.page_id, file_path, opts)
+    default_dir =
+      case opts[:screenshot_dir] ||
+             Application.get_env(:phoenix_test, :playwright, [])[:screenshot_dir] do
+        dir when is_binary(dir) -> dir
+        _ -> "screenshots"
+      end
+
+    full_path = Path.join(default_dir, file_path)
+
+    safe_opts = Keyword.drop(opts, [:screenshot_dir])
+    Frame.screenshot(session.page_id, full_path, safe_opts)
     session
   end
 

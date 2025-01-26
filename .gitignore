@@ -27,6 +27,7 @@ phoenix_test-*.tar
 
 # Ignore screenshots
 /screenshots/
+/screenshots_for_verification/
 
 # Ignore assets that are produced by build tools.
 /priv/static/assets/*

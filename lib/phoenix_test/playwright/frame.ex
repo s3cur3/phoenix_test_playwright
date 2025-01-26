@@ -24,7 +24,7 @@ defmodule PhoenixTest.Playwright.Frame do
     |> unwrap_response(& &1.result.value)
   end
 
-  def screenshot(frame_id, path, opts \\ []) do
+  def screenshot(frame_id, full_path, opts \\ []) do
     # Playwright options: https://playwright.dev/docs/api/class-page#page-screenshot
     params =
       opts
@@ -34,9 +34,6 @@ defmodule PhoenixTest.Playwright.Frame do
     [guid: frame_id, method: :screenshot, params: params]
     |> post()
     |> unwrap_response(fn %{result: %{binary: binary_img}} ->
-      default_dir = Application.get_env(:phoenix_test, :screenshot_dir, "screenshots")
-      full_path = Path.join(default_dir, path)
-
       full_path
       |> Path.dirname()
       |> File.mkdir_p!()

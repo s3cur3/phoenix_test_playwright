@@ -57,6 +57,13 @@ defmodule PhoenixTest.PlaywrightTest do
 
       assert full_page_size > viewport_size
     end
+
+    @tag playwright: [screenshot: true, screenshot_dir: "screenshots_for_verification"]
+    test "saves screenshot on test exit (for verification in CI)", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> assert_has("h1")
+    end
   end
 
   describe "click_link/2" do
