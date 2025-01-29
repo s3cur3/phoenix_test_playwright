@@ -24,6 +24,24 @@ defmodule PhoenixTest.Playwright.Frame do
     |> unwrap_response(& &1.result.value)
   end
 
+  def screenshot(frame_id, full_path, opts \\ []) do
+    # Playwright options: https://playwright.dev/docs/api/class-page#page-screenshot
+    params =
+      opts
+      |> Keyword.validate!(full_page: true, omit_background: false)
+      |> Map.new()
+
+    [guid: frame_id, method: :screenshot, params: params]
+    |> post()
+    |> unwrap_response(fn %{result: %{binary: binary_img}} ->
+      full_path
+      |> Path.dirname()
+      |> File.mkdir_p!()
+
+      File.write!(full_path, Base.decode64!(binary_img))
+    end)
+  end
+
   def evaluate(frame_id, js, opts \\ []) do
     params =
       opts
