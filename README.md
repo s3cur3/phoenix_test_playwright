@@ -7,6 +7,12 @@
 
 Execute PhoenixTest cases in an actual browser via Playwright.
 
+Please [get in touch](https://ftes.de) with feedback of any shape and size.
+
+Enjoy!
+
+Freddy.
+
 **Documentation:** [hexdocs.pm](https://hexdocs.pm/phoenix_test_playwright/)
 
 **Example:** [ftes/phoenix_test_playwright_example](https://github.com/ftes/phoenix_test_playwright_example)
