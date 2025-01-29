@@ -143,7 +143,7 @@ defmodule PhoenixTest.Case do
 
       if screenshot? do
         on_exit(fn ->
-          time = :erlang.system_time(:second) |> to_string()
+          time = :second |> :erlang.system_time() |> to_string()
 
           safe_test_name =
             context.test
@@ -152,9 +152,7 @@ defmodule PhoenixTest.Case do
 
           file_name = "#{safe_test_name}_#{time}.png"
 
-          PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file_name,
-            screenshot_dir: local_config[:screenshot_dir]
-          )
+          PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file_name, screenshot_dir: local_config[:screenshot_dir])
         end)
       end
 
@@ -178,7 +176,7 @@ defmodule PhoenixTest.Case do
           {:already, :allowed} -> :ok
         end
 
-        unless async?, do: Ecto.Adapters.SQL.Sandbox.mode(repo, {:shared, self()})
+        if not async?, do: Ecto.Adapters.SQL.Sandbox.mode(repo, {:shared, self()})
 
         repo
       end

@@ -221,10 +221,10 @@ defmodule PhoenixTest.Playwright do
 
   import ExUnit.Assertions
 
-  alias PhoenixTest.Playwright.Page
   alias PhoenixTest.OpenBrowser
   alias PhoenixTest.Playwright.Connection
   alias PhoenixTest.Playwright.Frame
+  alias PhoenixTest.Playwright.Page
   alias PhoenixTest.Playwright.Selector
 
   require Logger
@@ -293,7 +293,7 @@ defmodule PhoenixTest.Playwright do
       end
 
     full_path = Path.join(default_dir, file_path)
-    safe_opts = Keyword.drop(opts, [:screenshot_dir])
+    safe_opts = Keyword.delete(opts, :screenshot_dir)
     {:ok, binary_img} = Page.screenshot(session.page_id, safe_opts)
     full_path |> Path.dirname() |> File.mkdir_p!()
     File.write!(full_path, Base.decode64!(binary_img))
@@ -564,9 +564,7 @@ defmodule PhoenixTest.Playwright do
       {:error, %{error: %{error: %{message: "Error: strict mode violation: " <> _ = message}}}} ->
         short_message = String.replace(message, "Error: strict mode violation: ", "")
 
-        flunk(
-          "Found more than one element matching selector #{debug_selector}:\n#{short_message}"
-        )
+        flunk("Found more than one element matching selector #{debug_selector}:\n#{short_message}")
 
       {:error,
        %{
@@ -662,15 +660,11 @@ defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
   defdelegate refute_has(session, selector), to: Playwright
   defdelegate refute_has(session, selector, opts), to: Playwright
 
-  def assert_path(session, path),
-    do: Playwright.retry(fn -> Assertions.assert_path(session, path) end)
+  def assert_path(session, path), do: Playwright.retry(fn -> Assertions.assert_path(session, path) end)
 
-  def assert_path(session, path, opts),
-    do: Playwright.retry(fn -> Assertions.assert_path(session, path, opts) end)
+  def assert_path(session, path, opts), do: Playwright.retry(fn -> Assertions.assert_path(session, path, opts) end)
 
-  def refute_path(session, path),
-    do: Playwright.retry(fn -> Assertions.refute_path(session, path) end)
+  def refute_path(session, path), do: Playwright.retry(fn -> Assertions.refute_path(session, path) end)
 
-  def refute_path(session, path, opts),
-    do: Playwright.retry(fn -> Assertions.refute_path(session, path, opts) end)
+  def refute_path(session, path, opts), do: Playwright.retry(fn -> Assertions.refute_path(session, path, opts) end)
 end

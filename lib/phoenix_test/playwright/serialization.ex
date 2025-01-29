@@ -4,7 +4,7 @@ defmodule PhoenixTest.Playwright.Serialization do
   require Logger
 
   def camelize(input), do: input |> to_string() |> Phoenix.Naming.camelize(:lower)
-  def underscore(string), do: Phoenix.Naming.underscore(string) |> String.to_atom()
+  def underscore(string), do: string |> Phoenix.Naming.underscore() |> String.to_atom()
 
   def deep_key_camelize(input), do: deep_key_transform(input, &camelize/1)
   def deep_key_underscore(input), do: deep_key_transform(input, &underscore/1)

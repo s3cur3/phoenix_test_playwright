@@ -1,7 +1,8 @@
 defmodule PhoenixTest.PlaywrightTest do
   use PhoenixTest.Case, async: true
-  alias PhoenixTest.Playwright
+
   alias ExUnit.AssertionError
+  alias PhoenixTest.Playwright
 
   @moduletag :playwright
 
@@ -435,7 +436,7 @@ defmodule PhoenixTest.PlaywrightTest do
         assert content =~
                  ~r[<link rel="stylesheet" href="file:.*phoenix_test_playwright\/priv\/static\/assets\/app\.css"\/>]
 
-        assert content =~ "<link rel=\"stylesheet\" href=\"//example.com/cool-styles.css\"/>"
+        assert content =~ ~s(<link rel="stylesheet" href="//example.com/cool-styles.css"/>)
         assert content =~ "body { font-size: 12px; }"
 
         assert content =~ ~r/<h1.*Main page/
@@ -559,7 +560,7 @@ defmodule PhoenixTest.PlaywrightTest do
     end
 
     test "raises an error if count is more than expected count", %{conn: conn} do
-      session = conn |> visit("/page/index")
+      session = visit(conn, "/page/index")
 
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         assert_has(session, ".multiple_links", count: 1)
@@ -567,7 +568,7 @@ defmodule PhoenixTest.PlaywrightTest do
     end
 
     test "raises an error if count is less than expected count", %{conn: conn} do
-      session = conn |> visit("/page/index")
+      session = visit(conn, "/page/index")
 
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         assert_has(session, "h1", count: 2)

@@ -200,8 +200,7 @@ defmodule PhoenixTest.Playwright.Connection do
 
   defp add_initializer(state, _), do: state
 
-  defp reply_in_flight(%{posts_in_flight: in_flight} = state, msg)
-       when is_map_key(in_flight, msg.id) do
+  defp reply_in_flight(%{posts_in_flight: in_flight} = state, msg) when is_map_key(in_flight, msg.id) do
     {from, in_flight} = Map.pop(in_flight, msg.id)
     GenServer.reply(from, msg)
 

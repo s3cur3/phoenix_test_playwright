@@ -1,13 +1,14 @@
 import Config
 
-config :logger, level: :error
+config :esbuild,
+  version: "0.24.2",
+  default: [
+    args: ~w(js/app.js --bundle --target=es2017 --outdir=../../priv/static/assets),
+    cd: Path.expand("../test/assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
 
-config :phoenix_test_playwright, PhoenixTest.Endpoint,
-  server: true,
-  http: [port: 4000],
-  live_view: [signing_salt: "112345678212345678312345678412"],
-  secret_key_base: String.duplicate("57689", 50),
-  pubsub_server: PhoenixTest.PubSub
+config :logger, level: :error
 
 config :phoenix_test,
   endpoint: PhoenixTest.Endpoint,
@@ -23,10 +24,9 @@ config :phoenix_test,
   ],
   timeout_ms: 2000
 
-config :esbuild,
-  version: "0.24.2",
-  default: [
-    args: ~w(js/app.js --bundle --target=es2017 --outdir=../../priv/static/assets),
-    cd: Path.expand("../test/assets", __DIR__),
-    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
-  ]
+config :phoenix_test_playwright, PhoenixTest.Endpoint,
+  server: true,
+  http: [port: 4000],
+  live_view: [signing_salt: "112345678212345678312345678412"],
+  secret_key_base: String.duplicate("57689", 50),
+  pubsub_server: PhoenixTest.PubSub

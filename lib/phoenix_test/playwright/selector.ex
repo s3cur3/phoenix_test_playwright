@@ -27,8 +27,7 @@ defmodule PhoenixTest.Playwright.Selector do
 
   def unquote(:and)(left, :none), do: left
 
-  def unquote(:and)(left, right),
-    do: concat(left, "internal:and=#{Phoenix.json_library().encode!(right)}")
+  def unquote(:and)(left, right), do: concat(left, "internal:and=#{Phoenix.json_library().encode!(right)}")
 
   defdelegate _and(left, right), to: __MODULE__, as: :and
 
@@ -51,8 +50,7 @@ defmodule PhoenixTest.Playwright.Selector do
   def css(selector) when is_binary(selector), do: css([selector])
   def css(selectors) when is_list(selectors), do: "css=#{Enum.join(selectors, ",")}"
 
-  defp exact_suffix(opts) when is_list(opts),
-    do: opts |> Keyword.get(:exact, false) |> exact_suffix()
+  defp exact_suffix(opts) when is_list(opts), do: opts |> Keyword.get(:exact, false) |> exact_suffix()
 
   defp exact_suffix(true), do: "s"
   defp exact_suffix(false), do: "i"
