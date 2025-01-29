@@ -174,6 +174,7 @@ defmodule PhoenixTest.Case do
         case Ecto.Adapters.SQL.Sandbox.checkout(repo) do
           :ok -> :ok
           {:already, :allowed} -> :ok
+          {:already, :owner} -> :ok
         end
 
         if not async?, do: Ecto.Adapters.SQL.Sandbox.mode(repo, {:shared, self()})
