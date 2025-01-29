@@ -221,6 +221,7 @@ defmodule PhoenixTest.Playwright do
 
   import ExUnit.Assertions
 
+  alias PhoenixTest.Playwright.Page
   alias PhoenixTest.OpenBrowser
   alias PhoenixTest.Playwright.Connection
   alias PhoenixTest.Playwright.Frame
@@ -292,9 +293,11 @@ defmodule PhoenixTest.Playwright do
       end
 
     full_path = Path.join(default_dir, file_path)
-
     safe_opts = Keyword.drop(opts, [:screenshot_dir])
-    Frame.screenshot(session.page_id, full_path, safe_opts)
+    {:ok, binary_img} = Page.screenshot(session.page_id, safe_opts)
+    full_path |> Path.dirname() |> File.mkdir_p!()
+    File.write!(full_path, Base.decode64!(binary_img))
+
     session
   end
 
