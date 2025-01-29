@@ -64,7 +64,7 @@ jobs:
         run: "mix test --warnings-as-errors --max-cases 1 || if [[ $? = 2 ]]; then PLAYWRIGHT_TRACE=true mix test --max-cases 1 --failed; else false; fi"
       - name: Fail if screenshot on exit failed
         run: |
-          if ! ls screenshots_for_verification/test_screenshot_3_saves_screenshot_on_test_exit* >/dev/null 2>&1; then
+          if ! ls screenshots/PhoenixTest.PlaywrightTest.test_screenshot_3_saves_screenshot_on_test_exit* >/dev/null 2>&1; then
             echo "Screenshot on exit feature failed"
             exit 1
           fi
@@ -73,12 +73,12 @@ jobs:
         if: failure()
         with:
           name: Traces
-          path: ./tmp
+          path: ./traces
           if-no-files-found: ignore
       - name: Upload verification screenshots
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: screenshots_for_verification
-          path: ./screenshots_for_verification
+          name: screenshots
+          path: ./screenshots
           if-no-files-found: ignore

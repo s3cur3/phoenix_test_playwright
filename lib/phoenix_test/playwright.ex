@@ -45,18 +45,19 @@ defmodule PhoenixTest.Playwright do
     otp_app: :your_app,
     playwright: [
       cli: "assets/node_modules/playwright/cli.js",
-      browser: [browser: :chromium, headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true)],
+      browser: :chromium,
+      headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true),
       screenshot_dir: "screenshots",
       screenshot: System.get_env("PLAYWRIGHT_SCREENSHOT", "false") in ~w(t true),
       trace: System.get_env("PLAYWRIGHT_TRACE", "false") in ~w(t true),
-      trace_dir: "tmp",
+      trace_dir: "traces",
       js_logger:
         # Default to true if you like seeing log messages for errors during test
         if System.get_env("PLAYWRIGHT_LOG_JS_MESSSAGES", "false") in ~w(t true) do
           :default
-        end
-    ],
-    timeout_ms: 2000
+        end,
+      timeout: :timer.seconds(2)
+    ]
   ```
 
   JavaScript console messages are are written to standard IO and standard error by default.
@@ -222,6 +223,7 @@ defmodule PhoenixTest.Playwright do
   import ExUnit.Assertions
 
   alias PhoenixTest.OpenBrowser
+  alias PhoenixTest.Playwright.Config
   alias PhoenixTest.Playwright.Connection
   alias PhoenixTest.Playwright.Frame
   alias PhoenixTest.Playwright.Page
@@ -232,7 +234,6 @@ defmodule PhoenixTest.Playwright do
   defstruct [:context_id, :page_id, :frame_id, :last_input_selector, within: :none]
 
   @endpoint Application.compile_env(:phoenix_test, :endpoint)
-  @default_timeout_ms 1000
 
   def build(context_id, page_id, frame_id) do
     %__MODULE__{context_id: context_id, page_id: page_id, frame_id: frame_id}
@@ -284,19 +285,15 @@ defmodule PhoenixTest.Playwright do
       # Writes to screenshots/my-test/my-screenshot.jpg by default
       > PhoenixTest.Playwright.screenshot(session, "my-test/my-screenshot.jpg")
   """
-  def screenshot(session, file_path, opts \\ [full_page: true]) do
-    default_dir =
-      case opts[:screenshot_dir] ||
-             Application.get_env(:phoenix_test, :playwright, [])[:screenshot_dir] do
-        dir when is_binary(dir) -> dir
-        _ -> "screenshots"
-      end
+  def screenshot(session, file_path, opts \\ []) do
+    opts = Keyword.validate!(opts, full_page: true, omit_background: false)
 
-    full_path = Path.join(default_dir, file_path)
-    safe_opts = Keyword.delete(opts, :screenshot_dir)
-    {:ok, binary_img} = Page.screenshot(session.page_id, safe_opts)
-    full_path |> Path.dirname() |> File.mkdir_p!()
-    File.write!(full_path, Base.decode64!(binary_img))
+    dir = Config.global(:screenshot_dir)
+    File.mkdir_p!(dir)
+
+    path = Path.join(dir, file_path)
+    {:ok, binary_img} = Page.screenshot(session.page_id, opts)
+    File.write!(path, Base.decode64!(binary_img))
 
     session
   end
@@ -549,7 +546,7 @@ defmodule PhoenixTest.Playwright do
         error_header =
           case is_binary(playwright_message) &&
                  Regex.scan(~r/Timeout (\d+)ms exceeded./, playwright_message) do
-            [[_, timeout_ms]] -> base_error_header <> " within #{String.to_integer(timeout_ms)}ms"
+            [[_, timeout]] -> base_error_header <> " within #{String.to_integer(timeout)}ms"
             _ -> base_error_header
           end
 
@@ -620,8 +617,7 @@ defmodule PhoenixTest.Playwright do
   end
 
   defp timeout(opts \\ []) do
-    default = Application.get_env(:phoenix_test, :timeout_ms, @default_timeout_ms)
-    Keyword.get(opts, :timeout, default)
+    Keyword.get_lazy(opts, :timeout, fn -> Config.global(:timeout) end)
   end
 end
 

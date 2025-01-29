@@ -8,42 +8,27 @@ defmodule PhoenixTest.Case do
 
   alias PhoenixTest.Case
   alias PhoenixTest.Playwright
+  alias PhoenixTest.Playwright.Config
 
-  using opts do
+  using _opts do
     quote do
       import PhoenixTest
       import PhoenixTest.Case
       import PhoenixTest.Playwright, only: [screenshot: 2, screenshot: 3]
-
-      setup do
-        [phoenix_test: unquote(opts)]
-      end
     end
   end
 
-  @playwright_opts [
-    browser: :chromium,
-    headless: true,
-    slow_mo: 0
-  ]
-
   setup_all context do
-    global_config = Application.fetch_env!(:phoenix_test, :playwright)
-    global_browser_config = List.wrap(global_config[:browser])
-    trace = Map.get(context, :trace, global_config[:trace])
+    config = context |> Map.take(Config.keys()) |> Config.parse()
 
     case context do
       %{playwright: true} ->
-        opts = Keyword.merge(@playwright_opts, global_browser_config)
-        [browser_id: Case.Playwright.launch_browser(opts), trace: trace]
+        browser_opts = Keyword.take(config, ~w(browser headless slow_mo)a)
+        browser_id = Case.Playwright.launch_browser(browser_opts)
+        Keyword.put(config, :browser_id, browser_id)
 
-      %{playwright: context_browser_config} when is_list(context_browser_config) ->
-        opts =
-          @playwright_opts
-          |> Keyword.merge(global_browser_config)
-          |> Keyword.merge(context_browser_config)
-
-        [browser_id: Case.Playwright.launch_browser(opts), trace: trace]
+      %{playwright: _} ->
+        raise ArgumentError, "Pass any playwright options as top-level tags, e.g. `@moduletag browser: :firefox`"
 
       _ ->
         :ok
@@ -52,8 +37,11 @@ defmodule PhoenixTest.Case do
 
   setup context do
     case context do
-      %{playwright: p} when p != false ->
+      %{playwright: true} ->
         [conn: Case.Playwright.new_session(context)]
+
+      %{playwright: _} ->
+        raise ArgumentError, "Pass any playwright options as top-level tags, e.g. `@tag browser: :firefox`"
 
       _ ->
         [conn: Phoenix.ConnTest.build_conn()]
@@ -66,6 +54,7 @@ defmodule PhoenixTest.Case do
 
     alias PhoenixTest.Playwright.Browser
     alias PhoenixTest.Playwright.BrowserContext
+    alias PhoenixTest.Playwright.Page
     alias PhoenixTest.Playwright.Port
 
     @includes_ecto Code.ensure_loaded?(Ecto.Adapters.SQL.Sandbox) &&
@@ -73,90 +62,57 @@ defmodule PhoenixTest.Case do
 
     def launch_browser(opts) do
       ensure_started()
-      browser = Keyword.fetch!(opts, :browser)
+      {browser, opts} = Keyword.pop!(opts, :browser)
       browser_id = launch_browser(browser, opts)
       on_exit(fn -> post(guid: browser_id, method: :close) end)
       browser_id
     end
 
-    def new_session(%{browser_id: browser_id} = context) do
-      params = if ua = checkout_ecto_repos(context[:async]), do: %{user_agent: ua}, else: %{}
-      context_id = Browser.new_context(browser_id, params)
-      subscribe(context_id)
+    def new_session(context) do
+      browser_context_opts = if ua = checkout_ecto_repos(context[:async]), do: %{user_agent: ua}, else: %{}
+      browser_context_id = Browser.new_context(context.browser_id, browser_context_opts)
+      subscribe(browser_context_id)
 
-      page_id = BrowserContext.new_page(context_id)
-
-      post(%{
-        method: :update_subscription,
-        guid: page_id,
-        params: %{event: :console, enabled: true}
-      })
+      page_id = BrowserContext.new_page(browser_context_id)
+      Page.update_subscription(page_id, event: :console, enabled: true)
 
       frame_id = initializer(page_id).main_frame.guid
-      on_exit(fn -> post(guid: context_id, method: :close) end)
+      on_exit(fn -> post(guid: browser_context_id, method: :close) end)
 
-      if trace = context[:trace] do
-        BrowserContext.start_tracing(context_id)
+      if context.trace, do: trace(browser_context_id, context)
+      if context.screenshot, do: screenshot(page_id, context)
 
-        dir =
-          :phoenix_test
-          |> Application.fetch_env!(:playwright)
-          |> Keyword.get(:trace_dir, "tmp")
+      PhoenixTest.Playwright.build(browser_context_id, page_id, frame_id)
+    end
 
-        File.mkdir_p!(dir)
+    defp trace(browser_context_id, %{trace: trace, trace_dir: dir} = context) do
+      BrowserContext.start_tracing(browser_context_id)
 
-        "Elixir." <> module = to_string(context.module)
-        session_id = System.unique_integer([:positive, :monotonic])
+      File.mkdir_p!(dir)
+      file = file_name("_#{System.unique_integer([:positive, :monotonic])}.zip", context)
+      path = Path.join(dir, file)
 
-        file =
-          String.replace("#{module}.#{context.test}_#{session_id}.zip", ~r/[^a-zA-Z0-9 \.]/, "_")
+      on_exit(fn ->
+        BrowserContext.stop_tracing(browser_context_id, path)
 
-        path = Path.join(dir, file)
-
-        on_exit(fn ->
-          BrowserContext.stop_tracing(context_id, path)
-
-          if trace == :open do
-            cli_path = Path.join(File.cwd!(), Port.cli_path())
-            System.cmd(cli_path, ["show-trace", path])
-          end
-        end)
-      end
-
-      global_config =
-        case Application.fetch_env!(:phoenix_test, :playwright) do
-          kw_list when is_list(kw_list) -> kw_list
-          _ -> []
+        if trace == :open do
+          cli_path = Path.join(File.cwd!(), Port.cli_path())
+          System.cmd(cli_path, ["show-trace", path])
         end
+      end)
+    end
 
-      local_config =
-        case context[:playwright] do
-          kw_list when is_list(kw_list) -> kw_list
-          _ -> []
-        end
+    defp screenshot(page_id, context) do
+      on_exit(fn ->
+        file = file_name(".png", context)
+        PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file)
+      end)
+    end
 
-      screenshot? =
-        case local_config[:screenshot] do
-          bool when is_boolean(bool) -> bool
-          _ -> global_config[:screenshot]
-        end
-
-      if screenshot? do
-        on_exit(fn ->
-          time = :second |> :erlang.system_time() |> to_string()
-
-          safe_test_name =
-            context.test
-            |> to_string()
-            |> String.replace([" ", "/"], "_")
-
-          file_name = "#{safe_test_name}_#{time}.png"
-
-          PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file_name, screenshot_dir: local_config[:screenshot_dir])
-        end)
-      end
-
-      PhoenixTest.Playwright.build(context_id, page_id, frame_id)
+    defp file_name(suffix, %{module: module, test: test}) do
+      "Elixir." <> module = to_string(module)
+      time = :second |> :erlang.system_time() |> to_string()
+      String.replace("#{module}.#{test}_#{time}#{suffix}", ~r/[^a-zA-Z0-9\.]/, "_")
     end
 
     if @includes_ecto do

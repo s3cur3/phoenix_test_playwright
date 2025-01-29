@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Screenshots: `screenshot/{2,3}` function and `screenshot: true` config for auto-capture
 
+### Changed
+- Config: flattened list (remove nested `browser` config), override via top-level ExUnit `@tag ...`s (remove nested `@tag playwright: [...]`)
+
 ## [0.3.0] 2025-01-26
 ### Changed
 - Auto-convert case of playwright messages keys (snake_case to camelCase)

@@ -23,11 +23,6 @@ defmodule PhoenixTest.PlaywrightTest do
   end
 
   describe "screenshot/3" do
-    setup do
-      File.rm_rf("screenshots")
-      :ok
-    end
-
     test "takes a screenshot of the current page as a PNG", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -59,7 +54,7 @@ defmodule PhoenixTest.PlaywrightTest do
       assert full_page_size > viewport_size
     end
 
-    @tag playwright: [screenshot: true, screenshot_dir: "screenshots_for_verification"]
+    @tag :screenshot
     test "saves screenshot on test exit (for verification in CI)", %{conn: conn} do
       conn
       |> visit("/live/index")
