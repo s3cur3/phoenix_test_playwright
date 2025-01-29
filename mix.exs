@@ -48,7 +48,8 @@ defmodule PhoenixTestPlaywright.MixProject do
       {:phoenix_test, "~> 0.5", runtime: false},
       {:plug_cowboy, "~> 2.7", only: :test, runtime: false},
       {:phoenix_ecto, "~> 4.5", optional: true},
-      {:ecto_sql, "~> 3.10", optional: true}
+      {:ecto_sql, "~> 3.10", optional: true},
+      {:styler, "~> 1.3", only: [:dev, :test], runtime: false}
     ]
   end
 
