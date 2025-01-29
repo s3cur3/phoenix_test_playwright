@@ -31,6 +31,8 @@ defmodule PhoenixTest.Playwright.Selector do
 
   defdelegate _and(left, right), to: __MODULE__, as: :and
 
+  def has(left, right), do: concat(left, "internal:has=#{Phoenix.json_library().encode!(right)}")
+
   def text(nil, _opts), do: :none
   def text(text, opts), do: "internal:text=\"#{text}\"#{exact_suffix(opts)}"
 
