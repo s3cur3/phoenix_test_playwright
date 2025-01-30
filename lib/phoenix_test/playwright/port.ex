@@ -6,6 +6,7 @@ defmodule PhoenixTest.Playwright.Port do
   The remaining fraction is stored in `buffer` and continiued in the next `Port` response.
   """
 
+  alias PhoenixTest.Playwright.Config
   alias PhoenixTest.Playwright.Serialization
 
   defstruct [
@@ -14,9 +15,8 @@ defmodule PhoenixTest.Playwright.Port do
     :buffer
   ]
 
-  def cli_path(config \\ []) do
-    config = :phoenix_test |> Application.fetch_env!(:playwright) |> Keyword.merge(config)
-    path = Keyword.fetch!(config, :cli)
+  def cli_path do
+    path = Config.global(:cli)
 
     if !File.exists?(path) do
       msg = """
@@ -33,11 +33,8 @@ defmodule PhoenixTest.Playwright.Port do
     path
   end
 
-  def open(config \\ []) do
-    cli = cli_path(config)
-    cmd = "run-driver"
-    port = Port.open({:spawn, "#{cli} #{cmd}"}, [:binary])
-
+  def open do
+    port = Port.open({:spawn, "#{cli_path()} run-driver"}, [:binary])
     %__MODULE__{port: port, remaining: 0, buffer: ""}
   end
 

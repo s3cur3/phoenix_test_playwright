@@ -10,6 +10,10 @@ defmodule PhoenixTest.Playwright.Page do
 
   import PhoenixTest.Playwright.Connection, only: [post: 1]
 
+  def update_subscription(page_id, opts \\ []) do
+    post(guid: page_id, method: :update_subscription, params: Map.new(opts))
+  end
+
   def screenshot(page_id, opts \\ []) do
     # Playwright options: https://playwright.dev/docs/api/class-page#page-screenshot
     params =

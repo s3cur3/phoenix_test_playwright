@@ -8,12 +8,12 @@ defmodule PhoenixTest.Playwright.Connection do
   """
   use GenServer
 
+  alias PhoenixTest.Playwright.Config
   alias PhoenixTest.Playwright.Port, as: PlaywrightPort
 
   require Logger
 
-  @default_timeout_ms 2000
-  @playwright_timeout_grace_period_ms 500
+  @timeout_grace_factor 1.5
 
   defstruct [
     :port,
@@ -28,16 +28,16 @@ defmodule PhoenixTest.Playwright.Connection do
 
   @name __MODULE__
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, name: @name, timeout: timeout())
+  def start_link do
+    GenServer.start_link(__MODULE__, :no_init_arg, name: @name, timeout: Config.global(:timeout))
   end
 
   @doc """
   Lazy launch. Only start the playwright server if actually needed by a test.
   """
-  def ensure_started(opts \\ []) do
+  def ensure_started do
     case Process.whereis(@name) do
-      nil -> start_link(opts)
+      nil -> start_link()
       pid -> {:ok, pid}
     end
 
@@ -67,10 +67,9 @@ defmodule PhoenixTest.Playwright.Connection do
   """
   def post(msg) do
     default = %{params: %{}, metadata: %{}}
-    msg = msg |> Enum.into(default) |> update_in(~w(params timeout)a, &(&1 || timeout()))
-    timeout = msg.params.timeout
-    timeout_with_grace_period = timeout + @playwright_timeout_grace_period_ms
-    GenServer.call(@name, {:post, msg}, timeout_with_grace_period)
+    msg = msg |> Enum.into(default) |> update_in(~w(params timeout)a, &(&1 || Config.global(:timeout)))
+    call_timeout = round(msg.params.timeout * @timeout_grace_factor)
+    GenServer.call(@name, {:post, msg}, call_timeout)
   end
 
   @doc """
@@ -90,8 +89,8 @@ defmodule PhoenixTest.Playwright.Connection do
   end
 
   @impl GenServer
-  def init(config) do
-    port = PlaywrightPort.open(config)
+  def init(:no_init_arg) do
+    port = PlaywrightPort.open()
     msg = %{guid: "", params: %{sdk_language: :javascript}, method: :initialize, metadata: %{}}
     PlaywrightPort.post(port, msg)
 
@@ -158,18 +157,16 @@ defmodule PhoenixTest.Playwright.Connection do
   defp log_js_error(state, _), do: state
 
   defp log_console(state, %{method: :console} = msg) do
-    config = Application.get_env(:phoenix_test, :playwright)
-    js_logger = Access.get(config, :js_logger, :default)
+    case Config.global(:js_logger) do
+      :default ->
+        level =
+          case msg.params.type do
+            "error" -> :error
+            "debug" -> :debug
+            _ -> :info
+          end
 
-    if js_logger == :default do
-      level =
-        case msg.params.type do
-          "error" -> :error
-          "debug" -> :debug
-          _ -> :info
-        end
-
-      Logger.log(level, "Javascript console: #{msg.params.text}")
+        Logger.log(level, "Javascript console: #{msg.params.text}")
     end
 
     state
@@ -225,8 +222,4 @@ defmodule PhoenixTest.Playwright.Connection do
   end
 
   defp notify_subscribers(state, _), do: state
-
-  defp timeout do
-    Application.get_env(:phoenix_test, :timeout_ms, @default_timeout_ms)
-  end
 end

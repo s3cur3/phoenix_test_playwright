@@ -15,14 +15,14 @@ config :phoenix_test,
   otp_app: :phoenix_test_playwright,
   playwright: [
     cli: "priv/static/assets/node_modules/playwright/cli.js",
-    browser: [
-      browser: :chromium,
-      headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true)
-    ],
+    browser: :chromium,
+    headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true),
+    screenshot: System.get_env("PLAYWRIGHT_SCREENSHOT", "false") in ~w(t true),
+    screenshot_dir: "screenshots",
     trace: System.get_env("PLAYWRIGHT_TRACE", "false") in ~w(t true),
-    trace_dir: "tmp"
-  ],
-  timeout_ms: 2000
+    trace_dir: "traces",
+    timeout: :timer.seconds(2)
+  ]
 
 config :phoenix_test_playwright, PhoenixTest.Endpoint,
   server: true,
