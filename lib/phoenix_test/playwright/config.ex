@@ -6,12 +6,14 @@ defmodule PhoenixTest.Playwright.Config do
     cli: "assets/node_modules/playwright/cli.js",
     headless: true,
     js_logger: :default,
+
+    # true, [full_page: true, omit_background: true]
     screenshot: false,
     screenshot_dir: "screenshots",
     timeout: :timer.seconds(2),
     slow_mo: 0,
 
-    # true, :open
+    # true, :open, [open: true]
     trace: false,
     trace_dir: "traces"
   ]

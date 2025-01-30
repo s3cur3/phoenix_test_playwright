@@ -85,7 +85,14 @@ defmodule PhoenixTest.Case do
       PhoenixTest.Playwright.build(browser_context_id, page_id, frame_id)
     end
 
-    defp trace(browser_context_id, %{trace: trace, trace_dir: dir} = context) do
+    defp trace(browser_context_id, %{trace: opts, trace_dir: dir} = context) do
+      opts =
+        case opts do
+          true -> []
+          :open -> [open: true]
+          list when is_list(list) -> opts
+        end
+
       BrowserContext.start_tracing(browser_context_id)
 
       File.mkdir_p!(dir)
@@ -95,17 +102,23 @@ defmodule PhoenixTest.Case do
       on_exit(fn ->
         BrowserContext.stop_tracing(browser_context_id, path)
 
-        if trace == :open do
+        if opts[:open] do
           cli_path = Path.join(File.cwd!(), Port.cli_path())
           System.cmd(cli_path, ["show-trace", path])
         end
       end)
     end
 
-    defp screenshot(page_id, context) do
+    defp screenshot(page_id, %{screenshot: opts} = context) do
+      opts =
+        case opts do
+          true -> []
+          list when is_list(list) -> opts
+        end
+
       on_exit(fn ->
         file = file_name(".png", context)
-        PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file)
+        PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file, opts)
       end)
     end
 
