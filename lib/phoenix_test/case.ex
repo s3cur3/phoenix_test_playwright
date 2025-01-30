@@ -27,7 +27,7 @@ defmodule PhoenixTest.Case do
         browser_id = Case.Playwright.launch_browser(browser_opts)
         Keyword.put(config, :browser_id, browser_id)
 
-      %{playwright: _} ->
+      %{playwright: p} when p != false ->
         raise ArgumentError, "Pass any playwright options as top-level tags, e.g. `@moduletag browser: :firefox`"
 
       _ ->
@@ -40,7 +40,7 @@ defmodule PhoenixTest.Case do
       %{playwright: true} ->
         [conn: Case.Playwright.new_session(context)]
 
-      %{playwright: _} ->
+      %{playwright: p} when p != false ->
         raise ArgumentError, "Pass any playwright options as top-level tags, e.g. `@tag browser: :firefox`"
 
       _ ->
