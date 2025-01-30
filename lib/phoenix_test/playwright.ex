@@ -1,11 +1,10 @@
 defmodule PhoenixTest.Playwright do
   @moduledoc ~S"""
-  > #### Warning {: .warning}
-  >
-  > This driver is experimental.
-  > If you don't need browser based tests, see `m:PhoenixTest#module-usage` on regular usage.
-
   Execute PhoenixTest cases in an actual browser via [Playwright](https://playwright.dev/).
+
+  Please [get in touch](https://ftes.de) with feedback of any shape and size.
+
+  Enjoy! Freddy.
 
   ## Example
   Refer to the accompanying example repo for a full example:
