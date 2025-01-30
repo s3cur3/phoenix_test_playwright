@@ -13,7 +13,7 @@ defmodule PhoenixTest.Playwright.Config do
     screenshot: false,
     screenshot_dir: "screenshots",
     timeout: :timer.seconds(2),
-    slow_mo: 0,
+    slow_mo: :timer.seconds(0),
 
     # true, :open, [open: true]
     trace: false,

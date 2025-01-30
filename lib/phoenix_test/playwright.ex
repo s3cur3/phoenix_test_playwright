@@ -6,9 +6,11 @@ defmodule PhoenixTest.Playwright do
 
   Enjoy! Freddy.
 
+
   ## Example
   Refer to the accompanying example repo for a full example:
   https://github.com/ftes/phoenix_test_playwright_example/commits/main
+
 
   ## Setup
   1. Add to `mix.exs` deps: `{:phoenix_test_playwright, "~> 0.1", only: :test, runtime: false}`
@@ -18,20 +20,26 @@ defmodule PhoenixTest.Playwright do
   5. Add to `config/test.exs`: `config :your_app, YourAppWeb.Endpoint, server: true`
   6. Add to `test/test_helpers.exs`: `Application.put_env(:phoenix_test, :base_url, YourAppWeb.Endpoint.url())`
 
+
   ## Usage
   ```elixir
   defmodule MyFeatureTest do
     use PhoenixTest.Case, async: true
     @moduletag :playwright
+    @moduletag browser: :firefox
+    @moduletag headless: false
+    @moduletag slow_mo: :timer.seconds(1)
 
     @tag trace: :open
     test "heading", %{conn: conn} do
       conn
       |> visit("/")
       |> assert_has("h1", text: "Heading")
+      |> screenshot("heading.png")
     end
   end
   ```
+
 
   ## Configuration
   In `config/test.exs`:
@@ -41,71 +49,55 @@ defmodule PhoenixTest.Playwright do
     otp_app: :your_app,
     playwright: [
       browser: :chromium,
-      cli: "assets/node_modules/playwright/cli.js",
-      headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true),
+      headless: System.get_env("PW_HEADLESS", "true") in ~w(t true),
       js_logger: false,
-      screenshot: System.get_env("PLAYWRIGHT_SCREENSHOT", "false") in ~w(t true),
-      screenshot_dir: "screenshots",
-      timeout: :timer.seconds(2),
-      trace: System.get_env("PLAYWRIGHT_TRACE", "false") in ~w(t true),
-      trace_dir: "traces"
+      screenshot: System.get_env("PW_SCREENSHOT", "false") in ~w(t true),
+      trace: System.get_env("PW_TRACE", "false") in ~w(t true),
     ]
   ```
 
-  JavaScript console messages are are written to standard IO and standard error by default.
-  You can set the `:js_logger` config to `nil` to silence them.
+  See `PhoenixTest.Playwright.Config` for more details.
 
-  Note that the same options you pass to `:playwright` in your global configuration can also
-  be passed to the `@tag` in your test module. Thus, you might set the global default to
-  `headless: false`, then override it for a single module by setting up your test like this:
+  You can override most global options in your test via ExUnit tags (`@moduletag/@describetag/@tag`).
+  For example, you might set the global default to `headless: true` and override it for a single test:
 
   ```elixir
   defmodule DebuggingFeatureTest do
     use PhoenixTest.Case, async: true
 
-    # Run this module's tests in a headed browser, with a 1000 millisecond
-    # pause between browser interactions.
-    @moduletag playwright: [headless: false, slow_mo: 1_000]
-
-    ...
-  end
+    # Run test in a browser with a 1 second delay between every interaction
+    @tag headless: false
+    @tag slow_mo: 1_000
   ```
 
+
   ## Playwright Traces
-  You can enable [trace](https://playwright.dev/docs/trace-viewer-intro) recording in different ways:
-  - Environment variable, see [Configuration](#module-configuration)
-  - ExUnit `@tag :trace`
-  - ExUnit `@tag trace: :open` to open the trace viewer automatically after completion
+  Playwright traces record a full browser history, including all 'user' interaction, browser console, network transfers etc.
+  Traces can be explored in an interactive viewer for debugging purposes.
+
+  Manually:
+  - Add `@tag trace: :open` to trace a test and open it in the Playwright viewer.
+
+  Automatically for failed tests in CI:
+  - Configuration: `config :phoenix_test, playwright: [trace: System.get_env("PW_TRACE", "false") in ~w(t true)]`
+  - CI script: `mix test || if [[ $? = 2 ]]; then PW_TRACE=true mix test --failed; else false; fi`
+
 
   ## Screenshots
-  You can take screenshots manually by calling `PhoenixTest.Playwright.screenshot/2` with
-  the filename you want to write to. By default, the entire page will be captured,
-  not just the current viewport.
+  Manually:
+  - Call `PhoenixTest.Playwright.screenshot/2` with the filename you want to write to.
+  - By default, the entire page will be captured, not just the current viewport.
 
-  You can use the `:screenshot_dir` option in the config (see [Configuration](#module-configuration))
-  to set the default directory the screenshots will be saved to. By default, it will be `screenshots`
-  in your project root.
+  Automatically for failed tests in CI:
+  - Configuration: `config :phoenix_test, playwright: [screenshot: System.get_env("PW_SCREENSHOT", "false") in ~w(t true)]`
+  - CI script: `mix test || if [[ $? = 2 ]]; then PW_SCREENSHOT=true mix test --failed; else false; fi`
 
-  ### Automatic screenshots
-  You can configure the test runner to automatically take a screenshot of the final state of
-  each test by setting the `:screenshot` config to true (see [Configuration](#module-configuration)
-  above). This is primarily useful for debugging failed tests when loading a full
-  [trace](#module-playwright-traces) is more than you need.
-
-  If you're using the same setup described in [Configuration](#module-configuration), you might
-  set your CI to run with both `PLAYWRIGHT_SCREENSHOT=true` and `PLAYWRIGHT_TRACE=true` when
-  retrying failed tests—something like:
-
-      mix test || if [[ $? = 2 ]]; then PLAYWRIGHT_TRACE=true PLAYWRIGHT_SCREENSHOT=true mix test --failed; else false; fi
-
-  Alternatively, you can set a single test or test module to automatically take screenshots of
-  the final state by overriding the global config with `@tag playwright: [screenshot: true]` or
-  `@moduletag playwright: [screenshot: true]`.
 
   ## Common problems
   - Test failures in CI (timeouts): Try less concurrency, e.g. `mix test --max-cases 1` for GitHub CI shared runners
   - LiveView not connected: add `assert_has("body .phx-connected")` to test after `visit`ing (or otherwise navigating to) a LiveView
   - LiveComponent not connected: add `data-connected={connected?(@socket)}` to template and `assert_has("#my-component[data-connected]")` to test
+
 
   ## Ecto SQL.Sandbox
   `PhoenixTest.Case` automatically takes care of this.
@@ -120,6 +112,7 @@ defmodule PhoenixTest.Playwright do
   defmodule MyTest do
     use PhoenixTest.Case, async: true
   ```
+
 
   ## Advanced assertions
   ```elixir
