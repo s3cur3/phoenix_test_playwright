@@ -33,9 +33,6 @@ defmodule PhoenixTest.Playwright do
   end
   ```
 
-  As shown above, you can use `m:ExUnit.Case#module-parameterized-tests` parameterized tests
-  to run tests concurrently in different browsers.
-
   ## Configuration
   In `config/test.exs`:
 
@@ -43,19 +40,15 @@ defmodule PhoenixTest.Playwright do
   config :phoenix_test,
     otp_app: :your_app,
     playwright: [
-      cli: "assets/node_modules/playwright/cli.js",
       browser: :chromium,
+      cli: "assets/node_modules/playwright/cli.js",
       headless: System.get_env("PLAYWRIGHT_HEADLESS", "t") in ~w(t true),
-      screenshot_dir: "screenshots",
+      js_logger: false,
       screenshot: System.get_env("PLAYWRIGHT_SCREENSHOT", "false") in ~w(t true),
+      screenshot_dir: "screenshots",
+      timeout: :timer.seconds(2),
       trace: System.get_env("PLAYWRIGHT_TRACE", "false") in ~w(t true),
-      trace_dir: "traces",
-      js_logger:
-        # Default to true if you like seeing log messages for errors during test
-        if System.get_env("PLAYWRIGHT_LOG_JS_MESSSAGES", "false") in ~w(t true) do
-          :default
-        end,
-      timeout: :timer.seconds(2)
+      trace_dir: "traces"
     ]
   ```
 

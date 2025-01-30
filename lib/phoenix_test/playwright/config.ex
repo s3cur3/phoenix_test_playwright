@@ -5,6 +5,8 @@ defmodule PhoenixTest.Playwright.Config do
     browser: :chromium,
     cli: "assets/node_modules/playwright/cli.js",
     headless: true,
+
+    # false, :default, fn msg -> _ end, {Module, :function}
     js_logger: :default,
 
     # true, [full_page: true, omit_background: true]
