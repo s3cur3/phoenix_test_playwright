@@ -58,16 +58,16 @@ defmodule PhoenixTest.Playwright do
 
   See `PhoenixTest.Playwright.Config` for more details.
 
-  You can override most global options in your test via ExUnit tags (`@moduletag/@describetag/@tag`).
-  For example, you might set the global default to `headless: true` and override it for a single test:
+  You can override some options in your test via ExUnit tags (`@moduletag/@describetag/@tag`).
+  For example, you might set the global default to `headless: true` and override it for a single module:
 
   ```elixir
   defmodule DebuggingFeatureTest do
     use PhoenixTest.Case, async: true
 
     # Run test in a browser with a 1 second delay between every interaction
-    @tag headless: false
-    @tag slow_mo: 1_000
+    @moduletag headless: false
+    @moduletag slow_mo: 1_000
   ```
 
 

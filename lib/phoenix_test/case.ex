@@ -41,7 +41,7 @@ defmodule PhoenixTest.Case do
         [conn: Case.Playwright.new_session(context)]
 
       %{playwright: p} when p != false ->
-        raise ArgumentError, "Pass any playwright options as top-level tags, e.g. `@tag browser: :firefox`"
+        raise ArgumentError, "Pass any playwright options as top-level tags, e.g. `@tag :trace`"
 
       _ ->
         [conn: Phoenix.ConnTest.build_conn()]
