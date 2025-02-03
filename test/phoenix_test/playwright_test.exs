@@ -24,41 +24,41 @@ defmodule PhoenixTest.PlaywrightTest do
 
   describe "screenshot/3" do
     test "takes a screenshot of the current page as a PNG", %{conn: conn} do
+      name = "png_#{:erlang.system_time(:second)}.png"
+
       conn
       |> visit("/live/index")
       |> assert_has("h1", text: "LiveView main page")
-      |> screenshot("transparency_test.png", full_page: false, omit_background: true)
+      |> screenshot(name, full_page: false, omit_background: true)
 
-      assert File.exists?("screenshots/transparency_test.png")
+      assert File.exists?("screenshots/#{name}")
     end
 
     test "takes a screenshot of the current page as a JPEG", %{conn: conn} do
+      name = "jpg_#{:erlang.system_time(:second)}.jpg"
+
       conn
       |> visit("/live/index")
       |> assert_has("h1", text: "LiveView main page")
-      |> screenshot("test_screenshot.jpg")
+      |> screenshot(name)
 
-      assert File.exists?("screenshots/test_screenshot.jpg")
+      assert File.exists?("screenshots/#{name}")
     end
 
     test "full page screenshots are larger in file size than non-full-page", %{conn: conn} do
+      full_page_name = "full_page_#{:erlang.system_time(:second)}.png"
+      viewport_name = "viewport_#{:erlang.system_time(:second)}.png"
+
       conn
       |> visit("/live/index")
       |> assert_has("h1", text: "LiveView main page")
-      |> screenshot("full_page.png", full_page: true)
-      |> screenshot("viewport.png", full_page: false)
+      |> screenshot(full_page_name, full_page: true)
+      |> screenshot(viewport_name, full_page: false)
 
-      assert {:ok, %File.Stat{size: full_page_size}} = File.stat("screenshots/full_page.png")
-      assert {:ok, %File.Stat{size: viewport_size}} = File.stat("screenshots/viewport.png")
+      assert {:ok, %File.Stat{size: full_page_size}} = File.stat("screenshots/#{full_page_name}")
+      assert {:ok, %File.Stat{size: viewport_size}} = File.stat("screenshots/#{viewport_name}")
 
       assert full_page_size > viewport_size
-    end
-
-    @tag :screenshot
-    test "saves screenshot on test exit (for verification in CI)", %{conn: conn} do
-      conn
-      |> visit("/live/index")
-      |> assert_has("h1")
     end
   end
 
