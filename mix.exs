@@ -1,7 +1,7 @@
 defmodule PhoenixTestPlaywright.MixProject do
   use Mix.Project
 
-  @version "0.3.0"
+  @version "0.4.0"
   @source_url "https://github.com/ftes/phoenix_test_playwright"
   @description """
   Execute PhoenixTest cases in an actual browser via Playwright.
@@ -49,7 +49,8 @@ defmodule PhoenixTestPlaywright.MixProject do
       {:plug_cowboy, "~> 2.7", only: :test, runtime: false},
       {:phoenix_ecto, "~> 4.5", optional: true},
       {:ecto_sql, "~> 3.10", optional: true},
-      {:styler, "~> 1.3", only: [:dev, :test], runtime: false}
+      {:styler, "~> 1.3", only: [:dev, :test], runtime: false},
+      {:makeup_diff, "~> 0.1.1", only: :dev}
     ]
   end
 

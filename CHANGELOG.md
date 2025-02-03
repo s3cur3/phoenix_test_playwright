@@ -5,12 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [tbd]
+## [0.4.0] 2025-02-03
 ### Added
 - Screenshots: `screenshot/{2,3}` function and `screenshot: true` config for auto-capture
 
 ### Changed
 - Config: flattened list (remove nested `browser` config), override via top-level ExUnit `@tag ...`s (remove nested `@tag playwright: [...]`)
+  ```diff
+     # config/test.exs
+     config :phoenix_test,
+       playwright: [
+  -      browser: [browser: :chromium, headless: false, slow_mo: 0]
+  +      browser: :chromium,
+  +      headless: false,
+  +      slow_mo: 0
+  ```
 
 ## [0.3.0] 2025-01-26
 ### Changed
