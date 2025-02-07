@@ -19,7 +19,7 @@ defmodule PhoenixTest.Case do
   end
 
   setup_all context do
-    config = context |> Map.take(Config.keys()) |> Config.parse()
+    config = context |> Map.take(Config.keys()) |> Config.validate!()
 
     case context do
       %{playwright: true} ->

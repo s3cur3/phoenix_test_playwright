@@ -171,9 +171,6 @@ defmodule PhoenixTest.Playwright.Connection do
       fun when is_function(fun, 1) ->
         fun.(msg)
 
-      {mod, fun} when is_atom(mod) and is_atom(fun) ->
-        apply(mod, fun, [msg])
-
       nil ->
         nil
 

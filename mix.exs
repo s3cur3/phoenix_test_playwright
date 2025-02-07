@@ -50,7 +50,8 @@ defmodule PhoenixTestPlaywright.MixProject do
       {:phoenix_ecto, "~> 4.5", optional: true},
       {:ecto_sql, "~> 3.10", optional: true},
       {:styler, "~> 1.3", only: [:dev, :test], runtime: false},
-      {:makeup_diff, "~> 0.1.1", only: :dev}
+      {:makeup_diff, "~> 0.1.1", only: :dev},
+      {:nimble_options, "~> 1.1"}
     ]
   end
 
