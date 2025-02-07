@@ -18,12 +18,12 @@ config :phoenix_test,
     headless: System.get_env("PW_HEADLESS", "true") in ~w(t true),
     screenshot: System.get_env("PW_SCREENSHOT", "false") in ~w(t true),
     trace: System.get_env("PW_TRACE", "false") in ~w(t true),
-    timeout: :timer.seconds(2)
+    timeout: :timer.seconds(4)
   ]
 
 config :phoenix_test_playwright, PhoenixTest.Endpoint,
   server: true,
-  http: [port: 4000],
+  http: [port: 4002],
   live_view: [signing_salt: "112345678212345678312345678412"],
   secret_key_base: String.duplicate("57689", 50),
   pubsub_server: PhoenixTest.PubSub
