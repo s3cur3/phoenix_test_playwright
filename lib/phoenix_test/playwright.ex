@@ -1,50 +1,87 @@
 defmodule PhoenixTest.Playwright do
   @moduledoc ~S"""
-  Execute PhoenixTest cases in an actual browser via [Playwright](https://playwright.dev/).
+  Run feature tests in an actual browser, using [PhoenixTest](https://hexdocs.pm/phoenix_test) and [Playwright](https://playwright.dev/).
+
+  ```elixir
+  defmodule Features.RegisterTest do
+    use PhoenixTest.Case, async: true,
+      # run in multiple browsers in parallel
+      parameterize: [[browser: :chromium, browser: :firefox]]
+
+    @moduletag :playwright
+    @moduletag headless: false             # show browser window
+    @moduletag slow_mo: :timer.seconds(1)  # add delay between interactions
+
+    @tag trace: :open                      # replay in interactive viewer
+    test "register", %{conn: conn} do
+      conn
+      |> visit(~p"/")
+      |> click_link("Register")
+
+      |> fill_in("Email", with: "f@ftes.de")
+      |> click_button("Create an account")
+
+      |> assert_has(".text-rose-600", text: "required")
+      |> screenshot("error.png", full_page: true)
+    end
+  end
+  ```
 
   Please [get in touch](https://ftes.de) with feedback of any shape and size.
 
   Enjoy! Freddy.
 
 
-  ## Example
-  Refer to the accompanying example repo for a full example:
-  https://github.com/ftes/phoenix_test_playwright_example/commits/main
+  ## Getting started
+  1. Add dependency
+    ```elixir
+    # mix.exs
+    {:phoenix_test_playwright, "~> 0.4", only: :test, runtime: false}
+    ```
 
+  2. Install playwright and browser
+    ```
+    npm --prefix assets i -D playwright
+    npm --prefix assets exec playwright install chromium --with-deps
+    ```
 
-  ## Setup
-  1. Add to `mix.exs` deps: `{:phoenix_test_playwright, "~> 0.1", only: :test, runtime: false}`
-  2. Install Playwright: `npm --prefix assets i -D playwright`
-  3. Install browsers: `npm --prefix assets exec playwright install --with-deps`
-  4. Add to `config/test.exs`: `config :phoenix_test, otp_app: :your_app, playwright: [cli: "assets/node_modules/playwright/cli.js"]` (for more options, see [Configuration](#module-configuration) below)
-  5. Add to `config/test.exs`: `config :your_app, YourAppWeb.Endpoint, server: true`
-  6. Add to `test/test_helpers.exs`: `Application.put_env(:phoenix_test, :base_url, YourAppWeb.Endpoint.url())`
+  3. Config
+    ```elixir
+    # config/test.exs
+    config :phoenix_test, otp_app: :your_app
+    config :your_app, YourAppWeb.Endpoint, server: true
+    ```
 
+  4. Runtime config
+    ```elixir
+    # test/test_helpers.exs
+    Application.put_env(:phoenix_test, :base_url, YourAppWeb.Endpoint.url()
+    ```
 
-  ## Usage
-  ```elixir
-  defmodule MyFeatureTest do
-    use PhoenixTest.Case, async: true
-    @moduletag :playwright
-    @moduletag browser: :firefox
-    @moduletag headless: false
-    @moduletag slow_mo: :timer.seconds(1)
+  5. Use in test
+    ```elixir
+    defmodule MyTest do
+      use PhoenixTest.Case, async: true
+      @moduletag :playwright
 
-    @tag trace: :open
-    test "heading", %{conn: conn} do
-      conn
-      |> visit("/")
-      |> assert_has("h1", text: "Heading")
-      |> screenshot("heading.png")
-    end
-  end
-  ```
+      test "in browser", %{conn: conn} do
+        conn
+        |> visit(~p"/")
+        |> unwrap(&Frame.evaluate(&1.frame_id, "console.log('Hey')"))
+    ```
+
+  > #### Reference project {: .neutral}
+  >
+  > [github.com/ftes/phoenix_test_playwright_example](https://github.com/ftes/phoenix_test_playwright_example)
+  >
+  > The last commit adds a feature test for the `phx gen.auth` registration page
+  > and runs it in CI (Github Actions).
 
 
   ## Configuration
-  In `config/test.exs`:
 
   ```elixir
+  # config/test.ex
   config :phoenix_test,
     otp_app: :your_app,
     playwright: [
@@ -58,8 +95,7 @@ defmodule PhoenixTest.Playwright do
 
   See `PhoenixTest.Playwright.Config` for more details.
 
-  You can override some options in your test via ExUnit tags (`@moduletag/@describetag/@tag`).
-  For example, you might set the global default to `headless: true` and override it for a single module:
+  You can override some options in your test via `@moduletag/@describetag/@tag`:
 
   ```elixir
   defmodule DebuggingFeatureTest do
@@ -71,35 +107,77 @@ defmodule PhoenixTest.Playwright do
   ```
 
 
-  ## Playwright Traces
-  Playwright traces record a full browser history, including all 'user' interaction, browser console, network transfers etc.
+  ## Traces
+  Playwright traces record a full browser history, including 'user' interaction, browser console, network transfers etc.
   Traces can be explored in an interactive viewer for debugging purposes.
 
-  Manually:
-  - Add `@tag trace: :open` to trace a test and open it in the Playwright viewer.
+  ### Manually
+  ```elixir
+  @tag trace: :open
+  test "record a trace and open it automatically in the viewer" do
+  ```
 
-  Automatically for failed tests in CI:
-  - Configuration: `config :phoenix_test, playwright: [trace: System.get_env("PW_TRACE", "false") in ~w(t true)]`
-  - CI script: `mix test || if [[ $? = 2 ]]; then PW_TRACE=true mix test --failed; else false; fi`
+  ### Automatically for failed tests in CI
+  ```elixir
+  # config/test.exs
+  config :phoenix_test, playwright: [trace: System.get_env("PW_TRACE", "false") in ~w(t true)]
+  ```
+
+  ```yaml
+  # .github/workflows/elixir.yml
+  run: "mix test || if [[ $? = 2 ]]; then PW_TRACE=true mix test --failed; else false; fi"
+  ```
 
 
   ## Screenshots
-  Manually:
-  - Call `PhoenixTest.Playwright.screenshot/2` with the filename you want to write to.
-  - By default, the entire page will be captured, not just the current viewport.
+  ### Manually
+  ```elixir
+  |> visit(~p"/")
+  |> screenshot("home.png")    # captures entire page by default, not just viewport
+  ```
 
-  Automatically for failed tests in CI:
-  - Configuration: `config :phoenix_test, playwright: [screenshot: System.get_env("PW_SCREENSHOT", "false") in ~w(t true)]`
-  - CI script: `mix test || if [[ $? = 2 ]]; then PW_SCREENSHOT=true mix test --failed; else false; fi`
+  ### Automatically for failed tests in CI
+  ```elixir
+  # config/test.exs
+  config :phoenix_test, playwright: [screenshot: System.get_env("PW_SCREENSHOT", "false") in ~w(t true)]
+  ```
+
+  ```yaml
+  # .github/workflows/elixir.yml
+  run: "mix test || if [[ $? = 2 ]]; then PW_SCREENSHOT=true mix test --failed; else false; fi"
+  ```
 
 
   ## Common problems
-  - Test failures in CI (timeouts): Try less concurrency, e.g. `mix test --max-cases 1` for GitHub CI shared runners
-  - LiveView not connected: add `assert_has("body .phx-connected")` to test after `visit`ing (or otherwise navigating to) a LiveView
-  - LiveComponent not connected: add `data-connected={connected?(@socket)}` to template and `assert_has("#my-component[data-connected]")` to test
+  ### Test failure in CI (timeout)
+  - Limit concurrency: `mix test --max-cases 1` for GitHub CI shared runners
+  - Increase timemout: `config :phoenix_test, playwright: [timeout: :timer.seconds(2)]`
+
+  ### LiveView not connected
+  ```elixir
+  |> visit(~p"/")
+  |> assert_has("body .phx-connected")
+  # now continue, playwright has waited for LiveView to connect
+  ```
+
+  ### LiveComponent not connected
+  ```html
+  <div id="my-component" data-connected={connected?(@socket)}`>
+  ```
+
+  ```elixir
+  |> visit(~p"/")
+  |> assert_has("#my-component[data-connected]")
+  # now continue, playwright has waited for LiveComponent to connect
+  ```
 
 
   ## Ecto SQL.Sandbox
+  ```elixir
+  defmodule MyTest do
+    use PhoenixTest.Case, async: true
+  ```
+
   `PhoenixTest.Case` automatically takes care of this.
   It passes a user agent referencing your Ecto repos.
   This allows for [concurrent browser tests](https://hexdocs.pm/phoenix_ecto/main.html#concurrent-browser-tests).
@@ -108,14 +186,44 @@ defmodule PhoenixTest.Playwright do
   - [with LiveViews](https://hexdocs.pm/phoenix_ecto/Phoenix.Ecto.SQL.Sandbox.html#module-acceptance-tests-with-liveviews)
   - [with Channels](https://hexdocs.pm/phoenix_ecto/Phoenix.Ecto.SQL.Sandbox.html#module-acceptance-tests-with-channels)
 
-  ```elixir
-  defmodule MyTest do
-    use PhoenixTest.Case, async: true
-  ```
 
+  ## Missing Playwright features
+  This driver doesn't wrap the entire Playwright API.
+  However, you should be able to wrap any missing functionality yourself
+  using `PhoenixTest.unwrap/2`, [`Frame`](`PhoenixTest.Playwright.Frame`), [`Selector`](`PhoenixTest.Playwright.Selector`),
+  and the [Playwright code](https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/client/frame.ts).
 
-  ## Advanced assertions
+  If you think others might benefit, please [open a PR](https://github.com/ftes/phoenix_test_playwright/pulls).
+
+  Here is some inspiration:
+
   ```elixir
+  def assert_a11y(session) do
+    A11yAudit.Assertions.assert_no_violations(fn ->
+      Frame.evaluate(session.frame_id, A11yAudit.JS.axe_core())
+
+      session.frame_id
+      |> Frame.evaluate("axe.run().then(res => JSON.stringify(res))")
+      |> JSON.decode!()
+      |> A11yAudit.Results.from_json()
+    end)
+
+    session
+  end
+
+  def assert_download(session, name, contains: content) do
+    assert_receive({:playwright, %{method: :download} = download_msg}, 2000)
+    artifact_guid = download_msg.params.artifact.guid
+    assert_receive({:playwright, %{method: :__create__, params: %{guid: ^artifact_guid}} = artifact_msg}, 2000)
+    download_path = artifact_msg.params.initializer.absolutePath
+    wait_for_file(download_path)
+
+    assert download_msg.params.suggestedFilename =~ name
+    assert File.read!(download_path) =~ content
+
+    session
+  end
+
   def assert_has_value(session, label, value, opts \\ []) do
     opts = Keyword.validate!(opts, exact: true)
 
@@ -176,19 +284,6 @@ defmodule PhoenixTest.Playwright do
       {:ok, found} = Frame.expect(frame_id, params)
       if is_not, do: refute(found), else: assert(found)
     end)
-  end
-
-  def assert_download(session, name, contains: content) do
-    assert_receive({:playwright, %{method: :download} = download_msg}, 2000)
-    artifact_guid = download_msg.params.artifact.guid
-    assert_receive({:playwright, %{method: :__create__, params: %{guid: ^artifact_guid}} = artifact_msg}, 2000)
-    download_path = artifact_msg.params.initializer.absolutePath
-    wait_for_file(download_path)
-
-    assert download_msg.params.suggestedFilename =~ name
-    assert File.read!(download_path) =~ content
-
-    session
   end
 
   defp wait_for_file(path, remaining_ms \\ 2000, wait_for_ms \\ 100)
