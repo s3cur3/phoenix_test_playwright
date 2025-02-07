@@ -51,8 +51,8 @@ schema = [
   ],
   trace: [
     default: false,
-    type: {:or, [:boolean, non_empty_keyword_list: trace_opts_schema]},
-    type_doc: "`boolean() | Keyword.t()`",
+    type: {:or, [:boolean, {:in, [:open]}, non_empty_keyword_list: trace_opts_schema]},
+    type_doc: "`boolean() | :open | Keyword.t()`",
     doc: "Override via `@tag`.\n\n" <> NimbleOptions.docs(trace_opts_schema, nest_level: 1)
   ],
   trace_dir: [
@@ -74,14 +74,32 @@ defmodule PhoenixTest.Playwright.Config do
 
   @schema schema
   @compiled_schema compiled_schema
+  @screenshot_opts_schema screenshot_opts_schema
+  @trace_opts_schema trace_opts_schema
 
   def validate!(config) when is_map(config), do: config |> Keyword.new() |> validate!()
 
-  def validate!(config) when is_list(config),
-    do: global() |> Keyword.merge(config) |> NimbleOptions.validate!(@compiled_schema)
+  def validate!(config) when is_list(config) do
+    global()
+    |> Keyword.merge(config)
+    |> NimbleOptions.validate!(@compiled_schema)
+    |> normalize()
+  end
 
-  def global, do: :phoenix_test |> Application.get_env(:playwright, []) |> NimbleOptions.validate!(@compiled_schema)
+  def global do
+    :phoenix_test
+    |> Application.get_env(:playwright, [])
+    |> NimbleOptions.validate!(@compiled_schema)
+    |> normalize()
+  end
+
   def global(key), do: Keyword.fetch!(global(), key)
 
   def keys, do: Keyword.keys(@schema)
+
+  defp normalize(config), do: Keyword.new(config, fn {key, value} -> {key, normalize(key, value)} end)
+  defp normalize(:screenshot, true), do: NimbleOptions.validate!([], @screenshot_opts_schema)
+  defp normalize(:trace, :open), do: NimbleOptions.validate([open: true], @trace_opts_schema)
+  defp normalize(:trace, true), do: NimbleOptions.validate!([], @trace_opts_schema)
+  defp normalize(_key, value), do: value
 end

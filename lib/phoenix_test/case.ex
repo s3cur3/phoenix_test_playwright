@@ -36,15 +36,18 @@ defmodule PhoenixTest.Case do
   end
 
   setup context do
+    config = context |> Map.take(Config.keys()) |> Config.validate!()
+    context = Enum.into(config, context)
+
     case context do
       %{playwright: true} ->
-        [conn: Case.Playwright.new_session(context)]
+        Map.put(context, :conn, Case.Playwright.new_session(context))
 
       %{playwright: p} when p != false ->
         raise ArgumentError, "Pass any playwright options as top-level tags, e.g. `@tag :trace`"
 
       _ ->
-        [conn: Phoenix.ConnTest.build_conn()]
+        Map.put(context, :conn, Phoenix.ConnTest.build_conn())
     end
   end
 
@@ -86,13 +89,6 @@ defmodule PhoenixTest.Case do
     end
 
     defp trace(browser_context_id, %{trace: opts, trace_dir: dir} = context) do
-      opts =
-        case opts do
-          true -> []
-          :open -> [open: true]
-          list when is_list(list) -> opts
-        end
-
       BrowserContext.start_tracing(browser_context_id)
 
       File.mkdir_p!(dir)
@@ -110,12 +106,6 @@ defmodule PhoenixTest.Case do
     end
 
     defp screenshot(page_id, %{screenshot: opts} = context) do
-      opts =
-        case opts do
-          true -> []
-          list when is_list(list) -> opts
-        end
-
       on_exit(fn ->
         file = file_name(".png", context)
         PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file, opts)
