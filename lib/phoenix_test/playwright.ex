@@ -151,7 +151,8 @@ defmodule PhoenixTest.Playwright do
   ## Common problems
   ### Test failure in CI (timeout)
   - Limit concurrency: `mix test --max-cases 1` for GitHub CI shared runners
-  - Increase timemout: `config :phoenix_test, playwright: [timeout: :timer.seconds(2)]`
+  - Increase timemout: `config :phoenix_test, playwright: [timeout: :timer.seconds(4)]`
+  - More compute power: e.g. `x64 8-core` [GitHub runner](https://docs.github.com/en/enterprise-cloud@latest/actions/using-github-hosted-runners/using-larger-runners/about-larger-runners#machine-sizes-for-larger-runners)
 
   ### LiveView not connected
   ```elixir
