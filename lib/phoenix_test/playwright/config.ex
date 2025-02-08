@@ -9,59 +9,58 @@ trace_opts_schema = [
 
 browsers = ~w(android chromium electron firefox webkit)a
 
-schema = [
-  browser: [
-    default: :chromium,
-    type: {:in, browsers},
-    type_doc: "`#{Enum.map_join(browsers, " | ", &":#{&1}")}`",
-    doc: "Override via `Case` opts or `parameterize`."
-  ],
-  cli: [
-    default: "assets/node_modules/playwright/cli.js",
-    type: :string
-  ],
-  headless: [
-    default: true,
-    doc: "Override via `Case` opts.",
-    type: :boolean
-  ],
-  js_logger: [
-    default: :default,
-    type: {:or, [{:in, [:default, false]}, {:fun, 1}]},
-    type_doc: "`:default | false | (msg -> nil)`"
-  ],
-  screenshot: [
-    default: false,
-    type: {:or, [:boolean, non_empty_keyword_list: screenshot_opts_schema]},
-    type_doc: "`boolean() | Keyword.t()`",
-    doc: "Override via `@tag`.\n\n" <> NimbleOptions.docs(screenshot_opts_schema, nest_level: 1)
-  ],
-  screenshot_dir: [
-    default: "screenshots",
-    type: :string
-  ],
-  timeout: [
-    default: :timer.seconds(2),
-    type: :non_neg_integer
-  ],
-  slow_mo: [
-    default: :timer.seconds(0),
-    type: :non_neg_integer,
-    doc: "Override via `Case` opts."
-  ],
-  trace: [
-    default: false,
-    type: {:or, [:boolean, {:in, [:open]}, non_empty_keyword_list: trace_opts_schema]},
-    type_doc: "`boolean() | :open | Keyword.t()`",
-    doc: "Override via `@tag`.\n\n" <> NimbleOptions.docs(trace_opts_schema, nest_level: 1)
-  ],
-  trace_dir: [
-    default: "traces",
-    type: :string
-  ]
-]
-
-compiled_schema = NimbleOptions.new!(schema)
+schema =
+  NimbleOptions.new!(
+    browser: [
+      default: :chromium,
+      type: {:in, browsers},
+      type_doc: "`#{Enum.map_join(browsers, " | ", &":#{&1}")}`",
+      doc: "Override via `Case` opts or `parameterize`."
+    ],
+    cli: [
+      default: "assets/node_modules/playwright/cli.js",
+      type: :string
+    ],
+    headless: [
+      default: true,
+      doc: "Override via `Case` opts.",
+      type: :boolean
+    ],
+    js_logger: [
+      default: :default,
+      type: {:or, [{:in, [:default, false]}, {:fun, 1}]},
+      type_doc: "`:default | false | (msg -> nil)`"
+    ],
+    screenshot: [
+      default: false,
+      type: {:or, [:boolean, non_empty_keyword_list: screenshot_opts_schema]},
+      type_doc: "`boolean() | Keyword.t()`",
+      doc: "Override via `@tag`.\n\n" <> NimbleOptions.docs(screenshot_opts_schema, nest_level: 1)
+    ],
+    screenshot_dir: [
+      default: "screenshots",
+      type: :string
+    ],
+    timeout: [
+      default: :timer.seconds(2),
+      type: :non_neg_integer
+    ],
+    slow_mo: [
+      default: :timer.seconds(0),
+      type: :non_neg_integer,
+      doc: "Override via `Case` opts."
+    ],
+    trace: [
+      default: false,
+      type: {:or, [:boolean, {:in, [:open]}, non_empty_keyword_list: trace_opts_schema]},
+      type_doc: "`boolean() | :open | Keyword.t()`",
+      doc: "Override via `@tag`.\n\n" <> NimbleOptions.docs(trace_opts_schema, nest_level: 1)
+    ],
+    trace_dir: [
+      default: "traces",
+      type: :string
+    ]
+  )
 
 defmodule PhoenixTest.Playwright.Config do
   @moduledoc """
@@ -69,11 +68,10 @@ defmodule PhoenixTest.Playwright.Config do
   Most configuration is global (`config/test.exs`).
   Some configuration can be overridden via ExUnit tags.
 
-  #{NimbleOptions.docs(compiled_schema)}
+  #{NimbleOptions.docs(schema)}
   """
 
   @schema schema
-  @compiled_schema compiled_schema
   @screenshot_opts_schema screenshot_opts_schema
   @trace_opts_schema trace_opts_schema
 
@@ -82,20 +80,18 @@ defmodule PhoenixTest.Playwright.Config do
   def validate!(config) when is_list(config) do
     global()
     |> Keyword.merge(config)
-    |> NimbleOptions.validate!(@compiled_schema)
+    |> NimbleOptions.validate!(@schema)
     |> normalize()
   end
 
   def global do
     :phoenix_test
     |> Application.get_env(:playwright, [])
-    |> NimbleOptions.validate!(@compiled_schema)
+    |> NimbleOptions.validate!(@schema)
     |> normalize()
   end
 
   def global(key), do: Keyword.fetch!(global(), key)
-
-  def keys, do: Keyword.keys(@schema)
 
   defp normalize(config), do: Keyword.new(config, fn {key, value} -> {key, normalize(key, value)} end)
   defp normalize(:screenshot, true), do: NimbleOptions.validate!([], @screenshot_opts_schema)

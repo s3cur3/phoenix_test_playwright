@@ -1,7 +1,16 @@
+setup_all_config_keys = ~w(browser headless slow_mo)a
+setup_config_keys = ~w(screenshot trace)a
+
 defmodule PhoenixTest.Playwright.Case do
   @moduledoc """
   ExUnit case module to assist with browser based tests.
   See `PhoenixTest.Playwright` for more information.
+
+  These config values can be overridden via the `use` opts:
+  #{Enum.map_join(setup_all_config_keys, "\n", &"- `#{&1}`")}
+
+  These config values can be overridden via `@tag`:
+  #{Enum.map_join(setup_config_keys, "\n", &"- `#{&1}`")}
   """
 
   use ExUnit.CaseTemplate
@@ -9,6 +18,9 @@ defmodule PhoenixTest.Playwright.Case do
   alias PhoenixTest.Playwright
   alias PhoenixTest.Playwright.Case
   alias PhoenixTest.Playwright.Config
+
+  @setup_all_config_keys setup_all_config_keys
+  @setup_config_keys setup_config_keys
 
   using opts do
     quote do
@@ -21,16 +33,24 @@ defmodule PhoenixTest.Playwright.Case do
   end
 
   setup_all context do
-    config = context |> Map.take(Config.keys()) |> Config.validate!()
-    context = Enum.into(config, context)
-    browser_opts = Keyword.take(config, ~w(browser headless slow_mo)a)
-    browser_id = Case.Playwright.launch_browser(browser_opts)
-    Map.put(context, :browser_id, browser_id)
+    browser_id =
+      context
+      |> Map.take(@setup_all_config_keys)
+      |> Config.validate!()
+      |> Keyword.take(@setup_all_config_keys)
+      |> Case.Playwright.launch_browser()
+
+    [browser_id: browser_id]
   end
 
   setup context do
-    context = context |> Map.take(Config.keys()) |> Config.validate!() |> Enum.into(context)
-    Map.put(context, :conn, Case.Playwright.new_session(context))
+    session =
+      context
+      |> Map.take(@setup_config_keys)
+      |> Config.validate!()
+      |> Case.Playwright.new_session(context)
+
+    [conn: session]
   end
 
   defmodule Playwright do
@@ -53,8 +73,8 @@ defmodule PhoenixTest.Playwright.Case do
       browser_id
     end
 
-    def new_session(context) do
-      browser_context_opts = if ua = checkout_ecto_repos(context[:async]), do: %{user_agent: ua}, else: %{}
+    def new_session(config, context) do
+      browser_context_opts = if ua = checkout_ecto_repos(context.async), do: %{user_agent: ua}, else: %{}
       browser_context_id = Browser.new_context(context.browser_id, browser_context_opts)
       subscribe(browser_context_id)
 
@@ -64,34 +84,32 @@ defmodule PhoenixTest.Playwright.Case do
       frame_id = initializer(page_id).main_frame.guid
       on_exit(fn -> post(guid: browser_context_id, method: :close) end)
 
-      if context.trace, do: trace(browser_context_id, context)
-      if context.screenshot, do: screenshot(page_id, context)
+      if config[:trace], do: trace(browser_context_id, config, context)
+      if config[:screenshot], do: screenshot(page_id, config, context)
 
       PhoenixTest.Playwright.build(browser_context_id, page_id, frame_id)
     end
 
-    defp trace(browser_context_id, %{trace: opts, trace_dir: dir} = context) do
+    defp trace(browser_context_id, config, context) do
       BrowserContext.start_tracing(browser_context_id)
 
-      File.mkdir_p!(dir)
+      File.mkdir_p!(config[:trace_dir])
       file = file_name("_#{System.unique_integer([:positive, :monotonic])}.zip", context)
-      path = Path.join(dir, file)
+      path = Path.join(config[:trace_dir], file)
 
       on_exit(fn ->
         BrowserContext.stop_tracing(browser_context_id, path)
 
-        if opts[:open] do
+        if config[:trace][:open] do
           cli_path = Path.join(File.cwd!(), Port.cli_path())
           System.cmd(cli_path, ["show-trace", path])
         end
       end)
     end
 
-    defp screenshot(page_id, %{screenshot: opts} = context) do
-      on_exit(fn ->
-        file = file_name(".png", context)
-        PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file, opts)
-      end)
+    defp screenshot(page_id, config, context) do
+      file = file_name(".png", context)
+      on_exit(fn -> PhoenixTest.Playwright.screenshot(%{page_id: page_id}, file, config[:screenshot]) end)
     end
 
     defp file_name(suffix, %{module: module, test: test}) do
