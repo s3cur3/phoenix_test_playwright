@@ -71,7 +71,8 @@ defmodule PhoenixTestPlaywright.MixProject do
       main: "PhoenixTest.Playwright",
       extras: [
         "CHANGELOG.md": [title: "Changelog"]
-      ]
+      ],
+      nest_modules_by_prefix: [PhoenixTest.Playwright]
     ]
   end
 

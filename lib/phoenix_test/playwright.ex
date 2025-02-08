@@ -11,7 +11,7 @@ defmodule PhoenixTest.Playwright do
         %{browser: :firefox}
       ],
       headless: false,                     # show browser window
-      slow_mo: :timeer.seconds(1)          # add delay between interactions
+      slow_mo: :timer.seconds(1)          # add delay between interactions
 
     @tag trace: :open                      # replay in interactive viewer
     test "register", %{conn: conn} do
@@ -64,6 +64,8 @@ defmodule PhoenixTest.Playwright do
     defmodule MyTest do
       use PhoenixTest.Playwright.Case, async: true
 
+      # `conn` isn't a `Plug.Conn` but a Playwright session.
+      # We use the name `conn` anyway so you can easily switch `PhoenixTest` drivers.
       test "in browser", %{conn: conn} do
         conn
         |> visit(~p"/")
@@ -189,8 +191,10 @@ defmodule PhoenixTest.Playwright do
 
 
   ## Missing Playwright features
-  This driver doesn't wrap the entire Playwright API.
-  However, you should be able to wrap any missing functionality yourself
+  This module includes functions that are not part of the PhoenixTest protocol, e.g. `screenshot/3` and `click_link/4`.
+
+  But it does not wrap the entire Playwright API, which is quite large.
+  You should be able to add any missing functionality yourself
   using `PhoenixTest.unwrap/2`, [`Frame`](`PhoenixTest.Playwright.Frame`), [`Selector`](`PhoenixTest.Playwright.Selector`),
   and the [Playwright code](https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/client/frame.ts).
 
@@ -314,12 +318,22 @@ defmodule PhoenixTest.Playwright do
 
   defstruct [:context_id, :page_id, :frame_id, :last_input_selector, within: :none]
 
+  @opaque t :: %__MODULE__{}
+  @type css_selector :: String.t()
+  @type playwright_selector :: String.t()
+  @type selector :: playwright_selector() | css_selector()
+
+  @exact_opt_schema [type: :boolean, default: false, doc: "Exact or substring text match."]
+  @exact_opts_schema [exact: @exact_opt_schema]
+
   @endpoint Application.compile_env(:phoenix_test, :endpoint)
 
+  @doc false
   def build(context_id, page_id, frame_id) do
     %__MODULE__{context_id: context_id, page_id: page_id, frame_id: frame_id}
   end
 
+  @doc false
   def retry(fun, backoff_ms \\ [100, 250, 500, timeout()])
   def retry(fun, []), do: fun.()
 
@@ -331,6 +345,7 @@ defmodule PhoenixTest.Playwright do
       retry(fun, backoff_ms)
   end
 
+  @doc false
   def visit(session, path) do
     url =
       case path do
@@ -343,31 +358,35 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @screenshot_opts_schema [
+    full_page: [
+      type: :boolean,
+      default: true
+    ],
+    omit_background: [
+      type: :boolean,
+      default: false,
+      doc: "Only applicable to .png images."
+    ]
+  ]
+
   @doc """
   Takes a screenshot of the current page and saves it to the given file path.
 
-  The screenshot type will be inferred from the file extension on the path you provide.
-  If the path is relative (e.g., "my_screenshot.png" or "my_test/my_screenshot.jpg"), it will
-  be saved in the directory specified by the `:screenshot_dir` config option, which defaults
-  to `"screenshots"`.
+  The file type will be inferred from the file extension on the path you provide.
+  The file is saved in `:screenshot_dir`, see `PhoenixTest.Playwright.Config`.
 
   ## Options
-
-  - `:full_page` (boolean): Whether to take a full page screenshot. If false,
-    only the current viewport will be captured. Defaults to true.
-  - `:omit_background` (boolean): Whether to omit the background, allowing screenshots
-    to be captured with transparency. Only applicable to PNG images. Defaults to false.
+  #{NimbleOptions.docs(@screenshot_opts_schema)}
 
   ## Examples
-
-      # By default, writes to screenshots/my-screenshot.png within your project root
-      > PhoenixTest.Playwright.screenshot(session, "my-screenshot.png")
-
-      # Writes to screenshots/my-test/my-screenshot.jpg by default
-      > PhoenixTest.Playwright.screenshot(session, "my-test/my-screenshot.jpg")
+      conn
+      |> screenshot("my-screenshot.png")
+      |> screenshot("my-test/my-screenshot.jpg")
   """
+  @spec screenshot(t(), String.t(), [unquote(NimbleOptions.option_typespec(@screenshot_opts_schema))]) :: t()
   def screenshot(session, file_path, opts \\ []) do
-    opts = Keyword.validate!(opts, full_page: true, omit_background: false)
+    opts = NimbleOptions.validate!(opts, @screenshot_opts_schema)
 
     dir = Config.global(:screenshot_dir)
     File.mkdir_p!(dir)
@@ -379,12 +398,15 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @doc false
   def assert_has(session, "title") do
     retry(fn -> assert render_page_title(session) != nil end)
   end
 
+  @doc false
   def assert_has(session, selector), do: assert_has(session, selector, [])
 
+  @doc false
   def assert_has(session, "title", opts) do
     text = Keyword.fetch!(opts, :text)
     exact = Keyword.get(opts, :exact, false)
@@ -398,6 +420,7 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @doc false
   def assert_has(session, selector, opts) do
     if !found?(session, selector, opts) do
       flunk("Could not find element #{selector} #{inspect(opts)}")
@@ -406,12 +429,15 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @doc false
   def refute_has(session, "title") do
     retry(fn -> assert render_page_title(session) == nil end)
   end
 
+  @doc false
   def refute_has(session, selector), do: refute_has(session, selector, [])
 
+  @doc false
   def refute_has(session, "title", opts) do
     text = Keyword.fetch!(opts, :text)
     exact = Keyword.get(opts, :exact, false)
@@ -425,6 +451,7 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @doc false
   def refute_has(session, selector, opts) do
     if found?(session, selector, opts) do
       flunk("Found element #{selector} #{inspect(opts)}")
@@ -469,6 +496,7 @@ defmodule PhoenixTest.Playwright do
     end
   end
 
+  @doc false
   def render_page_title(session) do
     case Frame.title(session.frame_id) do
       {:ok, ""} -> nil
@@ -476,12 +504,17 @@ defmodule PhoenixTest.Playwright do
     end
   end
 
+  @doc false
   def render_html(session) do
     selector = session |> maybe_within() |> Selector.build()
     {:ok, html} = Frame.inner_html(session.frame_id, selector)
     html
   end
 
+  @doc """
+  See `click/4`.
+  """
+  @spec click(t(), selector()) :: t()
   def click(session, selector) do
     session.frame_id
     |> Frame.click(selector)
@@ -490,8 +523,16 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @doc """
+  Click an element that is not a link or button.
+  Otherwise, use `click_link/4` and `click_button/4`.
+
+  ## Options
+  #{NimbleOptions.docs(@exact_opts_schema)}
+  """
+  @spec click(t(), selector(), String.t(), [unquote(NimbleOptions.option_typespec(@exact_opts_schema))]) :: t()
   def click(session, selector, text, opts \\ []) do
-    opts = Keyword.validate!(opts, exact: false)
+    opts = NimbleOptions.validate!(opts, @exact_opts_schema)
 
     selector =
       session
@@ -506,8 +547,14 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @doc """
+  Like `PhoenixTest.click_link/3`, but allows exact text match.
+
+  ## Options
+  #{NimbleOptions.docs(@exact_opts_schema)}
+  """
   def click_link(session, selector \\ nil, text, opts \\ []) do
-    opts = Keyword.validate!(opts, exact: false)
+    opts = NimbleOptions.validate!(opts, @exact_opts_schema)
 
     selector =
       session
@@ -527,8 +574,14 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @doc """
+  Like `PhoenixTest.click_button/3`, but allows exact text match.
+
+  ## Options
+  #{NimbleOptions.docs(@exact_opts_schema)}
+  """
   def click_button(session, selector \\ nil, text, opts \\ []) do
-    opts = Keyword.validate!(opts, exact: false)
+    opts = NimbleOptions.validate!(opts, @exact_opts_schema)
 
     selector =
       session
@@ -548,6 +601,7 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @doc false
   def within(session, selector, fun) do
     session
     |> Map.put(:within, selector)
@@ -555,12 +609,14 @@ defmodule PhoenixTest.Playwright do
     |> Map.put(:within, :none)
   end
 
+  @doc false
   def fill_in(session, css_selector \\ nil, label, opts) do
     {value, opts} = Keyword.pop!(opts, :with)
     fun = &Frame.fill(session.frame_id, &1, to_string(value), &2)
     input(session, css_selector, label, opts, fun)
   end
 
+  @doc false
   def select(session, css_selector \\ nil, option_labels, opts) do
     if opts[:exact_option] != true, do: raise("exact_option not implemented")
 
@@ -570,27 +626,32 @@ defmodule PhoenixTest.Playwright do
     input(session, css_selector, label, opts, fun)
   end
 
+  @doc false
   def check(session, css_selector \\ nil, label, opts) do
     fun = &Frame.check(session.frame_id, &1, &2)
     input(session, css_selector, label, opts, fun)
   end
 
+  @doc false
   def uncheck(session, css_selector \\ nil, label, opts) do
     fun = &Frame.uncheck(session.frame_id, &1, &2)
     input(session, css_selector, label, opts, fun)
   end
 
+  @doc false
   def choose(session, css_selector \\ nil, label, opts) do
     fun = &Frame.check(session.frame_id, &1, &2)
     input(session, css_selector, label, opts, fun)
   end
 
+  @doc false
   def upload(session, css_selector \\ nil, label, paths, opts) do
     paths = paths |> List.wrap() |> Enum.map(&Path.expand/1)
     fun = &Frame.set_input_files(session.frame_id, &1, paths, &2)
     input(session, css_selector, label, opts, fun)
   end
 
+  @doc false
   defp input(session, css_selector, label, opts, fun) do
     selector =
       session
@@ -657,11 +718,13 @@ defmodule PhoenixTest.Playwright do
     end
   end
 
+  @doc false
   def submit(session) do
     Frame.press(session.frame_id, session.last_input_selector, "Enter")
     session
   end
 
+  @doc false
   def open_browser(session, open_fun \\ &OpenBrowser.open_with_system_cmd/1) do
     # Await any pending navigation
     Process.sleep(100)
@@ -680,11 +743,25 @@ defmodule PhoenixTest.Playwright do
     session
   end
 
+  @doc """
+  See `PhoenixTest.unwrap/2`.
+
+  Invokes `fun` with various Playwright IDs.
+  These can be used to interact with the Playwright
+  [`BrowserContext`](`PhoenixTest.Playwright.BrowserContext`),
+  [`Page`](`PhoenixTest.Playwright.Page`) and
+  [`Frame`](`PhoenixTest.Playwright.Frame`).
+
+  ## Examples
+      |> unwrap(&Frame.evaluate(&1.frame_id, "console.log('Hey')"))
+  """
+  @spec unwrap(t(), (%{context_id: any(), page_id: any(), frame_id: any()} -> any())) :: t()
   def unwrap(session, fun) do
     fun.(Map.take(session, ~w(context_id page_id frame_id)a))
     session
   end
 
+  @doc false
   def current_path(session) do
     resp =
       session.frame_id
@@ -703,6 +780,8 @@ defmodule PhoenixTest.Playwright do
 end
 
 defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
+  import PhoenixTest.Playwright, only: [retry: 1]
+
   alias PhoenixTest.Assertions
   alias PhoenixTest.Playwright
 
@@ -737,11 +816,8 @@ defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
   defdelegate refute_has(session, selector), to: Playwright
   defdelegate refute_has(session, selector, opts), to: Playwright
 
-  def assert_path(session, path), do: Playwright.retry(fn -> Assertions.assert_path(session, path) end)
-
-  def assert_path(session, path, opts), do: Playwright.retry(fn -> Assertions.assert_path(session, path, opts) end)
-
-  def refute_path(session, path), do: Playwright.retry(fn -> Assertions.refute_path(session, path) end)
-
-  def refute_path(session, path, opts), do: Playwright.retry(fn -> Assertions.refute_path(session, path, opts) end)
+  def assert_path(session, path), do: retry(fn -> Assertions.assert_path(session, path) end)
+  def assert_path(session, path, opts), do: retry(fn -> Assertions.assert_path(session, path, opts) end)
+  def refute_path(session, path), do: retry(fn -> Assertions.refute_path(session, path) end)
+  def refute_path(session, path, opts), do: retry(fn -> Assertions.refute_path(session, path, opts) end)
 end

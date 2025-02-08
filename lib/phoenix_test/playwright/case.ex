@@ -18,7 +18,10 @@ defmodule PhoenixTest.Playwright.Case do
   using opts do
     quote do
       import PhoenixTest
-      import PhoenixTest.Playwright, only: [screenshot: 2, screenshot: 3]
+
+      import PhoenixTest.Playwright,
+        only: [click: 3, click: 4, click_button: 4, click_link: 4, screenshot: 2, screenshot: 3]
+
       import PhoenixTest.Playwright.Case
 
       @moduletag Keyword.delete(unquote(opts), :async)
