@@ -380,7 +380,6 @@ defmodule PhoenixTest.Playwright do
   #{NimbleOptions.docs(@screenshot_opts_schema)}
 
   ## Examples
-      conn
       |> screenshot("my-screenshot.png")
       |> screenshot("my-test/my-screenshot.jpg")
   """
