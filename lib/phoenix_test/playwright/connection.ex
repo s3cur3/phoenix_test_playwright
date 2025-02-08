@@ -1,10 +1,18 @@
 defmodule PhoenixTest.Playwright.Connection do
   @moduledoc """
   Stateful, `GenServer` based connection to a Playwright node.js server.
-  The connection is established via `Playwright.Port`.
+  The connection is established via `PhoenixTest.Playwright.Port`.
+
+  The state is ever-growing and  never pruned.
+  Since we're dealing with (short-lived) tets, that is considered good enough for now.
+
+  The state includes
+  - a tree of Playwright artifact guids,
+  - all received messages,
+  - sent message for which we're expecting a response.
 
   You won't usually have to use this module directly.
-  `PhoenixTest.Playwright.Case` uses this under the hood.
+  `PhoenixTest.Playwright` uses this under the hood.
   """
   use GenServer
 
@@ -73,9 +81,7 @@ defmodule PhoenixTest.Playwright.Connection do
   end
 
   @doc """
-  Get all past received messages for a playwright `guid` (e.g. a `Frame`).
-  The internal map used to track these messages is never cleaned, it will keep on growing.
-  Since we're dealing with (short-lived) tests, that should be fine.
+  Get all past received messages for a playwright `guid` (e.g. a `PhoenixTest.Playwright.Frame`).
   """
   def received(guid) do
     GenServer.call(@name, {:received, guid})
