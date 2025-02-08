@@ -5,10 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.0] 2025-02-03
+## tbd
 ### Added
-- Screenshots: `screenshot/{2,3}` function and `screenshot: true` config for auto-capture
-- Pass browser config via `Case` opts, e.g. `use PhoenixTest.Playwright.Case, headless: false`
+- Config: Document and validate global and per-test configuration
+- Config: Override via `Case` opts, e.g. `use PhoenixTest.Playwright.Case, headless: false`
 
 ### Changed
 - Renamed: `PheonixTest.Case` to `PhoenixTest.Playwright.Case`
@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   +    use PhoenixTest.Playwright.Case, async: true
   -    @moduletag :playwright
   ```
+
+## [0.4.0] 2025-02-03
+### Added
+- Screenshots: `screenshot/{2,3}` function and `screenshot: true` config for auto-capture
 
 ### Changed
 - Config: flattened list (remove nested `browser` config), override via top-level ExUnit `@tag ...`s (remove nested `@tag playwright: [...]`)

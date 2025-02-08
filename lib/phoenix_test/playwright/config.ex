@@ -3,10 +3,6 @@ screenshot_opts_schema = [
   omit_background: [type: :boolean, default: false]
 ]
 
-trace_opts_schema = [
-  open: [type: :boolean, default: false]
-]
-
 browsers = ~w(android chromium electron firefox webkit)a
 
 schema =
@@ -14,8 +10,7 @@ schema =
     browser: [
       default: :chromium,
       type: {:in, browsers},
-      type_doc: "`#{Enum.map_join(browsers, " | ", &":#{&1}")}`",
-      doc: "Override via `Case` opts or `parameterize`."
+      type_doc: "`#{Enum.map_join(browsers, " | ", &":#{&1}")}`"
     ],
     cli: [
       default: "assets/node_modules/playwright/cli.js",
@@ -23,7 +18,6 @@ schema =
     ],
     headless: [
       default: true,
-      doc: "Override via `Case` opts.",
       type: :boolean
     ],
     js_logger: [
@@ -34,8 +28,8 @@ schema =
     screenshot: [
       default: false,
       type: {:or, [:boolean, non_empty_keyword_list: screenshot_opts_schema]},
-      type_doc: "`boolean() | Keyword.t()`",
-      doc: "Override via `@tag`.\n\n" <> NimbleOptions.docs(screenshot_opts_schema, nest_level: 1)
+      type_doc: "`boolean/0 | Keyword.t/0`",
+      doc: "Either a boolean or a keyword list:\n\n" <> NimbleOptions.docs(screenshot_opts_schema, nest_level: 1)
     ],
     screenshot_dir: [
       default: "screenshots",
@@ -47,14 +41,12 @@ schema =
     ],
     slow_mo: [
       default: :timer.seconds(0),
-      type: :non_neg_integer,
-      doc: "Override via `Case` opts."
+      type: :non_neg_integer
     ],
     trace: [
       default: false,
-      type: {:or, [:boolean, {:in, [:open]}, non_empty_keyword_list: trace_opts_schema]},
-      type_doc: "`boolean() | :open | Keyword.t()`",
-      doc: "Override via `@tag`.\n\n" <> NimbleOptions.docs(trace_opts_schema, nest_level: 1)
+      type: {:in, [false, true, :open]},
+      type_doc: "`boolean/0 | :open`"
     ],
     trace_dir: [
       default: "traces",
@@ -62,18 +54,30 @@ schema =
     ]
   )
 
+setup_all_keys = ~w(browser headless slow_mo)a
+setup_keys = ~w(screenshot trace)a
+
 defmodule PhoenixTest.Playwright.Config do
   @moduledoc """
   Configuration options for the Playwright driver.
-  Most configuration is global (`config/test.exs`).
-  Some configuration can be overridden via ExUnit tags.
 
+  Most should be set globally in `config/tests.exs`.
+  Some can be overridden per test.
+
+  All options:
   #{NimbleOptions.docs(schema)}
+
+  Options that be overridden per test module via the `use PhoenixTest.Playwright.Case` opts:
+  #{Enum.map_join(setup_all_keys, "\n", &"- `:#{&1}`")}
+
+  Options that be overridden per test via ExUnit `@tag`:
+  #{Enum.map_join(setup_keys, "\n", &"- `:#{&1}`")}
   """
 
   @schema schema
   @screenshot_opts_schema screenshot_opts_schema
-  @trace_opts_schema trace_opts_schema
+  @setup_all_keys setup_all_keys
+  @setup_keys setup_keys
 
   def validate!(config) when is_map(config), do: config |> Keyword.new() |> validate!()
 
@@ -93,9 +97,10 @@ defmodule PhoenixTest.Playwright.Config do
 
   def global(key), do: Keyword.fetch!(global(), key)
 
+  def setup_all_keys, do: @setup_all_keys
+  def setup_keys, do: @setup_keys
+
   defp normalize(config), do: Keyword.new(config, fn {key, value} -> {key, normalize(key, value)} end)
   defp normalize(:screenshot, true), do: NimbleOptions.validate!([], @screenshot_opts_schema)
-  defp normalize(:trace, :open), do: NimbleOptions.validate([open: true], @trace_opts_schema)
-  defp normalize(:trace, true), do: NimbleOptions.validate!([], @trace_opts_schema)
   defp normalize(_key, value), do: value
 end

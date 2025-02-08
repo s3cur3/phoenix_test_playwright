@@ -4,13 +4,9 @@ setup_config_keys = ~w(screenshot trace)a
 defmodule PhoenixTest.Playwright.Case do
   @moduledoc """
   ExUnit case module to assist with browser based tests.
-  See `PhoenixTest.Playwright` for more information.
 
-  These config values can be overridden via the `use` opts:
-  #{Enum.map_join(setup_all_config_keys, "\n", &"- `#{&1}`")}
-
-  These config values can be overridden via `@tag`:
-  #{Enum.map_join(setup_config_keys, "\n", &"- `#{&1}`")}
+  See `PhoenixTest.Playwright` and `PhoenixTest.Playwright.Config`
+  for more information.
   """
 
   use ExUnit.CaseTemplate
@@ -18,9 +14,6 @@ defmodule PhoenixTest.Playwright.Case do
   alias PhoenixTest.Playwright
   alias PhoenixTest.Playwright.Case
   alias PhoenixTest.Playwright.Config
-
-  @setup_all_config_keys setup_all_config_keys
-  @setup_config_keys setup_config_keys
 
   using opts do
     quote do
@@ -33,24 +26,14 @@ defmodule PhoenixTest.Playwright.Case do
   end
 
   setup_all context do
-    browser_id =
-      context
-      |> Map.take(@setup_all_config_keys)
-      |> Config.validate!()
-      |> Keyword.take(@setup_all_config_keys)
-      |> Case.Playwright.launch_browser()
-
-    [browser_id: browser_id]
+    keys = Config.setup_all_keys()
+    config = context |> Map.take(keys) |> Config.validate!() |> Keyword.take(keys)
+    [browser_id: Case.Playwright.launch_browser(config)]
   end
 
   setup context do
-    session =
-      context
-      |> Map.take(@setup_config_keys)
-      |> Config.validate!()
-      |> Case.Playwright.new_session(context)
-
-    [conn: session]
+    config = context |> Map.take(Config.setup_keys()) |> Config.validate!()
+    [conn: Case.Playwright.new_session(config, context)]
   end
 
   defmodule Playwright do
@@ -100,7 +83,7 @@ defmodule PhoenixTest.Playwright.Case do
       on_exit(fn ->
         BrowserContext.stop_tracing(browser_context_id, path)
 
-        if config[:trace][:open] do
+        if config[:trace] == :open do
           cli_path = Path.join(File.cwd!(), Port.cli_path())
           System.cmd(cli_path, ["show-trace", path])
         end
