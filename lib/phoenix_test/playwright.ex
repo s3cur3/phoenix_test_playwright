@@ -528,6 +528,9 @@ defmodule PhoenixTest.Playwright do
 
   ## Options
   #{NimbleOptions.docs(@exact_opts_schema)}
+
+  ## Examples
+      |> click(Selector.menuitem("Edit"))
   """
   @spec click(t(), selector(), String.t(), [unquote(NimbleOptions.option_typespec(@exact_opts_schema))]) :: t()
   def click(session, selector, text, opts \\ []) do
