@@ -4,13 +4,14 @@ defmodule PhoenixTest.Playwright do
 
   ```elixir
   defmodule Features.RegisterTest do
-    use PhoenixTest.Playwright.Case, async: true,
-      # run in multiple browsers in parallel
-      parameterize: [[browser: :chromium, browser: :firefox]]
-
-    @moduletag :playwright
-    @moduletag headless: false             # show browser window
-    @moduletag slow_mo: :timer.seconds(1)  # add delay between interactions
+    use PhoenixTest.Playwright.Case,
+      async: true,
+      parameterize: [                      # run in multiple browsers in parallel
+        %{browser: :chromium},
+        %{browser: :firefox}
+      ],
+      headless: false,                     # show browser window
+      slow_mo: :timeer.seconds(1)          # add delay between interactions
 
     @tag trace: :open                      # replay in interactive viewer
     test "register", %{conn: conn} do
@@ -94,15 +95,15 @@ defmodule PhoenixTest.Playwright do
 
   See `PhoenixTest.Playwright.Config` for more details.
 
-  You can override some options in your test via `@moduletag/@describetag/@tag`:
+  You can override some options in your test:
 
   ```elixir
   defmodule DebuggingFeatureTest do
-    use PhoenixTest.Playwright.Case, async: true
-
-    # Run test in a browser with a 1 second delay between every interaction
-    @moduletag headless: false
-    @moduletag slow_mo: 1_000
+    use PhoenixTest.Playwright.Case,
+      async: true,
+      # Show browser and pause 1 second between every interaction
+      headless: false,
+      slow_mo: :timer.seconds(1)
   ```
 
 

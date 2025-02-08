@@ -10,11 +10,13 @@ defmodule PhoenixTest.Playwright.Case do
   alias PhoenixTest.Playwright.Case
   alias PhoenixTest.Playwright.Config
 
-  using _opts do
+  using opts do
     quote do
       import PhoenixTest
       import PhoenixTest.Playwright, only: [screenshot: 2, screenshot: 3]
       import PhoenixTest.Playwright.Case
+
+      @moduletag Keyword.delete(unquote(opts), :async)
     end
   end
 

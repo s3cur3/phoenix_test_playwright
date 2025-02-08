@@ -14,7 +14,7 @@ schema = [
     default: :chromium,
     type: {:in, browsers},
     type_doc: "`#{Enum.map_join(browsers, " | ", &":#{&1}")}`",
-    doc: "Override via `@moduletag` or `parameterize`."
+    doc: "Override via `Case` opts or `parameterize`."
   ],
   cli: [
     default: "assets/node_modules/playwright/cli.js",
@@ -22,7 +22,7 @@ schema = [
   ],
   headless: [
     default: true,
-    doc: "Override via `@moduletag`.",
+    doc: "Override via `Case` opts.",
     type: :boolean
   ],
   js_logger: [
@@ -47,7 +47,7 @@ schema = [
   slow_mo: [
     default: :timer.seconds(0),
     type: :non_neg_integer,
-    doc: "Override via `@moduletag`."
+    doc: "Override via `Case` opts."
   ],
   trace: [
     default: false,
