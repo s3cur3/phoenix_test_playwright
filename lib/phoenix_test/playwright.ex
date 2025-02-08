@@ -530,7 +530,8 @@ defmodule PhoenixTest.Playwright do
   #{NimbleOptions.docs(@exact_opts_schema)}
 
   ## Examples
-      |> click(Selector.menuitem("Edit"))
+      |> click(Selector.menuitem("Edit", exact: true))
+      |> click("summary", "(expand)", exact: false)
   """
   @spec click(t(), selector(), String.t(), [unquote(NimbleOptions.option_typespec(@exact_opts_schema))]) :: t()
   def click(session, selector, text, opts \\ []) do
