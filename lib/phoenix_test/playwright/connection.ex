@@ -4,7 +4,7 @@ defmodule PhoenixTest.Playwright.Connection do
   The connection is established via `Playwright.Port`.
 
   You won't usually have to use this module directly.
-  `PhoenixTest.Case` uses this under the hood.
+  `PhoenixTest.Playwright.Case` uses this under the hood.
   """
   use GenServer
 

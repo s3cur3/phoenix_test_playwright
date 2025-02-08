@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Screenshots: `screenshot/{2,3}` function and `screenshot: true` config for auto-capture
 
 ### Changed
+- Renamed: `PheonixTest.Case` to `PhoenixTest.Playwright.Case`
+  ```diff
+     defmodule MyTest do
+  -    use PhoenixTest.Case, async: true
+  +    use PhoenixTest.Playwright.Case, async: true
+  -    @moduletag :playwright
+  ```
+
+### Changed
 - Config: flattened list (remove nested `browser` config), override via top-level ExUnit `@tag ...`s (remove nested `@tag playwright: [...]`)
   ```diff
      # config/test.exs

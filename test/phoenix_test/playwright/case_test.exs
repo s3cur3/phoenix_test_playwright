@@ -1,7 +1,5 @@
-defmodule PhoenixTest.CaseTest do
-  use PhoenixTest.Case, async: true
-
-  @moduletag :playwright
+defmodule PhoenixTest.Playwright.CaseTest do
+  use PhoenixTest.Playwright.Case, async: true
 
   describe "@tag :screenshot" do
     @tag :screenshot

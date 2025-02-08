@@ -1,4 +1,4 @@
-defmodule PhoenixTest.Case do
+defmodule PhoenixTest.Playwright.Case do
   @moduledoc """
   ExUnit case module to assist with browser based tests.
   See `PhoenixTest.Playwright` for more information.
@@ -6,49 +6,29 @@ defmodule PhoenixTest.Case do
 
   use ExUnit.CaseTemplate
 
-  alias PhoenixTest.Case
   alias PhoenixTest.Playwright
+  alias PhoenixTest.Playwright.Case
   alias PhoenixTest.Playwright.Config
 
   using _opts do
     quote do
       import PhoenixTest
-      import PhoenixTest.Case
       import PhoenixTest.Playwright, only: [screenshot: 2, screenshot: 3]
+      import PhoenixTest.Playwright.Case
     end
   end
 
   setup_all context do
     config = context |> Map.take(Config.keys()) |> Config.validate!()
-
-    case context do
-      %{playwright: true} ->
-        browser_opts = Keyword.take(config, ~w(browser headless slow_mo)a)
-        browser_id = Case.Playwright.launch_browser(browser_opts)
-        Keyword.put(config, :browser_id, browser_id)
-
-      %{playwright: p} when p != false ->
-        raise ArgumentError, "Pass any playwright options as top-level tags, e.g. `@moduletag browser: :firefox`"
-
-      _ ->
-        :ok
-    end
+    context = Enum.into(config, context)
+    browser_opts = Keyword.take(config, ~w(browser headless slow_mo)a)
+    browser_id = Case.Playwright.launch_browser(browser_opts)
+    Map.put(context, :browser_id, browser_id)
   end
 
   setup context do
-    config = context |> Map.take(Config.keys()) |> Config.validate!()
-    context = Enum.into(config, context)
-
-    case context do
-      %{playwright: true} ->
-        Map.put(context, :conn, Case.Playwright.new_session(context))
-
-      %{playwright: p} when p != false ->
-        raise ArgumentError, "Pass any playwright options as top-level tags, e.g. `@tag :trace`"
-
-      _ ->
-        Map.put(context, :conn, Phoenix.ConnTest.build_conn())
-    end
+    context = context |> Map.take(Config.keys()) |> Config.validate!() |> Enum.into(context)
+    Map.put(context, :conn, Case.Playwright.new_session(context))
   end
 
   defmodule Playwright do

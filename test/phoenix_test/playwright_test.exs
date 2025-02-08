@@ -1,10 +1,8 @@
 defmodule PhoenixTest.PlaywrightTest do
-  use PhoenixTest.Case, async: true
+  use PhoenixTest.Playwright.Case, async: true
 
   alias ExUnit.AssertionError
   alias PhoenixTest.Playwright
-
-  @moduletag :playwright
 
   describe "visit/2" do
     test "navigates to given LiveView page", %{conn: conn} do

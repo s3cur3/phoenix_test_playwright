@@ -4,7 +4,7 @@ defmodule PhoenixTest.Playwright do
 
   ```elixir
   defmodule Features.RegisterTest do
-    use PhoenixTest.Case, async: true,
+    use PhoenixTest.Playwright.Case, async: true,
       # run in multiple browsers in parallel
       parameterize: [[browser: :chromium, browser: :firefox]]
 
@@ -61,8 +61,7 @@ defmodule PhoenixTest.Playwright do
   5. Use in test
     ```elixir
     defmodule MyTest do
-      use PhoenixTest.Case, async: true
-      @moduletag :playwright
+      use PhoenixTest.Playwright.Case, async: true
 
       test "in browser", %{conn: conn} do
         conn
@@ -99,7 +98,7 @@ defmodule PhoenixTest.Playwright do
 
   ```elixir
   defmodule DebuggingFeatureTest do
-    use PhoenixTest.Case, async: true
+    use PhoenixTest.Playwright.Case, async: true
 
     # Run test in a browser with a 1 second delay between every interaction
     @moduletag headless: false
@@ -175,10 +174,10 @@ defmodule PhoenixTest.Playwright do
   ## Ecto SQL.Sandbox
   ```elixir
   defmodule MyTest do
-    use PhoenixTest.Case, async: true
+    use PhoenixTest.Playwright.Case, async: true
   ```
 
-  `PhoenixTest.Case` automatically takes care of this.
+  `PhoenixTest.Playwright.Case` automatically takes care of this.
   It passes a user agent referencing your Ecto repos.
   This allows for [concurrent browser tests](https://hexdocs.pm/phoenix_ecto/main.html#concurrent-browser-tests).
 
