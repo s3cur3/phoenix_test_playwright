@@ -11,7 +11,7 @@ defmodule PhoenixTest.Playwright do
         %{browser: :firefox}
       ],
       headless: false,                     # show browser window
-      slow_mo: :timer.seconds(1)          # add delay between interactions
+      slow_mo: :timer.seconds(1)           # add delay between interactions
 
     @tag trace: :open                      # replay in interactive viewer
     test "register", %{conn: conn} do
