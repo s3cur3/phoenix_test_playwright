@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## tbd
+## [0.5.0] 2025-02-14
 ### Added
 - Docs: Document and validate global and per-test configuration
 - Docs: Document non-standard driver functions (`click/4`, `click_button/4` etc.). Also, exclude standard driver functions from docs.
