@@ -30,7 +30,7 @@ jobs:
           elixir-version: "1.18.3" # [Required] Define the Elixir version
           otp-version: "27.3" # [Required] Define the Erlang/OTP version
       - name: Install dependencies
-        run: mix deps.get
+        run: mix do deps.get, deps.compile
       - name: Check Formatting
         run: mix format --check-formatted
       - name: Compiles without warnings
