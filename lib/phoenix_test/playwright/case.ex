@@ -11,6 +11,7 @@ defmodule PhoenixTest.Playwright.Case do
 
   use ExUnit.CaseTemplate
 
+  alias Ecto.Adapters.SQL.Sandbox
   alias PhoenixTest.Playwright
   alias PhoenixTest.Playwright.Case
   alias PhoenixTest.Playwright.Config
@@ -59,7 +60,7 @@ defmodule PhoenixTest.Playwright.Case do
     alias PhoenixTest.Playwright.Page
     alias PhoenixTest.Playwright.Port
 
-    @includes_ecto Code.ensure_loaded?(Ecto.Adapters.SQL.Sandbox) &&
+    @includes_ecto Code.ensure_loaded?(Sandbox) &&
                      Code.ensure_loaded?(Phoenix.Ecto.SQL.Sandbox)
 
     def launch_browser(opts) do
@@ -127,13 +128,13 @@ defmodule PhoenixTest.Playwright.Case do
       end
 
       defp checkout_ecto_repo(repo, async?) do
-        case Ecto.Adapters.SQL.Sandbox.checkout(repo) do
+        case Sandbox.checkout(repo) do
           :ok -> :ok
           {:already, :allowed} -> :ok
           {:already, :owner} -> :ok
         end
 
-        if not async?, do: Ecto.Adapters.SQL.Sandbox.mode(repo, {:shared, self()})
+        if not async?, do: Sandbox.mode(repo, {:shared, self()})
 
         repo
       end

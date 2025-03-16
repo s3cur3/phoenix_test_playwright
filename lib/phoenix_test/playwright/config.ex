@@ -36,11 +36,11 @@ schema =
       type: :string
     ],
     timeout: [
-      default: :timer.seconds(2),
+      default: to_timeout(second: 2),
       type: :non_neg_integer
     ],
     slow_mo: [
-      default: :timer.seconds(0),
+      default: to_timeout(second: 0),
       type: :non_neg_integer
     ],
     trace: [
