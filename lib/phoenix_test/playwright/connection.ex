@@ -59,7 +59,7 @@ defmodule PhoenixTest.Playwright.Connection do
   def launch_browser(type, opts) do
     types = initializer("Playwright")
     type_id = Map.fetch!(types, type).guid
-    timeout = opts[:browser_launch_timeout] || opts[:timeout] || Config.global(:timeout)
+    timeout = opts[:browser_launch_timeout] || opts[:timeout] || Config.global(:browser_launch_timeout)
 
     params =
       opts

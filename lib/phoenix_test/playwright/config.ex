@@ -58,7 +58,7 @@ schema =
     ]
   )
 
-setup_all_keys = ~w(browser headless slow_mo)a
+setup_all_keys = ~w(browser browser_launch_timeout headless slow_mo)a
 setup_keys = ~w(screenshot trace)a
 
 defmodule PhoenixTest.Playwright.Config do
