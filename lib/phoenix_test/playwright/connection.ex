@@ -59,8 +59,35 @@ defmodule PhoenixTest.Playwright.Connection do
   def launch_browser(type, opts) do
     types = initializer("Playwright")
     type_id = Map.fetch!(types, type).guid
-    resp = post(guid: type_id, method: :launch, params: Map.new(opts))
-    resp.result.browser.guid
+    timeout = opts[:browser_launch_timeout] || opts[:timeout] || Config.global(:timeout)
+
+    params =
+      opts
+      |> Map.new()
+      |> Map.put(:timeout, timeout)
+
+    case post(guid: type_id, method: :launch, params: params) do
+      %{result: %{browser: %{guid: guid}}} ->
+        guid
+
+      %{error: %{error: %{name: "TimeoutError", stack: stack, message: message}}} ->
+        raise """
+        Timed out while launching the Playwright browser, #{String.capitalize("#{type}")}. #{message}
+
+        You may need to increase the :browser_launch_timeout option in config/test.exs:
+
+            config :phoenix_test,
+              playwright: [
+                browser_launch_timeout: 10_000,
+                # other Playwright options...
+              ],
+              # other phoenix_test options...
+
+        Playwright backtrace:
+
+        #{stack}
+        """
+    end
   end
 
   @doc """

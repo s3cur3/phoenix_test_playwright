@@ -92,6 +92,7 @@ defmodule PhoenixTest.Playwright do
       js_logger: false,
       screenshot: System.get_env("PW_SCREENSHOT", "false") in ~w(t true),
       trace: System.get_env("PW_TRACE", "false") in ~w(t true),
+      browser_launch_timeout: 10_000,
     ]
   ```
 

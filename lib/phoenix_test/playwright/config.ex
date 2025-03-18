@@ -35,6 +35,10 @@ schema =
       default: "screenshots",
       type: :string
     ],
+    browser_launch_timeout: [
+      default: to_timeout(second: 4),
+      type: :non_neg_integer
+    ],
     timeout: [
       default: to_timeout(second: 2),
       type: :non_neg_integer
