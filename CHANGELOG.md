@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Add and remove cookies: `add_cookies/2`, `add_session_cookie/3`, `clear_cookies/{1,2}`
+- Add option `browser_launch_timeout` for more fine-grained control (is typically a lot slower than other actions)
 
 ## [0.5.0] 2025-02-14
 ### Added
