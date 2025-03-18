@@ -22,6 +22,7 @@ defmodule PhoenixTest.Playwright.Connection do
   require Logger
 
   @timeout_grace_factor 1.5
+  @min_genserver_timeout to_timeout(second: 1)
 
   defstruct [
     :port,
@@ -76,7 +77,7 @@ defmodule PhoenixTest.Playwright.Connection do
   def post(msg, timeout \\ nil) do
     default = %{params: %{}, metadata: %{}}
     msg = msg |> Enum.into(default) |> update_in(~w(params timeout)a, &(&1 || timeout || Config.global(:timeout)))
-    call_timeout = round(msg.params.timeout * @timeout_grace_factor)
+    call_timeout = max(@min_genserver_timeout, round(msg.params.timeout * @timeout_grace_factor))
     GenServer.call(@name, {:post, msg}, call_timeout)
   end
 
