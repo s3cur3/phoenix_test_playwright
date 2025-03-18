@@ -22,7 +22,7 @@ defmodule PhoenixTest.Playwright.Connection do
   require Logger
 
   @timeout_grace_factor 1.5
-  @min_genserver_timeout :timer.seconds(1)
+  @min_genserver_timeout to_timeout(second: 1)
 
   defstruct [
     :port,
