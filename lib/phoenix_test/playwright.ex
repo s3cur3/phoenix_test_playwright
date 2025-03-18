@@ -308,8 +308,10 @@ defmodule PhoenixTest.Playwright do
   import ExUnit.Assertions
 
   alias PhoenixTest.OpenBrowser
+  alias PhoenixTest.Playwright.BrowserContext
   alias PhoenixTest.Playwright.Config
   alias PhoenixTest.Playwright.Connection
+  alias PhoenixTest.Playwright.CookieArgs
   alias PhoenixTest.Playwright.Frame
   alias PhoenixTest.Playwright.Page
   alias PhoenixTest.Playwright.Selector
@@ -356,6 +358,44 @@ defmodule PhoenixTest.Playwright do
 
     Frame.goto(session.frame_id, url)
     session
+  end
+
+  @doc """
+  Add cookies to the browser context, using `Plug.Conn.put_resp_cookie/3`
+
+  Note that for signed cookies the signing salt is **not** configurable.
+  As such, this function is not appropriate for signed `Plug.Session` cookies.
+  For signed session cookies, use `add_session_cookie/3`
+
+  See `PhoenixTest.Playwright.CookieArgs` for the type of the cookie.
+  """
+  def add_cookies(session, cookies) do
+    cookies = Enum.map(cookies, &CookieArgs.from_cookie/1)
+    tap(session, &BrowserContext.add_cookies(&1.context_id, cookies))
+  end
+
+  @doc """
+  Removes all cookies from the context
+  """
+  def clear_cookies(session, opts \\ []) do
+    tap(session, &BrowserContext.clear_cookies(&1.context_id, opts))
+  end
+
+  @doc """
+  Add a `Plug.Session` cookie to the browser context.
+
+  This is useful for emulating a logged-in user.
+
+  Note that that the cookie `:value` must be a map, since we are using
+  `Plug.Conn.put_session/3` to write each of value's key-value pairs
+  to the cookie.
+
+  The `session_options` are exactly the same as the opts used when
+  writing `plug Plug.Session` in your router/endpoint module.
+  """
+  def add_session_cookie(session, cookie, session_options) do
+    cookie = CookieArgs.from_session_options(cookie, session_options)
+    tap(session, &BrowserContext.add_cookies(&1.context_id, [cookie]))
   end
 
   @screenshot_opts_schema [

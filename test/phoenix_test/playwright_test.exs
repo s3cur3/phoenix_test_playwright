@@ -761,4 +761,62 @@ defmodule PhoenixTest.PlaywrightTest do
       |> assert_path("/live/page_2")
     end
   end
+
+  describe "add_cookies/2" do
+    test "sets a plain cookie", %{conn: conn} do
+      conn
+      |> add_cookies([[name: "name", value: "42"]])
+      |> visit("/page/cookies")
+      |> assert_has("#form-data", text: "name: 42")
+    end
+
+    test "sets an encrypted cookie", %{conn: conn} do
+      conn
+      |> add_cookies([[name: "name", value: "42", encrypt: true]])
+      |> visit("/page/cookies?encrypted[]=")
+      |> assert_has("#form-data", text: "name:")
+      |> refute_has("#form-data", text: "name: 42")
+
+      conn
+      |> add_cookies([[name: "name", value: "42", encrypt: true]])
+      |> visit("/page/cookies?encrypted[]=name")
+      |> assert_has("#form-data", text: "name: 42")
+    end
+
+    test "sets a signed cookie", %{conn: conn} do
+      conn
+      |> add_cookies([[name: "name", value: "42", sign: true]])
+      |> visit("/page/cookies?signed[]=")
+      |> assert_has("#form-data", text: "name:")
+      |> refute_has("#form-data", text: "name: 42")
+
+      conn
+      |> add_cookies([[name: "name", value: "42", sign: true]])
+      |> visit("/page/cookies?signed[]=name")
+      |> assert_has("#form-data", text: "name: 42")
+    end
+  end
+
+  describe "add_session_cookie/3" do
+    test "puts a signed, encrypted cookie on the Conn", %{conn: conn} do
+      cookie = [value: %{secret: "monty_python"}]
+
+      conn
+      |> add_session_cookie(cookie, PhoenixTest.Endpoint.session_options())
+      |> visit("/page/session")
+      |> assert_has("#form-data", text: "secret: monty_python")
+    end
+  end
+
+  describe "clear_cookies/2" do
+    test "removes all cookies", %{conn: conn} do
+      conn
+      |> add_cookies([[name: "name", value: "42"]])
+      |> visit("/page/cookies")
+      |> assert_has("#form-data", text: "name: 42")
+      |> clear_cookies()
+      |> visit("/page/cookies")
+      |> refute_has("#form-data", text: "name: 42")
+    end
+  end
 end

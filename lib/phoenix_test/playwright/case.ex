@@ -22,6 +22,10 @@ defmodule PhoenixTest.Playwright.Case do
 
       import PhoenixTest.Playwright,
         only: [
+          add_cookies: 2,
+          add_session_cookie: 3,
+          clear_cookies: 1,
+          clear_cookies: 2,
           click: 3,
           click: 4,
           click_button: 4,

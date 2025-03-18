@@ -18,6 +18,19 @@ defmodule PhoenixTest.Playwright.BrowserContext do
     resp.result.page.guid
   end
 
+  @doc false
+  def add_cookies(context_id, cookies) do
+    post(guid: context_id, method: :add_cookies, params: %{cookies: cookies})
+  end
+
+  @doc """
+  Removes all cookies from the context
+  """
+  def clear_cookies(context_id, opts \\ []) do
+    opts = Keyword.validate!(opts, ~w(domain name path)a)
+    post(guid: context_id, method: :clear_cookies, params: Map.new(opts))
+  end
+
   @doc """
   Start tracing. The results can be retrieved via `stop_tracing/2`.
   """

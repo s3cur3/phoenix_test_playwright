@@ -3,19 +3,9 @@ defmodule PhoenixTest.Router do
 
   import Phoenix.LiveView.Router
 
-  pipeline :setup_session do
-    plug(Plug.Session,
-      store: :cookie,
-      key: "_phoenix_test_key",
-      signing_salt: "/VADsdfSfdMnp5"
-    )
-
-    plug(:fetch_session)
-  end
-
   pipeline :browser do
-    plug(:setup_session)
     plug(:accepts, ["html"])
+    plug(:fetch_session)
     plug(:fetch_live_flash)
   end
 
@@ -29,6 +19,8 @@ defmodule PhoenixTest.Router do
     get("/page/redirect_to_static", PageController, :redirect_to_static)
     post("/page/redirect_to_liveview", PageController, :redirect_to_liveview)
     post("/page/redirect_to_static", PageController, :redirect_to_static)
+    get("/page/cookies", PageController, :cookies)
+    get("/page/session", PageController, :session)
     get("/page/:page", PageController, :show)
 
     live_session :live_pages, root_layout: {PhoenixTest.PageView, :layout} do
