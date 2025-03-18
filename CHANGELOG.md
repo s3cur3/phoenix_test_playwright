@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.0] 2025-03-18
 ### Added
-- Add and remove cookies: `add_cookies/2`, `add_session_cookie/3`, `clear_cookies/{1,2}`
-- Add option `browser_launch_timeout` for more fine-grained control (is typically a lot slower than other actions)
+- Add and remove cookies: `add_cookies/2`, `add_session_cookie/3`, `clear_cookies/{1,2}` @peaceful-james
+- Add option `browser_launch_timeout` for more fine-grained control (is typically a lot slower than other actions) @s3cur3
 
 ## [0.5.0] 2025-02-14
 ### Added
@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] 2025-02-03
 ### Added
-- Screenshots: `screenshot/{2,3}` function and `screenshot: true` config for auto-capture
+- Screenshots: `screenshot/{2,3}` function and `screenshot: true` config for auto-capture @s3cur3
 
 ### Changed
 - Config: flattened list (remove nested `browser` config), override via top-level ExUnit `@tag ...`s (remove nested `@tag playwright: [...]`)
