@@ -41,8 +41,8 @@ defmodule PhoenixTestPlaywright.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:esbuild, "~> 0.8", only: :test, runtime: false},
-      {:ex_doc, "~> 0.35.1", only: :dev, runtime: false},
+      {:esbuild, "~> 0.9", only: :test, runtime: false},
+      {:ex_doc, "~> 0.37.3", only: :dev, runtime: false},
       {:phoenix, "~> 1.7"},
       {:phoenix_live_view, "~> 1.0"},
       {:phoenix_test, "~> 0.6", runtime: false},
