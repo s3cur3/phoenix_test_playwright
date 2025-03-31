@@ -207,14 +207,14 @@ defmodule PhoenixTest.PlaywrightTest do
     test "selects given option for a label", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> select("Elf", from: "Race")
+      |> select("Race", option: "Elf")
       |> assert_has("#full-form option[value='elf']")
     end
 
     test "allows selecting option if a similar option exists", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> select("Orc", from: "Race")
+      |> select("Race", option: "Orc")
       |> assert_has("#full-form option[value='orc']")
     end
 
@@ -222,7 +222,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "works for multiple select", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> select(["Elf", "Dwarf"], from: "Race 2")
+      |> select("Race 2", option: ["Elf", "Dwarf"])
       |> click_button("Save Full Form")
       |> assert_has("#form-data", text: "[elf, dwarf]")
     end
@@ -231,7 +231,7 @@ defmodule PhoenixTest.PlaywrightTest do
       conn
       |> visit("/live/index")
       |> within("#complex-labels", fn session ->
-        select(session, "Cat", from: "Choose a pet:", exact: false)
+        select(session, "Choose a pet:", option: "Cat", exact: false)
       end)
       |> assert_has("#form-data", text: "pet: cat")
     end
@@ -241,7 +241,7 @@ defmodule PhoenixTest.PlaywrightTest do
       conn
       |> visit("/live/index")
       |> within("#full-form", fn session ->
-        select(session, "Dwa", from: "Race", exact_option: false)
+        select(session, "Race", option: "Dwa", exact_option: false)
       end)
       |> submit()
       |> assert_has("#form-data", text: "race: dwarf")
@@ -251,7 +251,7 @@ defmodule PhoenixTest.PlaywrightTest do
       conn
       |> visit("/live/index")
       |> within("#same-labels", fn session ->
-        select(session, "#select-favorite-character", "Frodo", from: "Character")
+        select(session, "#select-favorite-character", "Character", option: "Frodo")
       end)
       |> assert_has("#form-data", text: "favorite-character: Frodo")
     end
