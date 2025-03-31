@@ -126,6 +126,17 @@ defmodule PhoenixTest.PlaywrightTest do
       end)
     end
 
+    test "nests selector when multiple withins", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> assert_has("button", text: "Reset")
+      |> within("#full-form", fn session ->
+        within(session, "#contact", fn session ->
+          assert_has(session, "label", text: "Email choice")
+        end)
+      end)
+    end
+
     test "scopes further form actions within a selector", %{conn: conn} do
       conn
       |> visit("/live/index")

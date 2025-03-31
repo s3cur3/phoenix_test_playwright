@@ -706,14 +706,6 @@ defmodule PhoenixTest.Playwright do
   end
 
   @doc false
-  def within(session, selector, fun) do
-    session
-    |> Map.put(:within, selector)
-    |> fun.()
-    |> Map.put(:within, :none)
-  end
-
-  @doc false
   def fill_in(session, css_selector \\ nil, label, opts) do
     {value, opts} = Keyword.pop!(opts, :with)
     fun = &Frame.fill(session.frame_id, &1, to_string(value), &2)
@@ -892,7 +884,7 @@ defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
   defdelegate visit(session, path), to: Playwright
   defdelegate render_page_title(session), to: Playwright
   defdelegate render_html(session), to: Playwright
-  defdelegate within(session, selector, fun), to: Playwright
+  defdelegate within(session, selector, fun), to: PhoenixTest.SessionHelpers
   defdelegate click_link(session, text), to: Playwright
   defdelegate click_link(session, selector, text), to: Playwright
   defdelegate click_button(session, text), to: Playwright
