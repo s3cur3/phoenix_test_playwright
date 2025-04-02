@@ -5,12 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.6.1] 2025-04-02
 ### Added
-- Support some `phoenix_test 0.6` features
-  - ❌ Raise error when visiting an defined route: In a feature test, we assert on the rendered page, not the status code.
-  - ✅ Deprecate `select` with `:from` in favor of `:option`
+- Support relevant `phoenix_test 0.6` features
+  - ✅ Deprecate `select` with `:from` in favor of `:option` (handled by `PhoenixTest`)
   - ✅ Allow nesting of `within/3`
+  - ✅ Allow calling `visit/2` sequentially (was already supported)
+  - ❌ Raise error when visiting a defined route: In a feature test, we assert on the rendered page, not the status code.
 
 ## [0.6.0] 2025-03-18
 ### Added
