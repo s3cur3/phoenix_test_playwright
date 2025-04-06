@@ -303,6 +303,10 @@ defmodule PhoenixTest.Playwright do
       wait_for_file(path, remaining_ms - wait_for_ms, wait_for_ms)
     end
   end
+
+  defp within_iframe(selector \\ "iframe", fun) when is_function(fun, 1) do
+    within("#{selector} >> internal:control=enter-frame", fun)
+  end
   ```
   """
 
