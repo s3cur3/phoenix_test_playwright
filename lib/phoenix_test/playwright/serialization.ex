@@ -31,9 +31,7 @@ defmodule PhoenixTest.Playwright.Serialization do
         number
 
       %{o: object} ->
-        object
-        |> Map.new(fn item -> {item.k, deserialize_arg(item.v)} end)
-        |> deep_key_transform(&underscore/1)
+        Map.new(object, fn item -> {item.k, deserialize_arg(item.v)} end)
 
       %{s: string} ->
         string
