@@ -80,6 +80,7 @@ defmodule PhoenixTest.Playwright.Case do
         locale: "en",
         user_agent: checkout_ecto_repos(context.async) || "No user agent"
       }
+
       browser_context_id = Browser.new_context(context.browser_id, browser_context_opts)
       subscribe(browser_context_id)
 
