@@ -204,15 +204,15 @@ defmodule PhoenixTest.Playwright do
   Here is some inspiration:
 
   ```elixir
-  def assert_a11y(session) do
-    A11yAudit.Assertions.assert_no_violations(fn ->
-      Frame.evaluate(session.frame_id, A11yAudit.JS.axe_core())
+  defp assert_a11y(session) do
+    Frame.evaluate(session.frame_id, A11yAudit.JS.axe_core())
 
+    results =
       session.frame_id
-      |> Frame.evaluate("axe.run().then(res => JSON.stringify(res))")
-      |> JSON.decode!()
+      |> Frame.evaluate("axe.run()")
       |> A11yAudit.Results.from_json()
-    end)
+
+    A11yAudit.Assertions.assert_no_violations(results)
 
     session
   end
