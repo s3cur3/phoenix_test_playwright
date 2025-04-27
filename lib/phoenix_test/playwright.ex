@@ -397,6 +397,12 @@ defmodule PhoenixTest.Playwright do
 
   The `session_options` are exactly the same as the opts used when
   writing `plug Plug.Session` in your router/endpoint module.
+
+  ## Examples
+      |> add_session_cookie(
+        [value: %{user_token: Accounts.generate_user_session_token(user)}],
+        MyAppWeb.Endpoint.session_options()
+      )
   """
   def add_session_cookie(session, cookie, session_options) do
     cookie = CookieArgs.from_session_options(cookie, session_options)
