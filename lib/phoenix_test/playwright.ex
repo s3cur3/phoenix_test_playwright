@@ -151,6 +151,25 @@ defmodule PhoenixTest.Playwright do
   ```
 
 
+  ## Emails
+  If you want to verify the HTML of sent emails in your feature tests,
+  consider using `Plug.Swoosh.MailboxPreview`.
+  The iframe used to render the email HTML body makes this slightly tricky:
+
+  ```elixir
+  |> visit(~p"/dev/mailbox")
+  |> click_link("Confirmation instructions")
+  |> within("iframe >> internal:control=enter-frame", fn conn ->
+    conn
+    |> click_link("Confirm account")
+    |> click_button("Confirm my account")
+    |> assert_has("#flash-info", text: "User confirmed")
+  end)
+  ```
+
+  For a full example see [ftes/phoenix_test_playwright_example/tree/phoenix-1.8](https://github.com/ftes/phoenix_test_playwright_example/tree/phoenix-1.8).
+
+
   ## Common problems
   ### Test failure in CI (timeout)
   - Limit concurrency: `mix test --max-cases 1` for GitHub CI shared runners
