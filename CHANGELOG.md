@@ -5,12 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.6.3] 2025-05-05
 ### Added
 - Add locale to avoid console warnings. Commit [becf5e6] @peaceful-james
 
 ### Fixed
-- Trigger `phx-change` event for input with `phx-debounce="blur"`
+- Trigger `phx-change` event for input with `phx-debounce="blur"`. Commit [72edd9]
 
 ## [0.6.2] 2025-04-24
 ### Changed
@@ -83,3 +83,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [5ff530]: https://github.com/ftes/phoenix_test_playwright/commit/5ff530
 [becf5e]: https://github.com/ftes/phoenix_test_playwright/commit/becf5e
+[72edd9]: https://github.com/ftes/phoenix_test_playwright/commit/72edd9
