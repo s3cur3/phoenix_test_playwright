@@ -147,6 +147,15 @@ defmodule PhoenixTest.Playwright.Frame do
     |> unwrap_response(& &1)
   end
 
+  def blur(frame_id, selector, opts \\ []) do
+    params = %{selector: selector}
+    params = Enum.into(opts, params)
+
+    [guid: frame_id, method: :blur, params: params]
+    |> post()
+    |> unwrap_response(& &1)
+  end
+
   defp unwrap_response(response, fun) do
     case response do
       %{error: _} = error -> {:error, error}

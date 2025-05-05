@@ -204,6 +204,13 @@ defmodule PhoenixTest.PlaywrightTest do
       |> assert_has("#form-data", text: "book-characters: Frodo")
     end
 
+    test "triggers phx-change event if phx-debounce=blur", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> fill_in("Debounce blur", with: "triggers")
+      |> assert_has("#form-data", text: "debounce-blur: triggers")
+    end
+
     test "raises an error when element can't be found with label", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn

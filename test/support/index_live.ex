@@ -187,6 +187,9 @@ defmodule PhoenixTest.IndexLive do
       <label for={@uploads.avatar.ref}>Avatar</label>
       <.live_file_input upload={@uploads.avatar} />
 
+      <label for="debounce-blur">Debounce blur</label>
+      <input id="debounce-blur" phx-debounce="blur" name="debounce-blur" phx-update="ignore" />
+
       <button type="submit" name="full_form_button" value="save">Save Full Form</button>
     </form>
 

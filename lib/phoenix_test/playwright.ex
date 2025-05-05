@@ -793,6 +793,9 @@ defmodule PhoenixTest.Playwright do
     |> fun.(%{timeout: timeout(opts)})
     |> handle_response(selector)
 
+    # trigger phx-change if phx-debounce="blur"
+    Frame.blur(session.frame_id, selector)
+
     %{session | last_input_selector: selector}
   end
 
