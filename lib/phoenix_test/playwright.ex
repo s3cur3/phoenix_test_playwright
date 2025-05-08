@@ -223,20 +223,20 @@ defmodule PhoenixTest.Playwright do
   Here is some inspiration:
 
   ```elixir
-  defp assert_a11y(session) do
-    Frame.evaluate(session.frame_id, A11yAudit.JS.axe_core())
+  defp assert_a11y(conn) do
+    Frame.evaluate(conn.frame_id, A11yAudit.JS.axe_core())
 
     results =
-      session.frame_id
+      conn.frame_id
       |> Frame.evaluate("axe.run()")
       |> A11yAudit.Results.from_json()
 
     A11yAudit.Assertions.assert_no_violations(results)
 
-    session
+    conn
   end
 
-  def assert_download(session, name, contains: content) do
+  def assert_download(conn, name, contains: content) do
     assert_receive({:playwright, %{method: :download} = download_msg}, 2000)
     artifact_guid = download_msg.params.artifact.guid
     assert_receive({:playwright, %{method: :__create__, params: %{guid: ^artifact_guid}} = artifact_msg}, 2000)
@@ -246,53 +246,53 @@ defmodule PhoenixTest.Playwright do
     assert download_msg.params.suggested_filename =~ name
     assert File.read!(download_path) =~ content
 
-    session
+    conn
   end
 
-  def assert_has_value(session, label, value, opts \\ []) do
+  def assert_has_value(conn, label, value, opts \\ []) do
     opts = Keyword.validate!(opts, exact: true)
 
-    assert_found(session,
+    assert_found(conn,
       selector: Selector.label(label, opts),
       expression: "to.have.value",
       expectedText: [%{string: value}]
     )
   end
 
-  def assert_has_selected(session, label, value, opts \\ []) do
+  def assert_has_selected(conn, label, value, opts \\ []) do
     opts = Keyword.validate!(opts, exact: true)
 
-    assert_found(session,
+    assert_found(conn,
       selector: label |> Selector.label(opts) |> Selector.concat("option[selected]"),
       expression: "to.have.text",
       expectedText: [%{string: value}]
     )
   end
 
-  def assert_is_chosen(session, label, opts \\ []) do
+  def assert_is_chosen(conn, label, opts \\ []) do
     opts = Keyword.validate!(opts, exact: true)
 
-    assert_found(session,
+    assert_found(conn,
       selector: Selector.label(label, opts),
       expression: "to.have.attribute",
       expressionArg: "checked"
     )
   end
 
-  def assert_is_editable(session, label, opts \\ []) do
+  def assert_is_editable(conn, label, opts \\ []) do
     opts = Keyword.validate!(opts, exact: true)
 
-    assert_found(session,
+    assert_found(conn,
       selector: Selector.label(label, opts),
       expression: "to.be.editable"
     )
   end
 
-  def refute_is_editable(session, label, opts \\ []) do
+  def refute_is_editable(conn, label, opts \\ []) do
     opts = Keyword.validate!(opts, exact: true)
 
     assert_found(
-      session,
+      conn,
       [
         selector: Selector.label(label, opts),
         expression: "to.be.editable"
@@ -301,11 +301,11 @@ defmodule PhoenixTest.Playwright do
     )
   end
 
-  def assert_found(session, params, opts \\ []) do
+  def assert_found(conn, params, opts \\ []) do
     is_not = Keyword.get(opts, :is_not, false)
     params = Enum.into(params, %{is_not: is_not})
 
-    unwrap(session, fn frame_id ->
+    unwrap(conn, fn frame_id ->
       {:ok, found} = Frame.expect(frame_id, params)
       if is_not, do: refute(found), else: assert(found)
     end)
@@ -372,7 +372,7 @@ defmodule PhoenixTest.Playwright do
   end
 
   @doc false
-  def visit(session, path) do
+  def visit(conn, path) do
     url =
       case path do
         "http://" <> _ -> path
@@ -380,8 +380,7 @@ defmodule PhoenixTest.Playwright do
         _ -> Application.fetch_env!(:phoenix_test, :base_url) <> path
       end
 
-    Frame.goto(session.frame_id, url)
-    session
+    tap(conn, &Frame.goto(&1.frame_id, url))
   end
 
   @doc """
@@ -393,16 +392,16 @@ defmodule PhoenixTest.Playwright do
 
   See `PhoenixTest.Playwright.CookieArgs` for the type of the cookie.
   """
-  def add_cookies(session, cookies) do
+  def add_cookies(conn, cookies) do
     cookies = Enum.map(cookies, &CookieArgs.from_cookie/1)
-    tap(session, &BrowserContext.add_cookies(&1.context_id, cookies))
+    tap(conn, &BrowserContext.add_cookies(&1.context_id, cookies))
   end
 
   @doc """
   Removes all cookies from the context
   """
-  def clear_cookies(session, opts \\ []) do
-    tap(session, &BrowserContext.clear_cookies(&1.context_id, opts))
+  def clear_cookies(conn, opts \\ []) do
+    tap(conn, &BrowserContext.clear_cookies(&1.context_id, opts))
   end
 
   @doc """
@@ -423,9 +422,9 @@ defmodule PhoenixTest.Playwright do
         MyAppWeb.Endpoint.session_options()
       )
   """
-  def add_session_cookie(session, cookie, session_options) do
+  def add_session_cookie(conn, cookie, session_options) do
     cookie = CookieArgs.from_session_options(cookie, session_options)
-    tap(session, &BrowserContext.add_cookies(&1.context_id, [cookie]))
+    tap(conn, &BrowserContext.add_cookies(&1.context_id, [cookie]))
   end
 
   @screenshot_opts_schema [
@@ -454,17 +453,17 @@ defmodule PhoenixTest.Playwright do
       |> screenshot("my-test/my-screenshot.jpg")
   """
   @spec screenshot(t(), String.t(), [unquote(NimbleOptions.option_typespec(@screenshot_opts_schema))]) :: t()
-  def screenshot(session, file_path, opts \\ []) do
+  def screenshot(conn, file_path, opts \\ []) do
     opts = NimbleOptions.validate!(opts, @screenshot_opts_schema)
 
     dir = Config.global(:screenshot_dir)
     File.mkdir_p!(dir)
 
     path = Path.join(dir, file_path)
-    {:ok, binary_img} = Page.screenshot(session.page_id, opts)
+    {:ok, binary_img} = Page.screenshot(conn.page_id, opts)
     File.write!(path, Base.decode64!(binary_img))
 
-    session
+    conn
   end
 
   @type_opts_schema [
@@ -483,14 +482,14 @@ defmodule PhoenixTest.Playwright do
       |> type(Selector.role("heading", "Untitled", exact: true), "New title")
   """
   @spec type(t(), selector(), String.t(), [unquote(NimbleOptions.option_typespec(@type_opts_schema))]) :: t()
-  def type(session, selector, text, opts \\ []) when is_binary(text) do
+  def type(conn, selector, text, opts \\ []) when is_binary(text) do
     opts = NimbleOptions.validate!(opts, @type_opts_schema)
 
-    session.frame_id
+    conn.frame_id
     |> Frame.type(selector, text, opts)
     |> handle_response(selector)
 
-    session
+    conn
   end
 
   @press_opts_schema [
@@ -518,80 +517,80 @@ defmodule PhoenixTest.Playwright do
       |> press(Selector.button("Submit", exact: true), "Enter")
   """
   @spec press(t(), selector(), String.t(), [unquote(NimbleOptions.option_typespec(@press_opts_schema))]) :: t()
-  def press(session, selector, key, opts \\ []) when is_binary(key) do
+  def press(conn, selector, key, opts \\ []) when is_binary(key) do
     opts = NimbleOptions.validate!(opts, @press_opts_schema)
 
-    session.frame_id
+    conn.frame_id
     |> Frame.press(selector, key, opts)
     |> handle_response(selector)
 
-    session
+    conn
   end
 
-  def assert_has(session, "title") do
-    retry(fn -> assert render_page_title(session) != nil end)
+  def assert_has(conn, "title") do
+    retry(fn -> assert render_page_title(conn) != nil end)
   end
 
   @doc false
-  def assert_has(session, selector), do: assert_has(session, selector, [])
+  def assert_has(conn, selector), do: assert_has(conn, selector, [])
 
   @doc false
-  def assert_has(session, "title", opts) do
+  def assert_has(conn, "title", opts) do
     text = Keyword.fetch!(opts, :text)
     exact = Keyword.get(opts, :exact, false)
 
     if exact do
-      retry(fn -> assert render_page_title(session) == text end)
+      retry(fn -> assert render_page_title(conn) == text end)
     else
-      retry(fn -> assert render_page_title(session) =~ text end)
+      retry(fn -> assert render_page_title(conn) =~ text end)
     end
 
-    session
+    conn
   end
 
   @doc false
-  def assert_has(session, selector, opts) do
-    if !found?(session, selector, opts) do
+  def assert_has(conn, selector, opts) do
+    if !found?(conn, selector, opts) do
       flunk("Could not find element #{selector} #{inspect(opts)}")
     end
 
-    session
+    conn
   end
 
   @doc false
-  def refute_has(session, "title") do
-    retry(fn -> assert render_page_title(session) == nil end)
+  def refute_has(conn, "title") do
+    retry(fn -> assert render_page_title(conn) == nil end)
   end
 
   @doc false
-  def refute_has(session, selector), do: refute_has(session, selector, [])
+  def refute_has(conn, selector), do: refute_has(conn, selector, [])
 
   @doc false
-  def refute_has(session, "title", opts) do
+  def refute_has(conn, "title", opts) do
     text = Keyword.fetch!(opts, :text)
     exact = Keyword.get(opts, :exact, false)
 
     if exact do
-      retry(fn -> refute render_page_title(session) == text end)
+      retry(fn -> refute render_page_title(conn) == text end)
     else
-      retry(fn -> refute render_page_title(session) =~ text end)
+      retry(fn -> refute render_page_title(conn) =~ text end)
     end
 
-    session
+    conn
   end
 
   @doc false
-  def refute_has(session, selector, opts) do
-    if found?(session, selector, opts) do
+  def refute_has(conn, selector, opts) do
+    if found?(conn, selector, opts) do
       flunk("Found element #{selector} #{inspect(opts)}")
     end
 
-    session
+    conn
   end
 
-  defp found?(session, selector, opts) do
+  defp found?(conn, selector, opts) do
     selector =
-      session
+      conn
       |> maybe_within()
       |> Selector.concat(Selector.css(selector))
       |> Selector.concat("visible=true")
@@ -609,7 +608,7 @@ defmodule PhoenixTest.Playwright do
           timeout: timeout(opts)
         }
 
-      {:ok, found?} = Frame.expect(session.frame_id, params)
+      {:ok, found?} = Frame.expect(conn.frame_id, params)
       found?
     else
       params =
@@ -618,7 +617,7 @@ defmodule PhoenixTest.Playwright do
           timeout: timeout(opts)
         }
 
-      case Frame.wait_for_selector(session.frame_id, params) do
+      case Frame.wait_for_selector(conn.frame_id, params) do
         {:ok, _} -> true
         _ -> false
       end
@@ -626,17 +625,17 @@ defmodule PhoenixTest.Playwright do
   end
 
   @doc false
-  def render_page_title(session) do
-    case Frame.title(session.frame_id) do
+  def render_page_title(conn) do
+    case Frame.title(conn.frame_id) do
       {:ok, ""} -> nil
       {:ok, title} -> title
     end
   end
 
   @doc false
-  def render_html(session) do
-    selector = session |> maybe_within() |> Selector.build()
-    {:ok, html} = Frame.inner_html(session.frame_id, selector)
+  def render_html(conn) do
+    selector = conn |> maybe_within() |> Selector.build()
+    {:ok, html} = Frame.inner_html(conn.frame_id, selector)
     html
   end
 
@@ -644,12 +643,12 @@ defmodule PhoenixTest.Playwright do
   See `click/4`.
   """
   @spec click(t(), selector()) :: t()
-  def click(session, selector) do
-    session.frame_id
+  def click(conn, selector) do
+    conn.frame_id
     |> Frame.click(selector)
     |> handle_response(selector)
 
-    session
+    conn
   end
 
   @doc """
@@ -664,20 +663,20 @@ defmodule PhoenixTest.Playwright do
       |> click("summary", "(expand)", exact: false)
   """
   @spec click(t(), selector(), String.t(), [unquote(NimbleOptions.option_typespec(@exact_opts_schema))]) :: t()
-  def click(session, selector, text, opts \\ []) do
+  def click(conn, selector, text, opts \\ []) do
     opts = NimbleOptions.validate!(opts, @exact_opts_schema)
 
     selector =
-      session
+      conn
       |> maybe_within()
       |> Selector.concat(selector)
       |> Selector.concat(Selector.text(text, opts))
 
-    session.frame_id
+    conn.frame_id
     |> Frame.click(selector)
     |> handle_response(selector)
 
-    session
+    conn
   end
 
   @doc """
@@ -686,11 +685,11 @@ defmodule PhoenixTest.Playwright do
   ## Options
   #{NimbleOptions.docs(@exact_opts_schema)}
   """
-  def click_link(session, selector \\ nil, text, opts \\ []) do
+  def click_link(conn, selector \\ nil, text, opts \\ []) do
     opts = NimbleOptions.validate!(opts, @exact_opts_schema)
 
     selector =
-      session
+      conn
       |> maybe_within()
       |> Selector.concat(
         case selector do
@@ -700,11 +699,11 @@ defmodule PhoenixTest.Playwright do
       )
       |> Selector.build()
 
-    session.frame_id
+    conn.frame_id
     |> Frame.click(selector)
     |> handle_response(selector)
 
-    session
+    conn
   end
 
   @doc """
@@ -713,11 +712,11 @@ defmodule PhoenixTest.Playwright do
   ## Options
   #{NimbleOptions.docs(@exact_opts_schema)}
   """
-  def click_button(session, selector \\ nil, text, opts \\ []) do
+  def click_button(conn, selector \\ nil, text, opts \\ []) do
     opts = NimbleOptions.validate!(opts, @exact_opts_schema)
 
     selector =
-      session
+      conn
       |> maybe_within()
       |> Selector.concat(
         case selector do
@@ -727,59 +726,59 @@ defmodule PhoenixTest.Playwright do
       )
       |> Selector.build()
 
-    session.frame_id
+    conn.frame_id
     |> Frame.click(selector)
     |> handle_response(selector)
 
-    session
+    conn
   end
 
   @doc false
-  def fill_in(session, css_selector \\ nil, label, opts) do
+  def fill_in(conn, css_selector \\ nil, label, opts) do
     {value, opts} = Keyword.pop!(opts, :with)
-    fun = &Frame.fill(session.frame_id, &1, to_string(value), &2)
-    input(session, css_selector, label, opts, fun)
+    fun = &Frame.fill(conn.frame_id, &1, to_string(value), &2)
+    input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
-  def select(session, css_selector \\ nil, option_labels, opts) do
+  def select(conn, css_selector \\ nil, option_labels, opts) do
     if opts[:exact_option] != true, do: raise("exact_option not implemented")
 
     {label, opts} = Keyword.pop!(opts, :from)
     options = option_labels |> List.wrap() |> Enum.map(&%{label: &1})
-    fun = &Frame.select_option(session.frame_id, &1, options, &2)
-    input(session, css_selector, label, opts, fun)
+    fun = &Frame.select_option(conn.frame_id, &1, options, &2)
+    input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
-  def check(session, css_selector \\ nil, label, opts) do
-    fun = &Frame.check(session.frame_id, &1, &2)
-    input(session, css_selector, label, opts, fun)
+  def check(conn, css_selector \\ nil, label, opts) do
+    fun = &Frame.check(conn.frame_id, &1, &2)
+    input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
-  def uncheck(session, css_selector \\ nil, label, opts) do
-    fun = &Frame.uncheck(session.frame_id, &1, &2)
-    input(session, css_selector, label, opts, fun)
+  def uncheck(conn, css_selector \\ nil, label, opts) do
+    fun = &Frame.uncheck(conn.frame_id, &1, &2)
+    input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
-  def choose(session, css_selector \\ nil, label, opts) do
-    fun = &Frame.check(session.frame_id, &1, &2)
-    input(session, css_selector, label, opts, fun)
+  def choose(conn, css_selector \\ nil, label, opts) do
+    fun = &Frame.check(conn.frame_id, &1, &2)
+    input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
-  def upload(session, css_selector \\ nil, label, paths, opts) do
+  def upload(conn, css_selector \\ nil, label, paths, opts) do
     paths = paths |> List.wrap() |> Enum.map(&Path.expand/1)
-    fun = &Frame.set_input_files(session.frame_id, &1, paths, &2)
-    input(session, css_selector, label, opts, fun)
+    fun = &Frame.set_input_files(conn.frame_id, &1, paths, &2)
+    input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
-  defp input(session, css_selector, label, opts, fun) do
+  defp input(conn, css_selector, label, opts, fun) do
     selector =
-      session
+      conn
       |> maybe_within()
       |> Selector.concat(
         case css_selector do
@@ -794,13 +793,13 @@ defmodule PhoenixTest.Playwright do
     |> handle_response(selector)
 
     # trigger phx-change if phx-debounce="blur"
-    Frame.blur(session.frame_id, selector)
+    Frame.blur(conn.frame_id, selector)
 
-    %{session | last_input_selector: selector}
+    %{conn | last_input_selector: selector}
   end
 
-  defp maybe_within(session) do
-    case session.within do
+  defp maybe_within(conn) do
+    case conn.within do
       :none -> Selector.none()
       selector -> selector
     end
@@ -847,16 +846,16 @@ defmodule PhoenixTest.Playwright do
   end
 
   @doc false
-  def submit(session) do
-    Frame.press(session.frame_id, session.last_input_selector, "Enter")
-    session
+  def submit(conn) do
+    Frame.press(conn.frame_id, conn.last_input_selector, "Enter")
+    conn
   end
 
   @doc false
-  def open_browser(session, open_fun \\ &OpenBrowser.open_with_system_cmd/1) do
+  def open_browser(conn, open_fun \\ &OpenBrowser.open_with_system_cmd/1) do
     # Await any pending navigation
     Process.sleep(100)
-    {:ok, html} = Frame.content(session.frame_id)
+    {:ok, html} = Frame.content(conn.frame_id)
 
     fixed_html =
       html
@@ -868,7 +867,7 @@ defmodule PhoenixTest.Playwright do
     File.write!(path, fixed_html)
     open_fun.(path)
 
-    session
+    conn
   end
 
   @doc """
@@ -884,15 +883,14 @@ defmodule PhoenixTest.Playwright do
       |> unwrap(&Frame.evaluate(&1.frame_id, "console.log('Hey')"))
   """
   @spec unwrap(t(), (%{context_id: any(), page_id: any(), frame_id: any()} -> any())) :: t()
-  def unwrap(session, fun) do
-    fun.(Map.take(session, ~w(context_id page_id frame_id)a))
-    session
+  def unwrap(conn, fun) do
+    tap(conn, &fun.(Map.take(&1, ~w(context_id page_id frame_id)a)))
   end
 
   @doc false
-  def current_path(session) do
+  def current_path(conn) do
     resp =
-      session.frame_id
+      conn.frame_id
       |> Connection.received()
       |> Enum.find(&match?(%{method: :navigated, params: %{url: _}}, &1))
 
@@ -913,39 +911,39 @@ defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
   alias PhoenixTest.Assertions
   alias PhoenixTest.Playwright
 
-  defdelegate visit(session, path), to: Playwright
-  defdelegate render_page_title(session), to: Playwright
-  defdelegate render_html(session), to: Playwright
-  defdelegate within(session, selector, fun), to: PhoenixTest.SessionHelpers
-  defdelegate click_link(session, text), to: Playwright
-  defdelegate click_link(session, selector, text), to: Playwright
-  defdelegate click_button(session, text), to: Playwright
-  defdelegate click_button(session, selector, text), to: Playwright
-  defdelegate fill_in(session, label, opts), to: Playwright
-  defdelegate fill_in(session, selector, label, opts), to: Playwright
-  defdelegate select(session, selector, option, opts), to: Playwright
-  defdelegate select(session, option, opts), to: Playwright
-  defdelegate check(session, selector, label, opts), to: Playwright
-  defdelegate check(session, label, opts), to: Playwright
-  defdelegate uncheck(session, selector, label, opts), to: Playwright
-  defdelegate uncheck(session, label, opts), to: Playwright
-  defdelegate choose(session, selector, label, opts), to: Playwright
-  defdelegate choose(session, label, opts), to: Playwright
-  defdelegate upload(session, selector, label, path, opts), to: Playwright
-  defdelegate upload(session, label, path, opts), to: Playwright
-  defdelegate submit(session), to: Playwright
-  defdelegate open_browser(session), to: Playwright
-  defdelegate open_browser(session, open_fun), to: Playwright
-  defdelegate unwrap(session, fun), to: Playwright
-  defdelegate current_path(session), to: Playwright
+  defdelegate visit(conn, path), to: Playwright
+  defdelegate render_page_title(conn), to: Playwright
+  defdelegate render_html(conn), to: Playwright
+  defdelegate within(conn, selector, fun), to: PhoenixTest.SessionHelpers
+  defdelegate click_link(conn, text), to: Playwright
+  defdelegate click_link(conn, selector, text), to: Playwright
+  defdelegate click_button(conn, text), to: Playwright
+  defdelegate click_button(conn, selector, text), to: Playwright
+  defdelegate fill_in(conn, label, opts), to: Playwright
+  defdelegate fill_in(conn, selector, label, opts), to: Playwright
+  defdelegate select(conn, selector, option, opts), to: Playwright
+  defdelegate select(conn, option, opts), to: Playwright
+  defdelegate check(conn, selector, label, opts), to: Playwright
+  defdelegate check(conn, label, opts), to: Playwright
+  defdelegate uncheck(conn, selector, label, opts), to: Playwright
+  defdelegate uncheck(conn, label, opts), to: Playwright
+  defdelegate choose(conn, selector, label, opts), to: Playwright
+  defdelegate choose(conn, label, opts), to: Playwright
+  defdelegate upload(conn, selector, label, path, opts), to: Playwright
+  defdelegate upload(conn, label, path, opts), to: Playwright
+  defdelegate submit(conn), to: Playwright
+  defdelegate open_browser(conn), to: Playwright
+  defdelegate open_browser(conn, open_fun), to: Playwright
+  defdelegate unwrap(conn, fun), to: Playwright
+  defdelegate current_path(conn), to: Playwright
 
-  defdelegate assert_has(session, selector), to: Playwright
-  defdelegate assert_has(session, selector, opts), to: Playwright
-  defdelegate refute_has(session, selector), to: Playwright
-  defdelegate refute_has(session, selector, opts), to: Playwright
+  defdelegate assert_has(conn, selector), to: Playwright
+  defdelegate assert_has(conn, selector, opts), to: Playwright
+  defdelegate refute_has(conn, selector), to: Playwright
+  defdelegate refute_has(conn, selector, opts), to: Playwright
 
-  def assert_path(session, path), do: retry(fn -> Assertions.assert_path(session, path) end)
-  def assert_path(session, path, opts), do: retry(fn -> Assertions.assert_path(session, path, opts) end)
-  def refute_path(session, path), do: retry(fn -> Assertions.refute_path(session, path) end)
-  def refute_path(session, path, opts), do: retry(fn -> Assertions.refute_path(session, path, opts) end)
+  def assert_path(conn, path), do: retry(fn -> Assertions.assert_path(conn, path) end)
+  def assert_path(conn, path, opts), do: retry(fn -> Assertions.assert_path(conn, path, opts) end)
+  def refute_path(conn, path), do: retry(fn -> Assertions.refute_path(conn, path) end)
+  def refute_path(conn, path, opts), do: retry(fn -> Assertions.refute_path(conn, path, opts) end)
 end

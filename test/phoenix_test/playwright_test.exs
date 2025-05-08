@@ -121,8 +121,8 @@ defmodule PhoenixTest.PlaywrightTest do
       conn
       |> visit("/live/index")
       |> assert_has("button", text: "Reset")
-      |> within("#email-form", fn session ->
-        refute_has(session, "button", text: "Reset")
+      |> within("#email-form", fn conn ->
+        refute_has(conn, "button", text: "Reset")
       end)
     end
 
@@ -130,9 +130,9 @@ defmodule PhoenixTest.PlaywrightTest do
       conn
       |> visit("/live/index")
       |> assert_has("button", text: "Reset")
-      |> within("#full-form", fn session ->
-        within(session, "#contact", fn session ->
-          assert_has(session, "label", text: "Email choice")
+      |> within("#full-form", fn conn ->
+        within(conn, "#contact", fn conn ->
+          assert_has(conn, "label", text: "Email choice")
         end)
       end)
     end
@@ -140,8 +140,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "scopes further form actions within a selector", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#email-form", fn session ->
-        fill_in(session, "Email", with: "someone@example.com")
+      |> within("#email-form", fn conn ->
+        fill_in(conn, "Email", with: "someone@example.com")
       end)
       |> assert_has("#form-data", text: "email: someone@example.com")
     end
@@ -150,8 +150,8 @@ defmodule PhoenixTest.PlaywrightTest do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
         |> visit("/live/index")
-        |> within("#email-form", fn session ->
-          fill_in(session, "User Name", with: "Aragorn")
+        |> within("#email-form", fn conn ->
+          fill_in(conn, "User Name", with: "Aragorn")
         end)
       end
     end
@@ -170,8 +170,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "fills in a single text field based on the label", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#email-form", fn session ->
-        fill_in(session, "Email", with: "someone@example.com")
+      |> within("#email-form", fn conn ->
+        fill_in(conn, "Email", with: "someone@example.com")
       end)
       |> assert_has("#form-data", text: "email: someone@example.com")
     end
@@ -179,8 +179,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can fill input with `nil` to override existing value", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#pre-rendered-data-form", fn session ->
-        fill_in(session, "Pre Rendered Input", with: nil)
+      |> within("#pre-rendered-data-form", fn conn ->
+        fill_in(conn, "Pre Rendered Input", with: nil)
       end)
       |> assert_has("#form-data", text: "input's value is empty")
     end
@@ -198,8 +198,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can target a label with exact: false", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#complex-labels", fn session ->
-        fill_in(session, "Name", with: "Frodo", exact: false)
+      |> within("#complex-labels", fn conn ->
+        fill_in(conn, "Name", with: "Frodo", exact: false)
       end)
       |> assert_has("#form-data", text: "name: Frodo")
     end
@@ -207,8 +207,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can target input with selector if multiple labels have same text", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#same-labels", fn session ->
-        fill_in(session, "#book-characters", "Character", with: "Frodo")
+      |> within("#same-labels", fn conn ->
+        fill_in(conn, "#book-characters", "Character", with: "Frodo")
       end)
       |> assert_has("#form-data", text: "book-characters: Frodo")
     end
@@ -264,8 +264,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can target a label with exact: false", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#complex-labels", fn session ->
-        select(session, "Choose a pet:", option: "Cat", exact: false)
+      |> within("#complex-labels", fn conn ->
+        select(conn, "Choose a pet:", option: "Cat", exact: false)
       end)
       |> assert_has("#form-data", text: "pet: cat")
     end
@@ -274,8 +274,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can target an option's text with exact_option: false", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#full-form", fn session ->
-        select(session, "Race", option: "Dwa", exact_option: false)
+      |> within("#full-form", fn conn ->
+        select(conn, "Race", option: "Dwa", exact_option: false)
       end)
       |> submit()
       |> assert_has("#form-data", text: "race: dwarf")
@@ -284,8 +284,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can target option with selector if multiple labels have same text", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#same-labels", fn session ->
-        select(session, "#select-favorite-character", "Character", option: "Frodo")
+      |> within("#same-labels", fn conn ->
+        select(conn, "#select-favorite-character", "Character", option: "Frodo")
       end)
       |> assert_has("#form-data", text: "favorite-character: Frodo")
     end
@@ -320,8 +320,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can target a label with exact: false", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#complex-labels", fn session ->
-        check(session, "Human", exact: false)
+      |> within("#complex-labels", fn conn ->
+        check(conn, "Human", exact: false)
       end)
       |> assert_has("#form-data", text: "human: yes")
     end
@@ -329,8 +329,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can specify input selector when multiple checkboxes have same label", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#same-labels", fn session ->
-        check(session, "#like-elixir", "Yes")
+      |> within("#same-labels", fn conn ->
+        check(conn, "#like-elixir", "Yes")
       end)
       |> assert_has("#form-data", text: "like-elixir: yes")
     end
@@ -349,8 +349,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can target a label with exact: false", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#complex-labels", fn session ->
-        session
+      |> within("#complex-labels", fn conn ->
+        conn
         |> check("Human", exact: false)
         |> uncheck("Human", exact: false)
       end)
@@ -360,8 +360,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can specify input selector when multiple checkboxes have same label", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#same-labels", fn session ->
-        session
+      |> within("#same-labels", fn conn ->
+        conn
         |> check("#like-elixir", "Yes")
         |> uncheck("#like-elixir", "Yes")
       end)
@@ -382,8 +382,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can target a label with exact: false", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#complex-labels", fn session ->
-        choose(session, "Book", exact: false)
+      |> within("#complex-labels", fn conn ->
+        choose(conn, "Book", exact: false)
       end)
       |> assert_has("#form-data", text: "book-or-movie: book")
     end
@@ -393,8 +393,8 @@ defmodule PhoenixTest.PlaywrightTest do
     } do
       conn
       |> visit("/live/index")
-      |> within("#same-labels", fn session ->
-        choose(session, "#elixir-yes", "Yes")
+      |> within("#same-labels", fn conn ->
+        choose(conn, "#elixir-yes", "Yes")
       end)
       |> assert_has("#form-data", text: "elixir-yes: yes")
     end
@@ -404,8 +404,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "uploads an image", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#full-form", fn session ->
-        session
+      |> within("#full-form", fn conn ->
+        conn
         |> upload("Avatar", "test/files/elixir.jpg")
         |> click_button("Save Full Form")
       end)
@@ -415,8 +415,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can target a label with exact: false", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#complex-labels", fn session ->
-        session
+      |> within("#complex-labels", fn conn ->
+        conn
         |> upload("Avatar", "test/files/elixir.jpg", exact: false)
         |> click_button("Save")
       end)
@@ -426,8 +426,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "can specify input selector when multiple inputs have same label", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#same-labels", fn session ->
-        session
+      |> within("#same-labels", fn conn ->
+        conn
         |> upload("[name='main_avatar']", "Avatar", "test/files/elixir.jpg")
         |> click_button("Submit Form")
       end)
@@ -439,8 +439,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "submits a pre-filled form via phx-submit", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#email-form", fn session ->
-        fill_in(session, "Email", with: "some@example.com")
+      |> within("#email-form", fn conn ->
+        fill_in(conn, "Email", with: "some@example.com")
       end)
       |> submit()
       |> assert_has("#form-data", text: "email: some@example.com")
@@ -502,8 +502,8 @@ defmodule PhoenixTest.PlaywrightTest do
     test "triggers phx-change validations", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> within("#email-form", fn session ->
-        session
+      |> within("#email-form", fn conn ->
+        conn
         |> fill_in("Email", with: "email")
         |> fill_in("Email", with: nil)
       end)
@@ -587,18 +587,18 @@ defmodule PhoenixTest.PlaywrightTest do
     end
 
     test "raises an error if count is more than expected count", %{conn: conn} do
-      session = visit(conn, "/page/index")
+      conn = visit(conn, "/page/index")
 
       assert_raise AssertionError, ~r/Could not find element/, fn ->
-        assert_has(session, ".multiple_links", count: 1)
+        assert_has(conn, ".multiple_links", count: 1)
       end
     end
 
     test "raises an error if count is less than expected count", %{conn: conn} do
-      session = visit(conn, "/page/index")
+      conn = visit(conn, "/page/index")
 
       assert_raise AssertionError, ~r/Could not find element/, fn ->
-        assert_has(session, "h1", count: 2)
+        assert_has(conn, "h1", count: 2)
       end
     end
 
