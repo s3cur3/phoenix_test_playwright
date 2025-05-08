@@ -157,6 +157,15 @@ defmodule PhoenixTest.PlaywrightTest do
     end
   end
 
+  describe "browser dialog" do
+    test "accepts dialog by default", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> click_link("Confirm to navigate")
+      |> assert_path("/live/page_2")
+    end
+  end
+
   describe "fill_in/4" do
     test "fills in a single text field based on the label", %{conn: conn} do
       conn

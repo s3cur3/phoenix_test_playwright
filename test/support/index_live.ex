@@ -439,6 +439,8 @@ defmodule PhoenixTest.IndexLive do
 
     <div id="hook" phx-hook="SomeHook"></div>
     <div id="hook-with-redirect" phx-hook="SomeOtherHook"></div>
+
+    <.link data-confirm="Are you sure?" navigate="/live/page_2">Confirm to navigate</.link>
     """
   end
 

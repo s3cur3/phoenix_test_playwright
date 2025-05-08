@@ -175,6 +175,7 @@ defmodule PhoenixTest.Playwright.Connection do
     state
     |> log_js_error(msg)
     |> log_console(msg)
+    |> accept_dialog(msg)
     |> add_guid_ancestors(msg)
     |> add_initializer(msg)
     |> add_received(msg)
@@ -216,6 +217,14 @@ defmodule PhoenixTest.Playwright.Connection do
   end
 
   defp log_console(state, _), do: state
+
+  defp accept_dialog(state, %{method: :__create__, params: %{type: "Dialog", guid: guid}}) do
+    msg = %{guid: guid, method: :accept, params: %{}, metadata: %{}}
+    PlaywrightPort.post(state.port, msg)
+    state
+  end
+
+  defp accept_dialog(state, _), do: state
 
   defp handle_started(state, %{method: :__create__, params: %{type: "Playwright"}}) do
     for from <- state.awaiting_started, do: GenServer.reply(from, :ok)

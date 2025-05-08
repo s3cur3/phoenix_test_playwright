@@ -86,6 +86,7 @@ defmodule PhoenixTest.Playwright.Case do
 
       page_id = BrowserContext.new_page(browser_context_id)
       Page.update_subscription(page_id, event: :console, enabled: true)
+      Page.update_subscription(page_id, event: :dialog, enabled: true)
 
       frame_id = initializer(page_id).main_frame.guid
       on_exit(fn -> post(guid: browser_context_id, method: :close) end)
