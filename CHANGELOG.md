@@ -5,11 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.7.0] 2025-06-16
 ### Added
 - Dialog handling
   - Config option `accept_dialogs` (default: `true`)
   - `PhoenixTest.Playwright.with_dialog/3` for conditional handling
+
+### Removed
+- `Connection.received/1`
+  - Use `EventRecorder` instead
 
 ## [0.6.3] 2025-05-05
 ### Added
