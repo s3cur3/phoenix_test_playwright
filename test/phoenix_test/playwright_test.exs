@@ -388,8 +388,8 @@ defmodule PhoenixTest.PlaywrightTest do
         |> check("#like-elixir", "Yes")
         |> uncheck("#like-elixir", "Yes")
       end)
-      |> refute_has("#form-data", text: "like-elixir: yes")
       |> assert_has("#form-data", text: "like-elixir: no")
+      |> refute_has("#form-data", text: "like-elixir: yes")
     end
   end
 
