@@ -608,9 +608,11 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def refute_has(conn, selector, opts) do
-    if found?(conn, selector, opts) do
-      flunk("Found element #{selector} #{inspect(opts)}")
-    end
+    retry(fn ->
+      if found?(conn, selector, opts) do
+        flunk("Found element #{selector} #{inspect(opts)}")
+      end
+    end)
 
     conn
   end

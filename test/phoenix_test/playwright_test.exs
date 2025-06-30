@@ -703,6 +703,13 @@ defmodule PhoenixTest.PlaywrightTest do
         |> refute_has(".multiple_links", count: 2)
       end
     end
+
+    test "retries if element initially visible", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> click_button("Button with push navigation")
+      |> refute_has("h1", text: "main page")
+    end
   end
 
   describe "refute_has/3" do
