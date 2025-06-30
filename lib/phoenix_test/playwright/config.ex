@@ -16,6 +16,10 @@ schema =
       default: "assets/node_modules/playwright/cli.js",
       type: :string
     ],
+    executable_path: [
+      type: :string,
+      doc: "Path to a browser executable to run instead of the bundled one. Use at your own risk."
+    ],
     headless: [
       default: true,
       type: :boolean
@@ -63,7 +67,7 @@ schema =
     ]
   )
 
-setup_all_keys = ~w(browser browser_launch_timeout headless slow_mo)a
+setup_all_keys = ~w(browser browser_launch_timeout executable_path headless slow_mo)a
 setup_keys = ~w(accept_dialogs screenshot trace)a
 
 defmodule PhoenixTest.Playwright.Config do

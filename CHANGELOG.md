@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [tbd]
+### Added
+- Config option `executable_path`: allow using existing browser executable instead of bundled browser (e.g. on NixOS).
 ### Fixed
 - `refute_has/3` add retry, don't fail if element initially found
 
