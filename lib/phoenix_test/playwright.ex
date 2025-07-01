@@ -924,9 +924,7 @@ defmodule PhoenixTest.Playwright do
       {:error, %{error: %{error: %{message: "Error: strict mode violation: " <> _ = message}}}} ->
         short_message = String.replace(message, "Error: strict mode violation: ", "")
 
-        flunk(
-          "Found more than one element matching selector #{debug_selector}:\n#{short_message}"
-        )
+        flunk("Found more than one element matching selector #{debug_selector}:\n#{short_message}")
 
       {:error,
        %{

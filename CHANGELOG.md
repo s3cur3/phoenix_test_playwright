@@ -5,20 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [tbd]
+## [0.7.1] 2025-07-01
 ### Added
-- Config option `executable_path`: allow using existing browser executable instead of bundled browser (e.g. on NixOS).
+- Config option `executable_path`: allow using existing browser executable instead of bundled browser (e.g. on NixOS). Commit [15df46]
 ### Fixed
-- `refute_has/3` add retry, don't fail if element initially found
+- `refute_has/3` add retry, don't fail if element initially found. Commit [7bd49b]
 
 ## [0.7.0] 2025-06-16
 ### Added
-- Dialog handling
+- Dialog handling. Commit [4eadea]
   - Config option `accept_dialogs` (default: `true`)
   - `PhoenixTest.Playwright.with_dialog/3` for conditional handling
 
 ### Removed
-- `Connection.received/1`
+- `Connection.received/1`. Commit [4eadea]
   - Use `EventRecorder` instead
 
 ## [0.6.3] 2025-05-05
@@ -100,3 +100,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [5ff530]: https://github.com/ftes/phoenix_test_playwright/commit/5ff530
 [becf5e]: https://github.com/ftes/phoenix_test_playwright/commit/becf5e
 [72edd9]: https://github.com/ftes/phoenix_test_playwright/commit/72edd9
+[15df46]: https://github.com/ftes/phoenix_test_playwright/commit/15df46
+[7bd49b]: https://github.com/ftes/phoenix_test_playwright/commit/7bd49b
+[4eadea]: https://github.com/ftes/phoenix_test_playwright/commit/4eadea
