@@ -43,7 +43,7 @@ defmodule PhoenixTest.Playwright do
   2. Install playwright and browser
     ```
     npm --prefix assets i -D playwright
-    npm --prefix assets exec playwright install chromium --with-deps
+    npm --prefix assets exec -- playwright install chromium --with-deps
     ```
 
   3. Config
@@ -479,7 +479,9 @@ defmodule PhoenixTest.Playwright do
       |> screenshot("my-screenshot.png")
       |> screenshot("my-test/my-screenshot.jpg")
   """
-  @spec screenshot(t(), String.t(), [unquote(NimbleOptions.option_typespec(@screenshot_opts_schema))]) :: t()
+  @spec screenshot(t(), String.t(), [
+          unquote(NimbleOptions.option_typespec(@screenshot_opts_schema))
+        ]) :: t()
   def screenshot(conn, file_path, opts \\ []) do
     opts = NimbleOptions.validate!(opts, @screenshot_opts_schema)
 
@@ -494,7 +496,11 @@ defmodule PhoenixTest.Playwright do
   end
 
   @type_opts_schema [
-    delay: [type: :non_neg_integer, default: 0, doc: "Time to wait between key presses in milliseconds."]
+    delay: [
+      type: :non_neg_integer,
+      default: 0,
+      doc: "Time to wait between key presses in milliseconds."
+    ]
   ]
   @doc """
   Focuses the matching element and simulates user typing.
@@ -508,7 +514,9 @@ defmodule PhoenixTest.Playwright do
       |> type("#id", "some text")
       |> type(Selector.role("heading", "Untitled", exact: true), "New title")
   """
-  @spec type(t(), selector(), String.t(), [unquote(NimbleOptions.option_typespec(@type_opts_schema))]) :: t()
+  @spec type(t(), selector(), String.t(), [
+          unquote(NimbleOptions.option_typespec(@type_opts_schema))
+        ]) :: t()
   def type(conn, selector, text, opts \\ []) when is_binary(text) do
     opts = NimbleOptions.validate!(opts, @type_opts_schema)
 
@@ -520,7 +528,11 @@ defmodule PhoenixTest.Playwright do
   end
 
   @press_opts_schema [
-    delay: [type: :non_neg_integer, default: 0, doc: "Time to wait between keydown and keyup in milliseconds."]
+    delay: [
+      type: :non_neg_integer,
+      default: 0,
+      doc: "Time to wait between keydown and keyup in milliseconds."
+    ]
   ]
   @doc """
   Focuses the matching element and presses a combination of the keyboard keys.
@@ -543,7 +555,9 @@ defmodule PhoenixTest.Playwright do
       |> press("#id", "Control+Shift+T")
       |> press(Selector.button("Submit", exact: true), "Enter")
   """
-  @spec press(t(), selector(), String.t(), [unquote(NimbleOptions.option_typespec(@press_opts_schema))]) :: t()
+  @spec press(t(), selector(), String.t(), [
+          unquote(NimbleOptions.option_typespec(@press_opts_schema))
+        ]) :: t()
   def press(conn, selector, key, opts \\ []) when is_binary(key) do
     opts = NimbleOptions.validate!(opts, @press_opts_schema)
 
@@ -740,7 +754,9 @@ defmodule PhoenixTest.Playwright do
       |> click(Selector.menuitem("Edit", exact: true))
       |> click("summary", "(expand)", exact: false)
   """
-  @spec click(t(), selector(), String.t(), [unquote(NimbleOptions.option_typespec(@exact_opts_schema))]) :: t()
+  @spec click(t(), selector(), String.t(), [
+          unquote(NimbleOptions.option_typespec(@exact_opts_schema))
+        ]) :: t()
   def click(conn, selector, text, opts \\ []) do
     opts = NimbleOptions.validate!(opts, @exact_opts_schema)
 
@@ -908,7 +924,9 @@ defmodule PhoenixTest.Playwright do
       {:error, %{error: %{error: %{message: "Error: strict mode violation: " <> _ = message}}}} ->
         short_message = String.replace(message, "Error: strict mode violation: ", "")
 
-        flunk("Found more than one element matching selector #{debug_selector}:\n#{short_message}")
+        flunk(
+          "Found more than one element matching selector #{debug_selector}:\n#{short_message}"
+        )
 
       {:error,
        %{
