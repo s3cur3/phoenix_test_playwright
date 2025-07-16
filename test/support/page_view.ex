@@ -447,6 +447,14 @@ defmodule PhoenixTest.PageView do
     """
   end
 
+  def render("js_script_console_error.html", assigns) do
+    ~H"""
+    <script type="text/javascript">
+      console.error("TESTME 42")
+    </script>
+    """
+  end
+
   defp render_input_data(key, value) when value == "" or is_nil(value) do
     "#{key}'s value is empty"
   end

@@ -1,6 +1,8 @@
 defmodule PhoenixTest.PlaywrightTest do
   use PhoenixTest.Playwright.Case, async: true
 
+  import ExUnit.CaptureLog, only: [capture_log: 1]
+
   alias ExUnit.AssertionError
   alias PhoenixTest.Playwright
 
@@ -881,6 +883,30 @@ defmodule PhoenixTest.PlaywrightTest do
       |> clear_cookies()
       |> visit("/page/cookies")
       |> refute_has("#form-data", text: "name: 42")
+    end
+  end
+
+  describe "javascript logs" do
+    test "logs file and line number", %{conn: conn} do
+      log =
+        capture_log(fn ->
+          conn
+          |> visit("/page/js_script_console_error")
+          |> assert_has("body")
+        end)
+
+      assert log =~ "TESTME 42 (http://localhost:4002/page/js_script_console_error:17)"
+    end
+
+    test "logs without location if unknown", %{conn: conn} do
+      log =
+        capture_log(fn ->
+          conn
+          |> visit("/live/index")
+          |> tap(&PhoenixTest.Playwright.Frame.evaluate(&1.frame_id, "console.error('TESTME 42')"))
+        end)
+
+      assert log =~ "TESTME 42 ()"
     end
   end
 end
