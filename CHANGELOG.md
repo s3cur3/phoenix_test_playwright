@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## tbd
+### Changed
+- Include source location when logging javascript errors and browser console logs. Commit [6b148f]
+
 ## [0.7.1] 2025-07-01
 ### Added
 - Config option `executable_path`: allow using existing browser executable instead of bundled browser (e.g. on NixOS). Commit [15df46]
@@ -103,3 +107,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [15df46]: https://github.com/ftes/phoenix_test_playwright/commit/15df46
 [7bd49b]: https://github.com/ftes/phoenix_test_playwright/commit/7bd49b
 [4eadea]: https://github.com/ftes/phoenix_test_playwright/commit/4eadea
+[6b148f]: https://github.com/ftes/phoenix_test_playwright/commit/6b148f
