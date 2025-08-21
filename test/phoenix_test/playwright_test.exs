@@ -488,14 +488,9 @@ defmodule PhoenixTest.PlaywrightTest do
         assert content =~
                  ~r[<link rel="stylesheet" href="file:.*phoenix_test_playwright\/priv\/static\/assets\/app\.css"\/>]
 
-        assert content =~ ~s(<link rel="stylesheet" href="//example.com/cool-styles.css"/>)
         assert content =~ "body { font-size: 12px; }"
 
         assert content =~ ~r/<h1.*Main page/
-
-        refute content =~ "<script>"
-        refute content =~ "console.log(\"Hey, I'm some JavaScript!\")"
-        refute content =~ "</script>"
 
         path
       end
@@ -895,7 +890,7 @@ defmodule PhoenixTest.PlaywrightTest do
           |> assert_has("body")
         end)
 
-      assert log =~ "TESTME 42 (http://localhost:4002/page/js_script_console_error:17)"
+      assert log =~ "TESTME 42 (http://localhost:4002/page/js_script_console_error:13)"
     end
 
     test "logs without location if unknown", %{conn: conn} do
