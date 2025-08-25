@@ -320,6 +320,7 @@ defmodule PhoenixTest.Playwright do
 
   import ExUnit.Assertions
 
+  alias PhoenixTest.Assertions
   alias PhoenixTest.OpenBrowser
   alias PhoenixTest.Playwright.BrowserContext
   alias PhoenixTest.Playwright.Config
@@ -376,16 +377,16 @@ defmodule PhoenixTest.Playwright do
     ExUnit.Callbacks.start_supervised!({EventListener, args}, id: "#{page_id}-dialog-listener")
   end
 
+  @retry_interval to_timeout(millisecond: 10)
   @doc false
-  def retry(fun, backoff_ms \\ [100, 250, 500, timeout()])
-  def retry(fun, []), do: fun.()
+  def retry(fun, remaining) when remaining <= 0, do: fun.()
 
-  def retry(fun, [sleep_ms | backoff_ms]) do
+  def retry(fun, remaining) do
     fun.()
   rescue
     ExUnit.AssertionError ->
-      Process.sleep(sleep_ms)
-      retry(fun, backoff_ms)
+      Process.sleep(@retry_interval)
+      retry(fun, remaining - @retry_interval)
   end
 
   @doc false
@@ -558,6 +559,22 @@ defmodule PhoenixTest.Playwright do
     conn
   end
 
+  def assert_path(conn, path, opts \\ []) do
+    if opts[:query_params] do
+      retry(fn -> Assertions.assert_path(conn, path, opts) end, timeout(opts))
+    else
+      retry(fn -> Assertions.assert_path(conn, path) end, timeout(opts))
+    end
+  end
+
+  def refute_path(conn, path, opts \\ []) do
+    if opts[:query_params] do
+      retry(fn -> Assertions.refute_path(conn, path, opts) end, refute_timeout(opts))
+    else
+      retry(fn -> Assertions.refute_path(conn, path) end, refute_timeout(opts))
+    end
+  end
+
   @doc false
   def assert_has(conn, "title") do
     if not has_title?(conn, text: ""), do: flunk("Page does not have a title")
@@ -587,13 +604,13 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def refute_has(conn, "title", opts) do
-    opts = Keyword.put_new_lazy(opts, :timeout, fn -> Config.global(:refute_timeout) end)
+    opts = Keyword.put(opts, :timeout, refute_timeout(opts))
     if not has_title?(conn, opts, is_not: true), do: flunk("Page title matches")
     conn
   end
 
   def refute_has(conn, selector, opts) do
-    opts = Keyword.put_new_lazy(opts, :timeout, fn -> Config.global(:refute_timeout) end)
+    opts = Keyword.put(opts, :timeout, refute_timeout(opts))
     if found?(conn, selector, opts, is_not: true), do: flunk("Found element #{selector} #{inspect(opts)}")
     conn
   end
@@ -963,15 +980,16 @@ defmodule PhoenixTest.Playwright do
     [uri.path, uri.query] |> Enum.reject(&is_nil/1) |> Enum.join("?")
   end
 
-  defp timeout(opts \\ []) do
+  defp timeout(opts) do
     Keyword.get_lazy(opts, :timeout, fn -> Config.global(:timeout) end)
+  end
+
+  defp refute_timeout(opts) do
+    Keyword.get_lazy(opts, :timeout, fn -> Config.global(:refute_timeout) end)
   end
 end
 
 defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
-  import PhoenixTest.Playwright, only: [retry: 1]
-
-  alias PhoenixTest.Assertions
   alias PhoenixTest.Playwright
 
   defdelegate visit(conn, path), to: Playwright
@@ -1005,8 +1023,8 @@ defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
   defdelegate refute_has(conn, selector), to: Playwright
   defdelegate refute_has(conn, selector, opts), to: Playwright
 
-  def assert_path(conn, path), do: retry(fn -> Assertions.assert_path(conn, path) end)
-  def assert_path(conn, path, opts), do: retry(fn -> Assertions.assert_path(conn, path, opts) end)
-  def refute_path(conn, path), do: retry(fn -> Assertions.refute_path(conn, path) end)
-  def refute_path(conn, path, opts), do: retry(fn -> Assertions.refute_path(conn, path, opts) end)
+  defdelegate assert_path(conn, path), to: Playwright
+  defdelegate assert_path(conn, path, opts), to: Playwright
+  defdelegate refute_path(conn, path), to: Playwright
+  defdelegate refute_path(conn, path, opts), to: Playwright
 end
