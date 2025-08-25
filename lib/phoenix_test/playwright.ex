@@ -568,12 +568,12 @@ defmodule PhoenixTest.Playwright do
     conn
   end
 
+  @doc false
   def assert_has(conn, "title") do
     if not has_title?(conn, text: ""), do: flunk("Page does not have a title")
     conn
   end
 
-  @doc false
   def assert_has(conn, selector), do: assert_has(conn, selector, [])
 
   @doc false
@@ -582,7 +582,6 @@ defmodule PhoenixTest.Playwright do
     conn
   end
 
-  @doc false
   def assert_has(conn, selector, opts) do
     if !found?(conn, selector, opts) do
       flunk("Could not find element #{selector} #{inspect(opts)}")
@@ -597,7 +596,6 @@ defmodule PhoenixTest.Playwright do
     conn
   end
 
-  @doc false
   def refute_has(conn, selector), do: refute_has(conn, selector, [])
 
   @doc false
@@ -606,7 +604,6 @@ defmodule PhoenixTest.Playwright do
     conn
   end
 
-  @doc false
   def refute_has(conn, selector, opts) do
     retry(fn ->
       if found?(conn, selector, opts) do
@@ -869,7 +866,6 @@ defmodule PhoenixTest.Playwright do
     input(conn, css_selector, label, opts, fun)
   end
 
-  @doc false
   defp input(conn, css_selector, label, opts, fun) do
     selector =
       conn
