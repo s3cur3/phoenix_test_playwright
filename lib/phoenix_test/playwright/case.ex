@@ -103,7 +103,7 @@ defmodule PhoenixTest.Playwright.Case do
       if config[:trace] == :open do
         System.cmd(
           Playwright.Config.global(:runner),
-          ["playwright", "show-trace", path],
+          ["playwright", "show-trace", Path.join(File.cwd!(), path)],
           cd: Playwright.Config.global(:assets_dir)
         )
       end
