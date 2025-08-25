@@ -569,7 +569,8 @@ defmodule PhoenixTest.Playwright do
   end
 
   def assert_has(conn, "title") do
-    retry(fn -> assert render_page_title(conn) end)
+    if not has_title?(conn, text: ""), do: flunk("Page does not have a title")
+    conn
   end
 
   @doc false
@@ -577,15 +578,7 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def assert_has(conn, "title", opts) do
-    text = Keyword.fetch!(opts, :text)
-    exact = Keyword.get(opts, :exact, false)
-
-    if exact do
-      retry(fn -> assert render_page_title(conn) == text end)
-    else
-      retry(fn -> assert render_page_title(conn) =~ text end)
-    end
-
+    if not has_title?(conn, opts), do: flunk("Page title does not match")
     conn
   end
 
@@ -600,7 +593,8 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def refute_has(conn, "title") do
-    retry(fn -> assert render_page_title(conn) == nil end)
+    if not has_title?(conn, text: ""), do: flunk("Page has a title")
+    conn
   end
 
   @doc false
@@ -608,15 +602,7 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def refute_has(conn, "title", opts) do
-    text = Keyword.fetch!(opts, :text)
-    exact = Keyword.get(opts, :exact, false)
-
-    if exact do
-      retry(fn -> refute render_page_title(conn) == text end)
-    else
-      retry(fn -> refute render_page_title(conn) =~ text end)
-    end
-
+    if not has_title?(conn, opts, is_not: true), do: flunk("Page title matches")
     conn
   end
 
@@ -629,6 +615,20 @@ defmodule PhoenixTest.Playwright do
     end)
 
     conn
+  end
+
+  defp has_title?(conn, opts, params \\ []) do
+    opts = Keyword.validate!(opts, [:text, exact: false])
+
+    params =
+      Enum.into(params, %{
+        expression: "to.have.title",
+        expected_text: [%{string: Keyword.fetch!(opts, :text), match_substring: not opts[:exact]}],
+        timeout: timeout(opts)
+      })
+
+    {:ok, matches?} = Frame.expect(conn.frame_id, params)
+    matches?
   end
 
   defp found?(conn, selector, opts) do
