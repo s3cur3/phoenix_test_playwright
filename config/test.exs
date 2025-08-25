@@ -18,7 +18,7 @@ config :phoenix_test,
     headless: System.get_env("PW_HEADLESS", "true") in ~w(t true),
     screenshot: System.get_env("PW_SCREENSHOT", "false") in ~w(t true),
     trace: System.get_env("PW_TRACE", "false") in ~w(t true),
-    timeout: to_timeout(second: 4)
+    timeout: String.to_integer(System.get_env("PW_TIMEOUT", "500"))
   ]
 
 config :phoenix_test_playwright, PhoenixTest.Endpoint,

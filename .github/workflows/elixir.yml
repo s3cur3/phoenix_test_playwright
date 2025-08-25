@@ -16,6 +16,7 @@ permissions:
 
 env:
   MIX_ENV: test
+  PW_TIMEOUT: 4000
 
 jobs:
   build:
