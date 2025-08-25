@@ -627,52 +627,29 @@ defmodule PhoenixTest.Playwright do
       |> Selector.concat("visible=true")
       |> Selector.concat(Selector.text(opts[:text], opts))
 
-    cond do
-      opts[:value] ->
-        if opts[:count],
-          do: raise(ArgumentError, message: "Options `value` and `count` can not be used together.")
+    at = &(selector |> Selector.concat(Selector.at(&1)) |> Selector.build())
 
-        if opts[:text],
-          do: raise(ArgumentError, message: "Options `value` and `text` can not be used together.")
+    params =
+      case Map.new(opts) do
+        %{value: _, count: _} ->
+          raise(ArgumentError, message: "Options `value` and `count` can not be used together")
 
-        params =
-          %{
-            expression: "to.have.value",
-            expected_text: [%{string: opts[:value]}],
-            selector: selector |> Selector.concat(Selector.at(opts[:at])) |> Selector.build(),
-            timeout: timeout(opts)
-          }
+        %{count: _, at: _} ->
+          raise(ArgumentError, message: "Options `count` and `at` can not be used together")
 
-        {:ok, found?} = Frame.expect(conn.frame_id, params)
-        found?
+        %{value: value} ->
+          %{expression: "to.have.value", expected_text: [%{string: value}], selector: at.(opts[:at])}
 
-      opts[:count] ->
-        if opts[:at],
-          do: raise(ArgumentError, message: "Options `count` and `at` can not be used together.")
+        %{count: count} ->
+          %{expression: "to.have.count", expected_number: count, selector: Selector.build(selector)}
 
-        params =
-          %{
-            expression: "to.have.count",
-            expected_number: opts[:count],
-            selector: Selector.build(selector),
-            timeout: timeout(opts)
-          }
+        _ ->
+          %{expression: "to.be.visible", selector: at.(opts[:at] || 0)}
+      end
 
-        {:ok, found?} = Frame.expect(conn.frame_id, params)
-        found?
-
-      true ->
-        params =
-          %{
-            selector: selector |> Selector.concat(Selector.at(opts[:at])) |> Selector.build(),
-            timeout: timeout(opts)
-          }
-
-        case Frame.wait_for_selector(conn.frame_id, params) do
-          {:ok, _} -> true
-          _ -> false
-        end
-    end
+    params = Enum.into(params, %{timeout: timeout(opts)})
+    {:ok, found?} = Frame.expect(conn.frame_id, params)
+    found?
   end
 
   @doc """
