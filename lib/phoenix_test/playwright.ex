@@ -248,16 +248,6 @@ defmodule PhoenixTest.Playwright do
     conn
   end
 
-  def assert_has_value(conn, label, value, opts \\ []) do
-    opts = Keyword.validate!(opts, exact: true)
-
-    assert_found(conn,
-      selector: Selector.label(label, opts),
-      expression: "to.have.value",
-      expectedText: [%{string: value}]
-    )
-  end
-
   def assert_has_selected(conn, label, value, opts \\ []) do
     opts = Keyword.validate!(opts, exact: true)
 
@@ -583,7 +573,7 @@ defmodule PhoenixTest.Playwright do
   end
 
   def assert_has(conn, selector, opts) do
-    if !found?(conn, selector, opts) do
+    if not found?(conn, selector, opts) do
       flunk("Could not find element #{selector} #{inspect(opts)}")
     end
 
@@ -633,34 +623,55 @@ defmodule PhoenixTest.Playwright do
       conn
       |> maybe_within()
       |> Selector.concat(Selector.css(selector))
+      |> Selector.and(Selector.label(opts[:label], exact: true))
       |> Selector.concat("visible=true")
       |> Selector.concat(Selector.text(opts[:text], opts))
 
-    if opts[:count] do
-      if opts[:at],
-        do: raise(ArgumentError, message: "Options `count` and `at` can not be used together.")
+    cond do
+      opts[:value] ->
+        if opts[:count],
+          do: raise(ArgumentError, message: "Options `value` and `count` can not be used together.")
 
-      params =
-        %{
-          expression: "to.have.count",
-          expected_number: opts[:count],
-          selector: Selector.build(selector),
-          timeout: timeout(opts)
-        }
+        if opts[:text],
+          do: raise(ArgumentError, message: "Options `value` and `text` can not be used together.")
 
-      {:ok, found?} = Frame.expect(conn.frame_id, params)
-      found?
-    else
-      params =
-        %{
-          selector: selector |> Selector.concat(Selector.at(opts[:at])) |> Selector.build(),
-          timeout: timeout(opts)
-        }
+        params =
+          %{
+            expression: "to.have.value",
+            expected_text: [%{string: opts[:value]}],
+            selector: selector |> Selector.concat(Selector.at(opts[:at])) |> Selector.build(),
+            timeout: timeout(opts)
+          }
 
-      case Frame.wait_for_selector(conn.frame_id, params) do
-        {:ok, _} -> true
-        _ -> false
-      end
+        {:ok, found?} = Frame.expect(conn.frame_id, params)
+        found?
+
+      opts[:count] ->
+        if opts[:at],
+          do: raise(ArgumentError, message: "Options `count` and `at` can not be used together.")
+
+        params =
+          %{
+            expression: "to.have.count",
+            expected_number: opts[:count],
+            selector: Selector.build(selector),
+            timeout: timeout(opts)
+          }
+
+        {:ok, found?} = Frame.expect(conn.frame_id, params)
+        found?
+
+      true ->
+        params =
+          %{
+            selector: selector |> Selector.concat(Selector.at(opts[:at])) |> Selector.build(),
+            timeout: timeout(opts)
+          }
+
+        case Frame.wait_for_selector(conn.frame_id, params) do
+          {:ok, _} -> true
+          _ -> false
+        end
     end
   end
 

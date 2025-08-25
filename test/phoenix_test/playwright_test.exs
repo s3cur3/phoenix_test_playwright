@@ -589,6 +589,34 @@ defmodule PhoenixTest.PlaywrightTest do
       |> assert_has(".has_extra_space", text: "Has extra space")
     end
 
+    test "asserts input with label", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> within("#email-form", fn conn ->
+        assert_has(conn, "input", label: "Email")
+      end)
+    end
+
+    test "asserts input with value", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> within("#email-form", fn conn ->
+        conn
+        |> fill_in("Email", with: "someone@example.com")
+        |> assert_has("input", value: "someone@example.com")
+      end)
+    end
+
+    test "asserts input with label and value", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> within("#email-form", fn conn ->
+        conn
+        |> fill_in("Email", with: "someone@example.com")
+        |> assert_has("input", label: "Email", value: "someone@example.com")
+      end)
+    end
+
     test "raises an error if the element cannot be found at all", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
