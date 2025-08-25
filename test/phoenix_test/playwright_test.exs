@@ -5,6 +5,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
   alias ExUnit.AssertionError
   alias PhoenixTest.Playwright
+  alias PhoenixTest.Playwright.Config
 
   describe "visit/2" do
     test "navigates to given LiveView page", %{conn: conn} do
@@ -733,7 +734,7 @@ defmodule PhoenixTest.PlaywrightTest do
       conn
       |> visit("/live/index")
       |> click_button("Button with push navigation")
-      |> refute_has("h1", text: "main page")
+      |> refute_has("h1", text: "main page", timeout: Config.global(:timeout))
     end
   end
 

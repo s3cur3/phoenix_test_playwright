@@ -573,10 +573,7 @@ defmodule PhoenixTest.Playwright do
   end
 
   def assert_has(conn, selector, opts) do
-    if not found?(conn, selector, opts) do
-      flunk("Could not find element #{selector} #{inspect(opts)}")
-    end
-
+    if not found?(conn, selector, opts), do: flunk("Could not find element #{selector} #{inspect(opts)}")
     conn
   end
 
@@ -590,15 +587,14 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def refute_has(conn, "title", opts) do
+    opts = Keyword.put_new_lazy(opts, :timeout, fn -> Config.global(:refute_timeout) end)
     if not has_title?(conn, opts, is_not: true), do: flunk("Page title matches")
     conn
   end
 
   def refute_has(conn, selector, opts) do
-    if found?(conn, selector, opts, is_not: true) do
-      flunk("Found element #{selector} #{inspect(opts)}")
-    end
-
+    opts = Keyword.put_new_lazy(opts, :timeout, fn -> Config.global(:refute_timeout) end)
+    if found?(conn, selector, opts, is_not: true), do: flunk("Found element #{selector} #{inspect(opts)}")
     conn
   end
 
