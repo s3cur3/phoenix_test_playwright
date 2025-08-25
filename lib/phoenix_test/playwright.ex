@@ -595,11 +595,9 @@ defmodule PhoenixTest.Playwright do
   end
 
   def refute_has(conn, selector, opts) do
-    retry(fn ->
-      if found?(conn, selector, opts) do
-        flunk("Found element #{selector} #{inspect(opts)}")
-      end
-    end)
+    if found?(conn, selector, opts, is_not: true) do
+      flunk("Found element #{selector} #{inspect(opts)}")
+    end
 
     conn
   end
@@ -618,7 +616,7 @@ defmodule PhoenixTest.Playwright do
     matches?
   end
 
-  defp found?(conn, selector, opts) do
+  defp found?(conn, selector, opts, other_params \\ []) do
     selector =
       conn
       |> maybe_within()
@@ -647,7 +645,7 @@ defmodule PhoenixTest.Playwright do
           %{expression: "to.be.visible", selector: at.(opts[:at] || 0)}
       end
 
-    params = Enum.into(params, %{timeout: timeout(opts)})
+    params = Enum.into(params, Enum.into(other_params, %{timeout: timeout(opts)}))
     {:ok, found?} = Frame.expect(conn.frame_id, params)
     found?
   end
