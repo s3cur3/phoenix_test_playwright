@@ -5,6 +5,8 @@ screenshot_opts_schema = [
 
 browsers = ~w(android chromium electron firefox webkit)a
 
+playwright_recommended_version = "1.55.0"
+
 schema =
   NimbleOptions.new!(
     browser: [
@@ -22,8 +24,12 @@ schema =
     ],
     assets_dir: [
       default: "./assets",
-      type: :string,
-      doc: "The directory where the JS assets are located and the Playwright CLI is installed."
+      type_spec: quote(do: binary()),
+      type_doc: "`t:binary/0`",
+      type: {:custom, PhoenixTest.Playwright.Config, :__validate_assets_dir__, []},
+      doc:
+        "The directory where the JS assets are located and the Playwright CLI is installed.\n" <>
+          "Playwright version `#{playwright_recommended_version}` or newer is recommended."
     ],
     cli: [
       type: {:custom, PhoenixTest.Playwright.Config, :__validate_cli__, []},
@@ -110,6 +116,7 @@ defmodule PhoenixTest.Playwright.Config do
   @screenshot_opts_schema screenshot_opts_schema
   @setup_all_keys setup_all_keys
   @setup_keys setup_keys
+  @playwright_recommended_version playwright_recommended_version
 
   def validate!(config) when is_map(config), do: config |> Keyword.new() |> validate!()
 
@@ -151,6 +158,32 @@ defmodule PhoenixTest.Playwright.Config do
       """
 
       {:error, message}
+    end
+  end
+
+  def __validate_assets_dir__(assets_dir) do
+    playwright_json = Path.join([assets_dir, "node_modules", "playwright", "package.json"])
+
+    with {:ok, string} <- File.read(playwright_json),
+         {:ok, json} <- JSON.decode(string) do
+      version = json["version"] || "0"
+
+      if Version.compare(version, @playwright_recommended_version) == :lt do
+        IO.warn("Playwright version #{version} is below recommended #{@playwright_recommended_version}")
+      end
+
+      {:ok, assets_dir}
+    else
+      {:error, error} ->
+        message = """
+        could not find playwright in `#{assets_dir}`.
+        Reason: #{inspect(error)}
+
+        To resolve this please
+        1. Install playwright, e.g. via `npm --prefix assets install playwright`
+        """
+
+        {:error, message}
     end
   end
 
