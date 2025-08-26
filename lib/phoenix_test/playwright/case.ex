@@ -11,10 +11,9 @@ defmodule PhoenixTest.Playwright.Case do
 
   use ExUnit.CaseTemplate
 
-  import PhoenixTest.Playwright.Connection
-
   alias Ecto.Adapters.SQL.Sandbox
   alias PhoenixTest.Playwright
+  alias PhoenixTest.Playwright.Connection
 
   using opts do
     quote do
@@ -57,10 +56,10 @@ defmodule PhoenixTest.Playwright.Case do
   end
 
   defp launch_browser(opts) do
-    ensure_started()
+    Connection.ensure_started()
     {browser, opts} = Keyword.pop!(opts, :browser)
-    browser_id = launch_browser(browser, opts)
-    on_exit(fn -> post(guid: browser_id, method: :close) end)
+    browser_id = Connection.launch_browser(browser, opts)
+    on_exit(fn -> Connection.post(guid: browser_id, method: :close) end)
     browser_id
   end
 
@@ -76,8 +75,8 @@ defmodule PhoenixTest.Playwright.Case do
     Playwright.Page.update_subscription(page_id, event: :console, enabled: true)
     Playwright.Page.update_subscription(page_id, event: :dialog, enabled: true)
 
-    frame_id = initializer(page_id).main_frame.guid
-    on_exit(fn -> post(guid: browser_context_id, method: :close) end)
+    frame_id = Connection.initializer(page_id).main_frame.guid
+    on_exit(fn -> Connection.post(guid: browser_context_id, method: :close) end)
 
     if config[:trace], do: trace(browser_context_id, config, context)
     if config[:screenshot], do: screenshot(page_id, config, context)
