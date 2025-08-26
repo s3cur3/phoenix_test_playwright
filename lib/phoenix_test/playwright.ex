@@ -569,9 +569,9 @@ defmodule PhoenixTest.Playwright do
 
   def refute_path(conn, path, opts \\ []) do
     if opts[:query_params] do
-      retry(fn -> Assertions.refute_path(conn, path, opts) end, refute_timeout(opts))
+      retry(fn -> Assertions.refute_path(conn, path, opts) end, timeout(opts))
     else
-      retry(fn -> Assertions.refute_path(conn, path) end, refute_timeout(opts))
+      retry(fn -> Assertions.refute_path(conn, path) end, timeout(opts))
     end
   end
 
@@ -604,13 +604,11 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def refute_has(conn, "title", opts) do
-    opts = Keyword.put(opts, :timeout, refute_timeout(opts))
     if not has_title?(conn, opts, is_not: true), do: flunk("Page title matches")
     conn
   end
 
   def refute_has(conn, selector, opts) do
-    opts = Keyword.put(opts, :timeout, refute_timeout(opts))
     if found?(conn, selector, opts, is_not: true), do: flunk("Found element #{selector} #{inspect(opts)}")
     conn
   end
@@ -982,10 +980,6 @@ defmodule PhoenixTest.Playwright do
 
   defp timeout(opts) do
     Keyword.get_lazy(opts, :timeout, fn -> Config.global(:timeout) end)
-  end
-
-  defp refute_timeout(opts) do
-    Keyword.get_lazy(opts, :timeout, fn -> Config.global(:refute_timeout) end)
   end
 end
 
