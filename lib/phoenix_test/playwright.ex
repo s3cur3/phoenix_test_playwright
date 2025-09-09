@@ -873,6 +873,7 @@ defmodule PhoenixTest.Playwright do
           css -> css |> Selector.css() |> Selector.and(Selector.label(label, opts))
         end
       )
+      |> Selector.concat("visible=true")
       |> Selector.build()
 
     selector
