@@ -223,6 +223,11 @@ defmodule PhoenixTest.Playwright do
   Here is some inspiration:
 
   ```elixir
+  def choose_styled_radio_with_hidden_input_button(session, label, opts \\ []) do
+    opts = Keyword.validate!(opts, exact: true)
+    click(Selector.text(label, opts))
+  end
+
   defp assert_a11y(conn) do
     Frame.evaluate(conn.frame_id, A11yAudit.JS.axe_core())
 
