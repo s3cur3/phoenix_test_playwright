@@ -5,9 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## tbd
+## [0.8.0] 2025-09-17
+### Removed
+- Config option `cli`. Use `assets_dir` instead. Commit [9e95e54]
+
+### Added
+- Support `bunx` JS runner. Added config options `runner` and `assets_dir`. Commit [9e95e54]
+- Support missing `assert_has/refute_has` options: `label` and `value`. Commit [2e92cbe]
+- Support `phoenix_test` `0.8` (lazy_html). Commit [1074cde]
+
 ### Changed
 - Include source location when logging javascript errors and browser console logs. Commit [6b148f]
+- Only consider visible inputs for fill_in etc. Commit [86c2e3d]
+- Speed up `refute_has`: Use playwright browser internal retry. Commit [aac0497]
 
 ## [0.7.1] 2025-07-01
 ### Added
@@ -108,3 +118,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [7bd49b]: https://github.com/ftes/phoenix_test_playwright/commit/7bd49b
 [4eadea]: https://github.com/ftes/phoenix_test_playwright/commit/4eadea
 [6b148f]: https://github.com/ftes/phoenix_test_playwright/commit/6b148f
+[9e95e54]: https://github.com/ftes/phoenix_test_playwright/commit/9e95e54
+[2e92cbe]: https://github.com/ftes/phoenix_test_playwright/commit/2e92cbe
+[6b148f]: https://github.com/ftes/phoenix_test_playwright/commit/6b148f
+[1074cde]: https://github.com/ftes/phoenix_test_playwright/commit/1074cde
+[86c2e3d]: https://github.com/ftes/phoenix_test_playwright/commit/86c2e3d
+[aac0497]: https://github.com/ftes/phoenix_test_playwright/commit/aac0497
