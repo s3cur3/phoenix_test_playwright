@@ -10,18 +10,24 @@ defmodule PhoenixTest.Playwright.BrowserContext do
 
   import PhoenixTest.Playwright.Connection, only: [post: 1, initializer: 1]
 
+  alias PhoenixTest.Playwright.Result
+
   @doc """
   Open a new browser page and return its `guid`.
   """
   def new_page(context_id, opts \\ []) do
     params = Map.new(opts)
-    resp = post(guid: context_id, method: :new_page, params: params)
-    resp.result.page.guid
+
+    [guid: context_id, method: :new_page, params: params]
+    |> post()
+    |> Result.from_response(& &1.result.page.guid)
   end
 
   @doc false
   def add_cookies(context_id, cookies) do
-    post(guid: context_id, method: :add_cookies, params: %{cookies: cookies})
+    [guid: context_id, method: :add_cookies, params: %{cookies: cookies}]
+    |> post()
+    |> Result.from_response(& &1)
   end
 
   @doc """
@@ -29,7 +35,10 @@ defmodule PhoenixTest.Playwright.BrowserContext do
   """
   def clear_cookies(context_id, opts \\ []) do
     opts = Keyword.validate!(opts, ~w(domain name path)a)
-    post(guid: context_id, method: :clear_cookies, params: Map.new(opts))
+
+    [guid: context_id, method: :clear_cookies, params: Map.new(opts)]
+    |> post()
+    |> Result.from_response(& &1)
   end
 
   @doc """
@@ -39,8 +48,10 @@ defmodule PhoenixTest.Playwright.BrowserContext do
     opts = Keyword.validate!(opts, screenshots: true, snapshots: true, sources: true)
     tracing_id = initializer(context_id).tracing.guid
     post(method: :tracing_start, guid: tracing_id, params: Map.new(opts))
-    post(method: :tracing_start_chunk, guid: tracing_id)
-    :ok
+
+    [method: :tracing_start_chunk, guid: tracing_id]
+    |> post()
+    |> Result.from_response(& &1)
   end
 
   @doc """
@@ -56,7 +67,9 @@ defmodule PhoenixTest.Playwright.BrowserContext do
     zip_id = resp.result.artifact.guid
     zip_path = initializer(zip_id).absolute_path
     File.cp!(zip_path, output_path)
-    post(method: :tracing_stop, guid: tracing_id)
-    :ok
+
+    [method: :tracing_stop, guid: tracing_id]
+    |> post()
+    |> Result.from_response(& &1)
   end
 end

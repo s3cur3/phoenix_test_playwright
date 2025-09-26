@@ -16,9 +16,6 @@ defmodule PhoenixTest.Playwright.Serialization do
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def deserialize_arg(value) do
     case value do
-      {:ok, value} ->
-        deserialize_arg(value)
-
       list when is_list(list) ->
         Enum.map(list, &deserialize_arg/1)
 

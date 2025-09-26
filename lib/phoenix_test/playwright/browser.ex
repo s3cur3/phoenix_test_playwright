@@ -15,7 +15,9 @@ defmodule PhoenixTest.Playwright.Browser do
   """
   def new_context(browser_id, opts \\ []) do
     params = Map.new(opts)
-    resp = post(guid: browser_id, method: :new_context, params: params)
-    resp.result.context.guid
+
+    [guid: browser_id, method: :new_context, params: params]
+    |> post()
+    |> PhoenixTest.Playwright.Result.from_response(& &1.result.context.guid)
   end
 end

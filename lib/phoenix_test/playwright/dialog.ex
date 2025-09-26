@@ -10,22 +10,17 @@ defmodule PhoenixTest.Playwright.Dialog do
 
   import PhoenixTest.Playwright.Connection, only: [post: 1]
 
+  alias PhoenixTest.Playwright.Result
+
   def accept(dialog_id, opts \\ []) do
     [guid: dialog_id, method: :accept, params: Map.new(opts)]
     |> post()
-    |> unwrap_response(& &1)
+    |> Result.from_response(& &1)
   end
 
   def dismiss(dialog_id, opts \\ []) do
     [guid: dialog_id, method: :dismiss, params: Map.new(opts)]
     |> post()
-    |> unwrap_response(& &1)
-  end
-
-  defp unwrap_response(response, fun) do
-    case response do
-      %{error: _} = error -> {:error, error}
-      _ -> {:ok, fun.(response)}
-    end
+    |> Result.from_response(& &1)
   end
 end

@@ -85,11 +85,11 @@ defmodule PhoenixTest.Playwright.Case do
         user_agent: checkout_ecto_repos(context.async) || "No user agent"
       })
 
-    browser_context_id = Playwright.Browser.new_context(context.browser_id, browser_context_opts)
+    {:ok, browser_context_id} = Playwright.Browser.new_context(context.browser_id, browser_context_opts)
 
-    page_id = Playwright.BrowserContext.new_page(browser_context_id, config[:browser_page_opts])
-    Playwright.Page.update_subscription(page_id, event: :console, enabled: true)
-    Playwright.Page.update_subscription(page_id, event: :dialog, enabled: true)
+    {:ok, page_id} = Playwright.BrowserContext.new_page(browser_context_id, config[:browser_page_opts])
+    {:ok, _} = Playwright.Page.update_subscription(page_id, event: :console, enabled: true)
+    {:ok, _} = Playwright.Page.update_subscription(page_id, event: :dialog, enabled: true)
 
     frame_id = Connection.initializer(page_id).main_frame.guid
     on_exit(fn -> Connection.post(guid: browser_context_id, method: :close) end)
@@ -106,14 +106,14 @@ defmodule PhoenixTest.Playwright.Case do
   end
 
   defp trace(browser_context_id, config, context) do
-    Playwright.BrowserContext.start_tracing(browser_context_id)
+    {:ok, _} = Playwright.BrowserContext.start_tracing(browser_context_id)
 
     File.mkdir_p!(config[:trace_dir])
     file = file_name("_#{System.unique_integer([:positive, :monotonic])}.zip", context)
     path = Path.join(config[:trace_dir], file)
 
     on_exit(fn ->
-      Playwright.BrowserContext.stop_tracing(browser_context_id, path)
+      _ignore_error = Playwright.BrowserContext.stop_tracing(browser_context_id, path)
 
       if config[:trace] == :open do
         System.cmd(

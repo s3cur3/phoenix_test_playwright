@@ -11,18 +11,21 @@ defmodule PhoenixTest.Playwright.Frame do
   import PhoenixTest.Playwright.Connection, only: [post: 1, post: 2]
 
   alias PhoenixTest.Playwright.Config
+  alias PhoenixTest.Playwright.Result
   alias PhoenixTest.Playwright.Serialization
 
   def goto(frame_id, url) do
     params = %{url: url}
-    post(guid: frame_id, method: :goto, params: params)
-    :ok
+
+    [guid: frame_id, method: :goto, params: params]
+    |> post()
+    |> Result.from_response(& &1)
   end
 
   def url(frame_id) do
     [guid: frame_id, method: :url, params: %{}]
     |> post()
-    |> unwrap_response(& &1.result.value)
+    |> Result.from_response(& &1.result.value)
   end
 
   def evaluate(frame_id, js, opts \\ []) do
@@ -33,8 +36,8 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :evaluate_expression, params: params]
     |> post()
-    |> unwrap_response(& &1.result.value)
-    |> Serialization.deserialize_arg()
+    |> Result.from_response(& &1.result.value)
+    |> Result.map(&Serialization.deserialize_arg/1)
   end
 
   def press(frame_id, selector, key, opts \\ []) do
@@ -45,7 +48,7 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :press, params: params]
     |> post(timeout)
-    |> unwrap_response(& &1)
+    |> Result.from_response(& &1)
   end
 
   def type(frame_id, selector, text, opts \\ []) do
@@ -56,13 +59,13 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :type, params: params]
     |> post(timeout)
-    |> unwrap_response(& &1)
+    |> Result.from_response(& &1)
   end
 
   def title(frame_id) do
     [guid: frame_id, method: :title]
     |> post()
-    |> unwrap_response(& &1.result.value)
+    |> Result.from_response(& &1.result.value)
   end
 
   def expect(frame_id, params) do
@@ -70,13 +73,13 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :expect, params: params]
     |> post()
-    |> unwrap_response(& &1.result.matches)
+    |> Result.from_response(& &1.result.matches)
   end
 
   def wait_for_selector(frame_id, params) do
     [guid: frame_id, method: :wait_for_selector, params: params]
     |> post()
-    |> unwrap_response(& &1.result.element)
+    |> Result.from_response(& &1.result.element)
   end
 
   def inner_html(frame_id, selector) do
@@ -84,13 +87,13 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: "innerHTML", params: params]
     |> post()
-    |> unwrap_response(& &1.result.value)
+    |> Result.from_response(& &1.result.value)
   end
 
   def content(frame_id) do
     [guid: frame_id, method: :content]
     |> post()
-    |> unwrap_response(& &1.result.value)
+    |> Result.from_response(& &1.result.value)
   end
 
   def fill(frame_id, selector, value, opts \\ []) do
@@ -99,7 +102,7 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :fill, params: params]
     |> post()
-    |> unwrap_response(& &1)
+    |> Result.from_response(& &1)
   end
 
   def select_option(frame_id, selector, options, opts \\ []) do
@@ -108,7 +111,7 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :select_option, params: params]
     |> post()
-    |> unwrap_response(& &1)
+    |> Result.from_response(& &1)
   end
 
   def check(frame_id, selector, opts \\ []) do
@@ -117,7 +120,7 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :check, params: params]
     |> post()
-    |> unwrap_response(& &1)
+    |> Result.from_response(& &1)
   end
 
   def uncheck(frame_id, selector, opts \\ []) do
@@ -126,7 +129,7 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :uncheck, params: params]
     |> post()
-    |> unwrap_response(& &1)
+    |> Result.from_response(& &1)
   end
 
   def set_input_files(frame_id, selector, paths, opts \\ []) do
@@ -135,7 +138,7 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :set_input_files, params: params]
     |> post()
-    |> unwrap_response(& &1)
+    |> Result.from_response(& &1)
   end
 
   def click(frame_id, selector, opts \\ []) do
@@ -144,7 +147,7 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :click, params: params]
     |> post()
-    |> unwrap_response(& &1)
+    |> Result.from_response(& &1)
   end
 
   def blur(frame_id, selector, opts \\ []) do
@@ -153,13 +156,6 @@ defmodule PhoenixTest.Playwright.Frame do
 
     [guid: frame_id, method: :blur, params: params]
     |> post()
-    |> unwrap_response(& &1)
-  end
-
-  defp unwrap_response(response, fun) do
-    case response do
-      %{error: _} = error -> {:error, error}
-      _ -> {:ok, fun.(response)}
-    end
+    |> Result.from_response(& &1)
   end
 end

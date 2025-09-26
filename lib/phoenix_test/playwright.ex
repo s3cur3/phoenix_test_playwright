@@ -230,12 +230,8 @@ defmodule PhoenixTest.Playwright do
 
   defp assert_a11y(conn) do
     Frame.evaluate(conn.frame_id, A11yAudit.JS.axe_core())
-
-    results =
-      conn.frame_id
-      |> Frame.evaluate("axe.run()")
-      |> A11yAudit.Results.from_json()
-
+    {:ok, json} = Frame.evaluate(conn.frame_id, "axe.run()")
+    results = A11yAudit.Results.from_json(json)
     A11yAudit.Assertions.assert_no_violations(results)
 
     conn
@@ -403,7 +399,7 @@ defmodule PhoenixTest.Playwright do
         _ -> Application.fetch_env!(:phoenix_test, :base_url) <> path
       end
 
-    tap(conn, &Frame.goto(&1.frame_id, url))
+    tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, url)))
   end
 
   @doc """
@@ -417,14 +413,14 @@ defmodule PhoenixTest.Playwright do
   """
   def add_cookies(conn, cookies) do
     cookies = Enum.map(cookies, &CookieArgs.from_cookie/1)
-    tap(conn, &BrowserContext.add_cookies(&1.context_id, cookies))
+    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, cookies)))
   end
 
   @doc """
   Removes all cookies from the context
   """
   def clear_cookies(conn, opts \\ []) do
-    tap(conn, &BrowserContext.clear_cookies(&1.context_id, opts))
+    tap(conn, &({:ok, _} = BrowserContext.clear_cookies(&1.context_id, opts)))
   end
 
   @doc """
@@ -447,7 +443,7 @@ defmodule PhoenixTest.Playwright do
   """
   def add_session_cookie(conn, cookie, session_options) do
     cookie = CookieArgs.from_session_options(cookie, session_options)
-    tap(conn, &BrowserContext.add_cookies(&1.context_id, [cookie]))
+    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, [cookie])))
   end
 
   @screenshot_opts_schema [

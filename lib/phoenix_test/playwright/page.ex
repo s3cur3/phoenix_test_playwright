@@ -10,8 +10,12 @@ defmodule PhoenixTest.Playwright.Page do
 
   import PhoenixTest.Playwright.Connection, only: [post: 1]
 
+  alias PhoenixTest.Playwright.Result
+
   def update_subscription(page_id, opts \\ []) do
-    post(guid: page_id, method: :update_subscription, params: Map.new(opts))
+    [guid: page_id, method: :update_subscription, params: Map.new(opts)]
+    |> post()
+    |> Result.from_response(& &1)
   end
 
   def screenshot(page_id, opts \\ []) do
@@ -23,13 +27,6 @@ defmodule PhoenixTest.Playwright.Page do
 
     [guid: page_id, method: :screenshot, params: params]
     |> post()
-    |> unwrap_response(& &1.result.binary)
-  end
-
-  defp unwrap_response(response, fun) do
-    case response do
-      %{error: _} = error -> {:error, error}
-      _ -> {:ok, fun.(response)}
-    end
+    |> Result.from_response(& &1.result.binary)
   end
 end
