@@ -88,7 +88,7 @@ defmodule PhoenixTestPlaywright.MixProject do
       "assets.setup": [
         "esbuild.install --if-missing",
         "cmd npm install --prefix priv/static/assets",
-        "cmd npm exec --prefix priv/static/assets playwright install chromium --with-deps --only-shell"
+        "cmd npm exec --prefix priv/static/assets playwright -- install chromium --with-deps --only-shell"
       ],
       "assets.build": ["esbuild default"],
       check: [
