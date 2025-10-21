@@ -19,15 +19,7 @@ defmodule PhoenixTestPlaywright.MixProject do
       name: "PhoenixTestPlaywright",
       source_url: @source_url,
       docs: docs(),
-      aliases: aliases(),
-      preferred_cli_env: [
-        setup: :test,
-        check: :test,
-        "assets.setup": :test,
-        "assets.build": :test,
-        esbuild: :test,
-        "esbuild.install": :test
-      ]
+      aliases: aliases()
     ]
   end
 
@@ -64,6 +56,19 @@ defmodule PhoenixTestPlaywright.MixProject do
       licenses: ["MIT"],
       links: %{"Github" => @source_url},
       exclude_patterns: ~w(assets/node_modules priv/static/assets)
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
+        setup: :test,
+        check: :test,
+        "assets.setup": :test,
+        "assets.build": :test,
+        esbuild: :test,
+        "esbuild.install": :test
+      ]
     ]
   end
 
