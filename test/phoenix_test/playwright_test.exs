@@ -6,6 +6,7 @@ defmodule PhoenixTest.PlaywrightTest do
   alias ExUnit.AssertionError
   alias PhoenixTest.Playwright
   alias PhoenixTest.Playwright.Config
+  alias PhoenixTest.Playwright.Selector
 
   describe "visit/2" do
     test "navigates to given LiveView page", %{conn: conn} do
