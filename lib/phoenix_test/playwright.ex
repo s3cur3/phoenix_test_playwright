@@ -504,7 +504,7 @@ defmodule PhoenixTest.Playwright do
 
   ## Examples
       |> type("#id", "some text")
-      |> type(Selector.role("heading", "Untitled", exact: true), "New title")
+      |> type(Selector.role("heading", "Untitled"), "New title")
   """
   @spec type(t(), selector(), String.t(), [
           unquote(NimbleOptions.option_typespec(@type_opts_schema))
@@ -545,7 +545,7 @@ defmodule PhoenixTest.Playwright do
 
   ## Examples
       |> press("#id", "Control+Shift+T")
-      |> press(Selector.button("Submit", exact: true), "Enter")
+      |> press(Selector.button("Submit"), "Enter")
   """
   @spec press(t(), selector(), String.t(), [
           unquote(NimbleOptions.option_typespec(@press_opts_schema))
@@ -740,7 +740,7 @@ defmodule PhoenixTest.Playwright do
   #{NimbleOptions.docs(@exact_opts_schema)}
 
   ## Examples
-      |> click(Selector.menuitem("Edit", exact: true))
+      |> click(Selector.menuitem("Edit"))
       |> click("summary", "(expand)", exact: false)
   """
   @spec click(t(), selector(), String.t(), [

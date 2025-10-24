@@ -512,7 +512,7 @@ defmodule PhoenixTest.PlaywrightTest do
       conn
       |> visit("/live/index")
       |> unwrap(fn %{frame_id: frame_id} ->
-        selector = Playwright.Selector.role("link", "Navigate link", exact: true)
+        selector = Selector.role("link", "Navigate link")
         {:ok, _} = Playwright.Frame.click(frame_id, selector)
       end)
       |> assert_has("h1", text: "LiveView page 2")

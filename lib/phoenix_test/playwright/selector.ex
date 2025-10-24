@@ -33,19 +33,21 @@ defmodule PhoenixTest.Playwright.Selector do
 
   def has(left, right), do: concat(left, "internal:has=#{Phoenix.json_library().encode!(right)}")
 
+  def text(text, opts \\ [])
   def text(nil, _opts), do: :none
   def text(text, opts), do: "internal:text=\"#{text}\"#{exact_suffix(opts)}"
 
+  def label(label, opts \\ [])
   def label(nil, _opts), do: :none
   def label(label, opts), do: "internal:label=\"#{label}\"#{exact_suffix(opts)}"
 
   def at(nil), do: :none
   def at(at), do: "nth=#{at}"
 
-  def link(text, opts), do: role("link", text, opts)
-  def button(text, opts), do: role("button", text, opts)
-  def menuitem(text, opts), do: role("menuitem", text, opts)
-  def role(role, text, opts), do: "internal:role=#{role}[name=\"#{text}\"#{exact_suffix(opts)}]"
+  def link(text, opts \\ []), do: role("link", text, opts)
+  def button(text, opts \\ []), do: role("button", text, opts)
+  def menuitem(text, opts \\ []), do: role("menuitem", text, opts)
+  def role(role, text, opts \\ []), do: "internal:role=#{role}[name=\"#{text}\"#{exact_suffix(opts)}]"
 
   def css(nil), do: :none
   def css([]), do: :none
