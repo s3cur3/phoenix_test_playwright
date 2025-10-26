@@ -2,17 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+<!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
-## tbd
+## [0.9.0] 2025-10-26
 ### Fixed
-- `assert_has/refute_has`: don't raise if multiple nodes found when using `value` option (playwright strict mode)
+- `assert_has/refute_has`: don't raise if multiple nodes found when using `value` option (playwright strict mode). Commit [73ebf10]
 ### Changed
-- Return result tuples from all playwright channel functions for consistency and to surface errors early.
+- Return result tuples from all playwright channel functions for consistency and to surface errors early. Commit [ae63989]
   - Most notably may affect callers of `Frame.evaluate/3`
 ### Added
-- Config option `selector_engines`.
+- Register custom selector engines via new config option `selector_engines`. Commit [73ebf10]
+- Import click/2 in Playwright.Case. Commit [968d5cd]
+- Add drag and drop: `drag(source, to: target)`. Commit [f4161bd]
 
 ## [0.8.0] 2025-09-17
 ### Removed
@@ -133,3 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1074cde]: https://github.com/ftes/phoenix_test_playwright/commit/1074cde
 [86c2e3d]: https://github.com/ftes/phoenix_test_playwright/commit/86c2e3d
 [aac0497]: https://github.com/ftes/phoenix_test_playwright/commit/aac0497
+[73ebf10]: https://github.com/ftes/phoenix_test_playwright/commit/73ebf10
+[ae63989]: https://github.com/ftes/phoenix_test_playwright/commit/ae63989
+[968d5cd]: https://github.com/ftes/phoenix_test_playwright/commit/968d5cd
+[f4161bd]: https://github.com/ftes/phoenix_test_playwright/commit/f4161bd
