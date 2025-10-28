@@ -32,21 +32,11 @@ defmodule PhoenixTest.Playwright.Connection do
   end
 
   @doc """
-  Lazy launch. Only start the playwright server if actually needed by a test.
-  """
-  def ensure_started do
-    case Process.whereis(@name) do
-      nil -> start_link()
-      pid -> {:ok, pid}
-    end
-
-    GenServer.call(@name, :awaiting_started)
-  end
-
-  @doc """
   Launch a browser and return its `guid`.
   """
   def launch_browser(type, opts) do
+    ensure_started()
+
     types = initializer("Playwright")
     type_id = Map.fetch!(types, type).guid
 
@@ -80,6 +70,15 @@ defmodule PhoenixTest.Playwright.Connection do
         #{stack}
         """
     end
+  end
+
+  defp ensure_started do
+    case Process.whereis(@name) do
+      nil -> start_link()
+      pid -> {:ok, pid}
+    end
+
+    GenServer.call(@name, :awaiting_started)
   end
 
   @doc """

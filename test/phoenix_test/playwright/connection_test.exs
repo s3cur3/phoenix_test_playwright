@@ -3,10 +3,6 @@ defmodule PhoenixTest.Playwright.ConnectionTest do
 
   alias PhoenixTest.Playwright.Connection
 
-  setup_all do
-    Connection.ensure_started()
-  end
-
   test "launch_browser/2 produces a reasonable error on timeout" do
     for opts <- [
           %{browser_launch_timeout: -1_000},

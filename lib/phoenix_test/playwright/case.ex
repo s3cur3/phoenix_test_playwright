@@ -74,7 +74,6 @@ defmodule PhoenixTest.Playwright.Case do
   end
 
   def launch_browser(opts) do
-    Connection.ensure_started()
     {browser, opts} = Keyword.pop!(opts, :browser)
     browser_id = Connection.launch_browser(browser, opts)
     on_exit(fn -> Connection.post(guid: browser_id, method: :close) end)
