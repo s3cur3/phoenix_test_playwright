@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
+## [0.9.1] 2025-10-29
+### Added
+- Browser pooling (opt-in): Reduced memory, higher speed. See `PhoenixTest.Playwright.BrowserPool`. Commit [00e75c6]
+
 ## [0.9.0] 2025-10-26
 ### Fixed
 - `assert_has/refute_has`: don't raise if multiple nodes found when using `value` option (playwright strict mode). Commit [73ebf10]
@@ -139,3 +143,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [ae63989]: https://github.com/ftes/phoenix_test_playwright/commit/ae63989
 [968d5cd]: https://github.com/ftes/phoenix_test_playwright/commit/968d5cd
 [f4161bd]: https://github.com/ftes/phoenix_test_playwright/commit/f4161bd
+[00e75c6]: https://github.com/ftes/phoenix_test_playwright/commit/00e75c6
