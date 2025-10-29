@@ -14,7 +14,7 @@ defmodule PhoenixTest.Playwright.BrowserPool do
   {:ok, _} =
     Supervisor.start_link(
       [
-        {PhoenixTest.Playwright.BrowserPool, name: :normal_chromium, size: System.schedulers_online(), browser: :chromium},
+        {PhoenixTest.Playwright.BrowserPool, name: :normal_chromium, size: ceil(System.schedulers_online() / 2), browser: :chromium},
         {PhoenixTest.Playwright.BrowserPool, name: :slow_chromium, size: 4, browser: :chromium, slow_mo: 100},
       ],
       strategy: :one_for_one
