@@ -19,17 +19,20 @@ schema =
       type_spec: quote(do: binary()),
       type_doc: "`t:binary/0`",
       type: {:custom, PhoenixTest.Playwright.Config, :__validate_runner__, []},
-      doc:
-        "The JS package runner to use to run the Playwright CLI. Accepts either a binary executable exposed in PATH or the absolute path to it."
+      doc: """
+      The JS package runner to use to run the Playwright CLI.
+      Accepts either a binary executable exposed in PATH or the absolute path to it.
+      """
     ],
     assets_dir: [
       default: "./assets",
       type_spec: quote(do: binary()),
       type_doc: "`t:binary/0`",
       type: {:custom, PhoenixTest.Playwright.Config, :__validate_assets_dir__, []},
-      doc:
-        "The directory where the JS assets are located and the Playwright CLI is installed.\n" <>
-          "Playwright version `#{playwright_recommended_version}` or newer is recommended."
+      doc: """
+      The directory where the JS assets are located and the Playwright CLI is installed.
+      Playwright version `#{playwright_recommended_version}` or newer is recommended.
+      """
     ],
     cli: [
       type: {:custom, PhoenixTest.Playwright.Config, :__validate_cli__, []},
@@ -37,7 +40,10 @@ schema =
     ],
     executable_path: [
       type: :string,
-      doc: "Path to a browser executable to run instead of the bundled one. Use at your own risk."
+      doc: """
+      Path to a browser executable to run instead of the bundled one.
+      Use at your own risk.
+      """
     ],
     headless: [
       default: true,
@@ -52,9 +58,11 @@ schema =
       default: false,
       type: {:or, [:boolean, non_empty_keyword_list: screenshot_opts_schema]},
       type_doc: "`boolean/0 | Keyword.t/0`",
-      doc:
-        "Either a boolean or a keyword list:\n\n" <>
-          NimbleOptions.docs(screenshot_opts_schema, nest_level: 1)
+      doc: """
+      Either a boolean or a keyword list:
+
+      #{NimbleOptions.docs(screenshot_opts_schema, nest_level: 1)}
+      """
     ],
     screenshot_dir: [
       default: "screenshots",
@@ -75,8 +83,10 @@ schema =
     browser_pool: [
       default: nil,
       type: :any,
-      doc:
-        "Reuse a browser from this pool instead of launching a new browser per test suite. See `PhoenixTest.Playwright.BrowserPool`."
+      doc: """
+      Reuse a browser from this pool instead of launching a new browser per test suite.
+      See `PhoenixTest.Playwright.BrowserPool`.
+      """
     ],
     slow_mo: [
       default: to_timeout(second: 0),
@@ -94,27 +104,30 @@ schema =
     accept_dialogs: [
       default: true,
       type: :boolean,
-      doc: "Accept browser dialogs (`alert()`, `confirm()`, `prompt()`)"
+      doc: "Accept browser dialogs (`alert()`, `confirm()`, `prompt()`)."
     ],
     browser_context_opts: [
       default: [],
       type: {:or, [:map, :keyword_list]},
-      doc:
-        "Additional arguments passed to Playwright [Browser.newContext](https://playwright.dev/docs/api/class-browser#browser-new-context).\n" <>
-          ~s(E.g. `[http_credentials: %{username: "a", password: "b"}]`)
+      doc: """
+      Additional arguments passed to Playwright [Browser.newContext](https://playwright.dev/docs/api/class-browser#browser-new-context).
+      E.g. `[http_credentials: %{username: "a", password: "b"}]`.
+      """
     ],
     browser_page_opts: [
       default: [],
       type: {:or, [:map, :keyword_list]},
-      doc:
-        "Additional arguments passed to Playwright [Browser.newPage](https://playwright.dev/docs/api/class-browser#browser-new-page).\n" <>
-          ~s(E.g. `[accept_downloads: false]`)
+      doc: """
+      Additional arguments passed to Playwright [Browser.newPage](https://playwright.dev/docs/api/class-browser#browser-new-page).
+      (E.g. `[accept_downloads: false]`.
+      """
     ],
     selector_engines: [
       default: [],
       type: {:or, [:map, :keyword_list]},
-      doc:
-        "Define custom Playwright [selector engines](https://playwright.dev/docs/extensibility#custom-selector-engines)."
+      doc: """
+      Define custom Playwright [selector engines](https://playwright.dev/docs/extensibility#custom-selector-engines).
+      """
     ]
   )
 
