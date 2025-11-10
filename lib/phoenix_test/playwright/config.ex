@@ -77,9 +77,10 @@ schema_opts = [
     type: :boolean
   ],
   js_logger: [
-    default: :default,
-    type: {:or, [{:in, [:default, false]}, {:fun, 1}]},
-    type_doc: "`:default | false | (msg -> nil)`"
+    default: PhoenixTest.Playwright.JsLoggerDefault,
+    type: :atom,
+    type_doc: "`module | false`",
+    doc: "`false` to disable, or a module that implements the `PhoenixTest.Playwright.JsLogger` behaviour."
   ],
   runner: [
     default: "npx",

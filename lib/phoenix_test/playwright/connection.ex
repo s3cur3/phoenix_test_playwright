@@ -11,8 +11,6 @@ defmodule PhoenixTest.Playwright.Connection do
   alias PhoenixTest.Playwright.Config
   alias PhoenixTest.Playwright.Port, as: PlaywrightPort
 
-  require Logger
-
   @timeout_grace_factor 1.5
   @min_genserver_timeout to_timeout(second: 1)
 
@@ -158,70 +156,36 @@ defmodule PhoenixTest.Playwright.Connection do
 
   defp handle_recv(msg, state) do
     state
-    |> log_js_error(msg)
-    |> log_console(msg)
+    |> log_js(msg)
     |> add_initializer(msg)
     |> handle_started(msg)
     |> reply_in_flight(msg)
     |> send_to_subscribers(msg)
   end
 
-  defp log_js_error(state, %{method: :page_error} = msg) do
-    "Javascript error: #{inspect(msg.params.error)}"
-    |> add_location(msg)
-    |> Logger.error()
-
-    state
-  end
-
-  defp log_js_error(state, _), do: state
-
-  defp log_console(state, %{method: :console} = msg) do
-    case Config.global(:js_logger) do
-      :default ->
-        level =
-          case msg.params.type do
-            "error" -> :error
-            "debug" -> :debug
-            _ -> :info
-          end
-
-        "Javascript console: #{msg.params.text}"
-        |> add_location(msg)
-        |> tap(&Logger.log(level, &1))
-
-      fun when is_function(fun, 1) ->
-        fun.(msg)
-
-      nil ->
-        nil
-
-      false ->
-        nil
+  defp log_js(state, %{method: :page_error} = msg) do
+    if module = Config.global(:js_logger) do
+      module.log(:error, msg.params.error, msg)
     end
 
     state
   end
 
-  defp log_console(state, _), do: state
+  defp log_js(state, %{method: :console} = msg) do
+    if module = Config.global(:js_logger) do
+      case msg[:params][:type] do
+        "error" -> :error
+        "debug" -> :debug
+        _ -> :info
+      end
 
-  def add_location(text, %{params: %{location: %{url: ""}}} = _message) do
-    "#{text}"
+      module.log(:error, msg.params.text, msg)
+    end
+
+    state
   end
 
-  def add_location(text, %{params: %{location: %{url: url, line_number: 0}}} = _message) do
-    "#{text} (#{url})"
-  end
-
-  def add_location(text, %{params: %{location: %{url: url, line_number: line_number}}} = _message) do
-    "#{text} (#{url}:#{line_number})"
-  end
-
-  def add_location(text, %{params: %{location: %{url: url}}} = _message) do
-    "#{text} (#{url})"
-  end
-
-  def add_location(text, _message), do: text
+  defp log_js(state, _), do: state
 
   defp handle_started(state, %{method: :__create__, params: %{type: "Playwright"}}) do
     for from <- state.awaiting_started, do: GenServer.reply(from, :ok)
