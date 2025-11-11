@@ -207,7 +207,7 @@ defmodule PhoenixTest.Playwright.Config do
     playwright_json = Path.join([assets_dir, "node_modules", "playwright", "package.json"])
 
     with {:ok, string} <- File.read(playwright_json),
-         {:ok, json} <- JSON.decode(string) do
+         {:ok, json} <- Phoenix.json_library().decode(string) do
       version = json["version"] || "0"
 
       if Version.compare(version, @playwright_recommended_version) == :lt do
