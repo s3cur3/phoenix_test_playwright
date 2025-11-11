@@ -173,13 +173,14 @@ defmodule PhoenixTest.Playwright.Connection do
 
   defp log_js(state, %{method: :console} = msg) do
     if module = Config.global(:js_logger) do
-      case msg[:params][:type] do
-        "error" -> :error
-        "debug" -> :debug
-        _ -> :info
-      end
+      level =
+        case msg[:params][:type] do
+          "error" -> :error
+          "debug" -> :debug
+          _ -> :info
+        end
 
-      module.log(:error, msg.params.text, msg)
+      module.log(level, msg.params.text, msg)
     end
 
     state
