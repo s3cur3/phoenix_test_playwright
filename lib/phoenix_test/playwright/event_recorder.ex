@@ -27,7 +27,7 @@ defmodule PhoenixTest.Playwright.EventRecorder do
   end
 
   @impl GenServer
-  def handle_info({:playwright, event}, state) do
+  def handle_info({:playwright_msg, event}, state) do
     if state.filter.(event) do
       {:noreply, Map.update!(state, :events, &[event | &1])}
     else

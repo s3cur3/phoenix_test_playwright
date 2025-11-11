@@ -39,7 +39,7 @@ defmodule PhoenixTest.Playwright.EventListener do
   end
 
   @impl GenServer
-  def handle_info({:playwright, event}, %__MODULE__{} = state) do
+  def handle_info({:playwright_msg, event}, %__MODULE__{} = state) do
     callback = List.first(state.callbacks)
     if state.filter.(event) and callback, do: callback.(event)
     {:noreply, state}
