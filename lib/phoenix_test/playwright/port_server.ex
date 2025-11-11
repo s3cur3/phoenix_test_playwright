@@ -1,21 +1,46 @@
-defmodule PhoenixTest.Playwright.Port do
+defmodule PhoenixTest.Playwright.PortServer do
   @moduledoc """
-  Start a Playwright node.js server and communicate with it via a `Port`.
+  GenServer that owns the Erlang Port to Playwright node.js server and handles message framing.
 
   A single `Port` response can contain multiple Playwright messages and/or a fraction of a message.
-  The remaining fraction is stored in `buffer` and continiued in the next `Port` response.
+  The remaining fraction is stored in `buffer` and continued in the next `Port` response.
+
+  This process:
+  - Opens and owns the Erlang Port
+  - Receives `{port, {:data, binary}}` messages automatically
+  - Parses and assembles complete messages from potentially fragmented Port data
+  - Forwards complete messages to the Connection process as `{:playwright_msg, msg}`
+  - Handles sending messages to Playwright via `Port.command/2`
+  - Serializes message terms <-> JSON (underscore_case <-> camelCase, atom <-> string)
   """
+  use GenServer
 
   alias PhoenixTest.Playwright.Config
+  alias PhoenixTest.Playwright.Connection
   alias PhoenixTest.Playwright.Serialization
 
-  defstruct [
-    :port,
-    :remaining,
-    :buffer
-  ]
+  defstruct port: nil,
+            remaining: 0,
+            buffer: ""
 
-  def open do
+  @name __MODULE__
+
+  @doc """
+  Start the PortServer and link it to the connection process.
+  """
+  def start_link(connection_pid) do
+    GenServer.start_link(__MODULE__, connection_pid, name: @name)
+  end
+
+  @doc """
+  Post a message to Playwright via the Port.
+  """
+  def post(msg) do
+    GenServer.cast(@name, {:post, msg})
+  end
+
+  @impl GenServer
+  def init(_connection_pid) do
     port =
       Port.open({:spawn_executable, Config.global(:runner)}, [
         :binary,
@@ -23,23 +48,28 @@ defmodule PhoenixTest.Playwright.Port do
         cd: Config.global(:assets_dir)
       ])
 
-    %__MODULE__{port: port, remaining: 0, buffer: ""}
+    {:ok, %__MODULE__{port: port}}
   end
 
-  def post(state, msg) do
+  @impl GenServer
+  def handle_cast({:post, msg}, state) do
     frame = to_json(msg)
     length = byte_size(frame)
     padding = <<length::utf32-little>>
-
     Port.command(state.port, padding <> frame)
+
+    {:noreply, state}
   end
 
-  def parse(%{port: port} = state, {port, {:data, data}}) do
+  @impl GenServer
+  def handle_info({port, {:data, data}}, %{port: port} = state) do
     {remaining, buffer, frames} = parse(data, state.remaining, state.buffer, [])
-    state = %{state | buffer: buffer, remaining: remaining}
-    msgs = Enum.map(frames, &from_json/1)
 
-    {state, msgs}
+    for frame <- frames do
+      frame |> from_json() |> Connection.handle_playwright_msg()
+    end
+
+    {:noreply, %{state | buffer: buffer, remaining: remaining}}
   end
 
   defp parse(data, remaining, buffer, frames)
@@ -65,14 +95,14 @@ defmodule PhoenixTest.Playwright.Port do
     {remaining - byte_size(data), buffer <> data, frames}
   end
 
-  def to_json(msg) do
+  defp to_json(msg) do
     msg
     |> Map.update(:method, nil, &Serialization.camelize/1)
     |> Serialization.deep_key_camelize()
     |> Phoenix.json_library().encode!()
   end
 
-  def from_json(frame) do
+  defp from_json(frame) do
     frame
     |> Phoenix.json_library().decode!()
     |> Serialization.deep_key_underscore()

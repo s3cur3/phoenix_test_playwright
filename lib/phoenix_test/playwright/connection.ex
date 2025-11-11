@@ -9,19 +9,16 @@ defmodule PhoenixTest.Playwright.Connection do
   use GenServer
 
   alias PhoenixTest.Playwright.Config
-  alias PhoenixTest.Playwright.Port, as: PlaywrightPort
+  alias PhoenixTest.Playwright.PortServer
 
   @timeout_grace_factor 1.5
   @min_genserver_timeout to_timeout(second: 1)
 
-  defstruct [
-    :port,
-    status: :pending,
-    awaiting_started: [],
-    initializers: %{},
-    guid_subscribers: %{},
-    posts_in_flight: %{}
-  ]
+  defstruct status: :pending,
+            awaiting_started: [],
+            initializers: %{},
+            guid_subscribers: %{},
+            posts_in_flight: %{}
 
   @name __MODULE__
 
@@ -87,6 +84,14 @@ defmodule PhoenixTest.Playwright.Connection do
   end
 
   @doc """
+  Handle a parsed message from the PortServer.
+  This is called by PortServer after parsing complete messages from the Port.
+  """
+  def handle_playwright_msg(msg) do
+    GenServer.cast(@name, {:playwright_msg, msg})
+  end
+
+  @doc """
   Post a message and await the response.
   We wait for an additional grace period after the timeout that we pass to playwright.
   """
@@ -111,11 +116,11 @@ defmodule PhoenixTest.Playwright.Connection do
 
   @impl GenServer
   def init(:no_init_arg) do
-    port = PlaywrightPort.open()
+    {:ok, _} = PortServer.start_link(self())
     msg = %{guid: "", params: %{sdk_language: :javascript}, method: :initialize, metadata: %{}}
-    PlaywrightPort.post(port, msg)
+    PortServer.post(msg)
 
-    {:ok, %__MODULE__{port: port}}
+    {:ok, %__MODULE__{}}
   end
 
   @impl GenServer
@@ -124,11 +129,16 @@ defmodule PhoenixTest.Playwright.Connection do
     {:noreply, %{state | guid_subscribers: subscribers}}
   end
 
+  def handle_cast({:playwright_msg, msg}, state) do
+    state = handle_recv(msg, state)
+    {:noreply, state}
+  end
+
   @impl GenServer
   def handle_call({:post, msg}, from, state) do
     msg_id = fn -> System.unique_integer([:positive, :monotonic]) end
     msg = msg |> Map.new() |> Map.put_new_lazy(:id, msg_id)
-    PlaywrightPort.post(state.port, msg)
+    PortServer.post(msg)
 
     {:noreply, Map.update!(state, :posts_in_flight, &Map.put(&1, msg.id, from))}
   end
@@ -143,15 +153,6 @@ defmodule PhoenixTest.Playwright.Connection do
 
   def handle_call(:awaiting_started, _from, %{status: :started} = state) do
     {:reply, :ok, state}
-  end
-
-  @impl GenServer
-  def handle_info({_, {:data, _}} = raw_msg, state) do
-    {port, msgs} = PlaywrightPort.parse(state.port, raw_msg)
-    state = %{state | port: port}
-    state = Enum.reduce(msgs, state, &handle_recv/2)
-
-    {:noreply, state}
   end
 
   defp handle_recv(msg, state) do
