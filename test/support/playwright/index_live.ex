@@ -1,4 +1,4 @@
-defmodule PhoenixTest.IndexLive do
+defmodule PhoenixTest.Playwright.IndexLive do
   @moduledoc false
   use Phoenix.LiveView
 
@@ -6,14 +6,14 @@ defmodule PhoenixTest.IndexLive do
     ~H"""
     <h1 id="title" class="title" data-role="title">LiveView main page</h1>
 
-    <.link navigate="/live/page_2?details=true&foo=bar">Navigate link</.link>
-    <.link patch="/live/index?details=true&foo=bar">Patch link</.link>
-    <.link href="/page/index?details=true&foo=bar">Navigate to non-liveview</.link>
+    <.link navigate="/pw/live/page_2?details=true&foo=bar">Navigate link</.link>
+    <.link patch="/pw/live/index?details=true&foo=bar">Patch link</.link>
+    <.link href="/pw/page/index?details=true&foo=bar">Navigate to non-liveview</.link>
 
-    <.link class="multiple_links" href="/live/page_3">Multiple links</.link>
-    <.link class="multiple_links" href="/live/page_4">Multiple links</.link>
+    <.link class="multiple_links" href="/pw/live/page_3">Multiple links</.link>
+    <.link class="multiple_links" href="/pw/live/page_4">Multiple links</.link>
 
-    <.link navigate="/live/page_2?redirect_to=/live/index">Navigate (and redirect back) link</.link>
+    <.link navigate="/pw/live/page_2?redirect_to=/pw/live/index">Navigate (and redirect back) link</.link>
 
     <h2 :if={@details}>LiveView main page details</h2>
 
@@ -222,7 +222,7 @@ defmodule PhoenixTest.IndexLive do
       </button>
     </form>
 
-    <form id="non-liveview-form" action="/page/create_record" method="post">
+    <form id="non-liveview-form" action="/pw/page/create_record" method="post">
       <label for="non-liveview-form-name">Name</label>
       <input id="non-liveview-form-name" name="name" />
       <button type="submit" name="button" value="save">
@@ -230,7 +230,7 @@ defmodule PhoenixTest.IndexLive do
       </button>
     </form>
 
-    <form id="pre-rendered-data-non-liveview-form" action="/page/create_record" method="post">
+    <form id="pre-rendered-data-non-liveview-form" action="/pw/page/create_record" method="post">
       <input name="input" value="value" />
 
       <select name="select">
@@ -440,7 +440,7 @@ defmodule PhoenixTest.IndexLive do
     <div id="hook" phx-hook="SomeHook"></div>
     <div id="hook-with-redirect" phx-hook="SomeOtherHook"></div>
 
-    <.link data-confirm="Are you sure?" navigate="/live/page_2">Confirm to navigate</.link>
+    <.link data-confirm="Are you sure?" navigate="/pw/live/page_2">Confirm to navigate</.link>
 
     <div id="drag-and-drop">
       <div id="drag-status">pending</div>
@@ -538,11 +538,11 @@ defmodule PhoenixTest.IndexLive do
   end
 
   def handle_event("save-redirect-form", _, socket) do
-    {:noreply, push_navigate(socket, to: "/live/page_2")}
+    {:noreply, push_navigate(socket, to: "/pw/live/page_2")}
   end
 
   def handle_event("save-redirect-form-to-static", _, socket) do
-    {:noreply, redirect(socket, to: "/page/index")}
+    {:noreply, redirect(socket, to: "/pw/page/index")}
   end
 
   def handle_event("reset-email-form", _, socket) do
@@ -591,15 +591,15 @@ defmodule PhoenixTest.IndexLive do
   end
 
   def handle_event("redirect-on-change", _, socket) do
-    {:noreply, push_navigate(socket, to: "/live/page_2")}
+    {:noreply, push_navigate(socket, to: "/pw/live/page_2")}
   end
 
   def handle_event("push-navigate", _, socket) do
-    {:noreply, push_navigate(socket, to: "/live/page_2?foo=bar")}
+    {:noreply, push_navigate(socket, to: "/pw/live/page_2?foo=bar")}
   end
 
   def handle_event("push-patch", _, socket) do
-    {:noreply, push_patch(socket, to: "/live/index?foo=bar")}
+    {:noreply, push_patch(socket, to: "/pw/live/index?foo=bar")}
   end
 
   def handle_event("hook_event", params, socket) do
@@ -612,7 +612,7 @@ defmodule PhoenixTest.IndexLive do
   end
 
   def handle_event("hook_with_redirect_event", _params, socket) do
-    {:noreply, push_navigate(socket, to: "/live/page_2")}
+    {:noreply, push_navigate(socket, to: "/pw/live/page_2")}
   end
 
   def handle_event("select-drone", params, socket) do

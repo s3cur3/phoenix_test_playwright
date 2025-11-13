@@ -11,14 +11,14 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "visit/2" do
     test "navigates to given LiveView page", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("h1", text: "LiveView main page")
     end
 
     test "user can visit different pages sequentially", %{conn: conn} do
       conn
-      |> visit("/live/page_2")
-      |> visit("/live/index")
+      |> visit("/pw/live/page_2")
+      |> visit("/pw/live/index")
       |> assert_has("h1", text: "LiveView main page")
     end
   end
@@ -26,7 +26,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "render_html/2" do
     test "doesn't fail", %{conn: conn} do
       assert conn
-             |> visit("/live/index")
+             |> visit("/pw/live/index")
              |> Playwright.render_html() =~ "<body"
     end
   end
@@ -36,7 +36,7 @@ defmodule PhoenixTest.PlaywrightTest do
       name = "png_#{:erlang.system_time(:second)}.png"
 
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("h1", text: "LiveView main page")
       |> screenshot(name, full_page: false, omit_background: true)
 
@@ -47,7 +47,7 @@ defmodule PhoenixTest.PlaywrightTest do
       name = "jpg_#{:erlang.system_time(:second)}.jpg"
 
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("h1", text: "LiveView main page")
       |> screenshot(name)
 
@@ -59,7 +59,7 @@ defmodule PhoenixTest.PlaywrightTest do
       viewport_name = "viewport_#{:erlang.system_time(:second)}.png"
 
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("h1", text: "LiveView main page")
       |> screenshot(full_page_name, full_page: true)
       |> screenshot(viewport_name, full_page: false)
@@ -74,14 +74,14 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "click_link/2" do
     test "follows 'navigate' links", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> click_link("Navigate link")
       |> assert_has("h1", text: "LiveView page 2")
     end
 
     test "accepts click_link with selector", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> click_link("a", "Navigate link")
       |> assert_has("h1", text: "LiveView page 2")
     end
@@ -89,7 +89,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises error when there are multiple links with same text", %{conn: conn} do
       assert_raise AssertionError, ~r/Found more than one/, fn ->
         conn
-        |> visit("/live/index")
+        |> visit("/pw/live/index")
         |> click_link("Multiple links")
       end
     end
@@ -97,7 +97,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises an error when link element can't be found with given text", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
-        |> visit("/live/index")
+        |> visit("/pw/live/index")
         |> click_link("No link")
       end
     end
@@ -106,7 +106,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "click_button/2" do
     test "handles a `phx-click` button", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> click_button("Show tab")
       |> assert_has("#tab", text: "Tab title")
     end
@@ -114,7 +114,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises an error when there are no buttons on page", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find/, fn ->
         conn
-        |> visit("/live/page_2")
+        |> visit("/pw/live/page_2")
         |> click_button("Show tab")
       end
     end
@@ -123,7 +123,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "within/3" do
     test "scopes assertions within selector", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("button", text: "Reset")
       |> within("#email-form", fn conn ->
         refute_has(conn, "button", text: "Reset")
@@ -132,7 +132,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "nests selector when multiple withins", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("button", text: "Reset")
       |> within("#full-form", fn conn ->
         within(conn, "#contact", fn conn ->
@@ -143,7 +143,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "scopes further form actions within a selector", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#email-form", fn conn ->
         fill_in(conn, "Email", with: "someone@example.com")
       end)
@@ -153,7 +153,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises when data is not in scoped HTML", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
-        |> visit("/live/index")
+        |> visit("/pw/live/index")
         |> within("#email-form", fn conn ->
           fill_in(conn, "User Name", with: "Aragorn")
         end)
@@ -164,16 +164,16 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "browser dialog handling: accept_dialogs config and with_dialog/3" do
     test "accepts dialog by default", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> click_link("Confirm to navigate")
-      |> assert_path("/live/page_2")
+      |> assert_path("/pw/live/page_2")
     end
 
     @tag accept_dialogs: false
     test "override config via tag: dismisses dialog and fails click_link", %{conn: conn} do
       assert_raise AssertionError, fn ->
         conn
-        |> visit("/live/index")
+        |> visit("/pw/live/index")
         |> click_link("Confirm to navigate")
       end
     end
@@ -181,13 +181,13 @@ defmodule PhoenixTest.PlaywrightTest do
     @tag accept_dialogs: false
     test "with_dialog/3 accepts dialog conditionally", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> with_dialog(
         fn %{message: "Are you sure?"} -> :accept end,
         fn conn ->
           conn
           |> click_link("Confirm to navigate")
-          |> assert_path("/live/page_2")
+          |> assert_path("/pw/live/page_2")
         end
       )
     end
@@ -196,7 +196,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "fill_in/4" do
     test "fills in a single text field based on the label", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#email-form", fn conn ->
         fill_in(conn, "Email", with: "someone@example.com")
       end)
@@ -205,7 +205,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can fill input with `nil` to override existing value", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#pre-rendered-data-form", fn conn ->
         fill_in(conn, "Pre Rendered Input", with: nil)
       end)
@@ -214,7 +214,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can fill-in textareas", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> fill_in("Notes", with: "Dunedain. Heir to the throne. King of Arnor and Gondor")
       |> click_button("Save Full Form")
       |> assert_has("#form-data",
@@ -224,7 +224,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can target a label with exact: false", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#complex-labels", fn conn ->
         fill_in(conn, "Name", with: "Frodo", exact: false)
       end)
@@ -233,7 +233,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can target input with selector if multiple labels have same text", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#same-labels", fn conn ->
         fill_in(conn, "#book-characters", "Character", with: "Frodo")
       end)
@@ -242,7 +242,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "triggers phx-change event if phx-debounce=blur", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> fill_in("Debounce blur", with: "triggers")
       |> assert_has("#form-data", text: "debounce-blur: triggers")
     end
@@ -250,7 +250,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises an error when element can't be found with label", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
-        |> visit("/live/index")
+        |> visit("/pw/live/index")
         |> fill_in("Non-existent Email Label", with: "some@example.com")
       end
     end
@@ -258,7 +258,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises an error when label is found but no corresponding input is found", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
-        |> visit("/live/index")
+        |> visit("/pw/live/index")
         |> fill_in("Email (no input)", with: "some@example.com")
       end
     end
@@ -267,14 +267,14 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "select/3" do
     test "selects given option for a label", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> select("Race", option: "Elf")
       |> assert_has("#full-form option[value='elf']")
     end
 
     test "allows selecting option if a similar option exists", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> select("Race", option: "Orc")
       |> assert_has("#full-form option[value='orc']")
     end
@@ -282,7 +282,7 @@ defmodule PhoenixTest.PlaywrightTest do
     @tag skip: "failing to select any option"
     test "works for multiple select", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> select("Race 2", option: ["Elf", "Dwarf"])
       |> click_button("Save Full Form")
       |> assert_has("#form-data", text: "[elf, dwarf]")
@@ -290,7 +290,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can target a label with exact: false", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#complex-labels", fn conn ->
         select(conn, "Choose a pet:", option: "Cat", exact: false)
       end)
@@ -300,7 +300,7 @@ defmodule PhoenixTest.PlaywrightTest do
     @tag skip: true, reason: :not_implemented, not_implemented: :exact_option
     test "can target an option's text with exact_option: false", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#full-form", fn conn ->
         select(conn, "Race", option: "Dwa", exact_option: false)
       end)
@@ -310,7 +310,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can target option with selector if multiple labels have same text", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#same-labels", fn conn ->
         select(conn, "#select-favorite-character", "Character", option: "Frodo")
       end)
@@ -321,7 +321,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "check/3" do
     test "checks a checkbox", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> check("Admin")
       |> click_button("Save Full Form")
       |> assert_has("#form-data", text: "admin: on")
@@ -329,7 +329,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can check an unchecked checkbox", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> uncheck("Admin")
       |> check("Admin")
       |> click_button("Save Full Form")
@@ -338,7 +338,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "handle checkbox name with '?'", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> check("Subscribe")
       |> click_button("Save Full Form")
       |> assert_has("#form-data", text: "subscribe?: on")
@@ -346,7 +346,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can target a label with exact: false", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#complex-labels", fn conn ->
         check(conn, "Human", exact: false)
       end)
@@ -355,7 +355,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can specify input selector when multiple checkboxes have same label", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#same-labels", fn conn ->
         check(conn, "#like-elixir", "Yes")
       end)
@@ -366,7 +366,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "uncheck/3" do
     test "can uncheck a previous check/2 in the test", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> check("Admin")
       |> uncheck("Admin")
       |> click_button("Save Full Form")
@@ -375,7 +375,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can target a label with exact: false", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#complex-labels", fn conn ->
         conn
         |> check("Human", exact: false)
@@ -386,7 +386,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can specify input selector when multiple checkboxes have same label", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#same-labels", fn conn ->
         conn
         |> check("#like-elixir", "Yes")
@@ -400,7 +400,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "choose/3" do
     test "chooses an option in radio button", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> choose("Email Choice")
       |> click_button("Save Full Form")
       |> assert_has("#form-data", text: "contact: email")
@@ -408,7 +408,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can target a label with exact: false", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#complex-labels", fn conn ->
         choose(conn, "Book", exact: false)
       end)
@@ -419,7 +419,7 @@ defmodule PhoenixTest.PlaywrightTest do
       conn: conn
     } do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#same-labels", fn conn ->
         choose(conn, "#elixir-yes", "Yes")
       end)
@@ -430,7 +430,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "upload/4" do
     test "uploads an image", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#full-form", fn conn ->
         conn
         |> upload("Avatar", "test/files/elixir.jpg")
@@ -441,7 +441,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can target a label with exact: false", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#complex-labels", fn conn ->
         conn
         |> upload("Avatar", "test/files/elixir.jpg", exact: false)
@@ -452,7 +452,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can specify input selector when multiple inputs have same label", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#same-labels", fn conn ->
         conn
         |> upload("[name='main_avatar']", "Avatar", "test/files/elixir.jpg")
@@ -465,7 +465,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "submit/1" do
     test "submits a pre-filled form via phx-submit", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#email-form", fn conn ->
         fill_in(conn, "Email", with: "some@example.com")
       end)
@@ -475,7 +475,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "can submit form without button", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> fill_in("Country of Origin", with: "Arnor")
       |> submit()
       |> assert_has("#form-data", text: "country: Arnor")
@@ -502,7 +502,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "opens the browser ", %{conn: conn, open_fun: open_fun} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> open_browser(open_fun)
       |> assert_has("h1", text: "Main page")
     end
@@ -511,7 +511,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "unwrap" do
     test "provides an escape hatch that gives access to the underlying frame", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> unwrap(fn %{frame_id: frame_id} ->
         selector = Selector.role("link", "Navigate link")
         {:ok, _} = Playwright.Frame.click(frame_id, selector)
@@ -523,7 +523,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "shared form helpers behavior" do
     test "triggers phx-change validations", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#email-form", fn conn ->
         conn
         |> fill_in("Email", with: "email")
@@ -536,21 +536,21 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "assert_has/2" do
     test "succeeds if single element is found with CSS selector", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> assert_has("[data-role='title']")
     end
 
     test "raises an error if the element cannot be found at all", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> assert_has("#nonexistent-id")
       end
     end
 
     test "succeeds if more than one element matches selector", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> assert_has("li")
     end
   end
@@ -558,13 +558,13 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "assert_has/3" do
     test "title text match", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("title", text: "PhoenixTest is the best!")
     end
 
     test "succeeds if single element is found with CSS selector and text", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("h1", text: "LiveView main page")
       |> assert_has("#title", text: "LiveView main page")
       |> assert_has(".title", text: "LiveView main page")
@@ -575,25 +575,25 @@ defmodule PhoenixTest.PlaywrightTest do
       conn: conn
     } do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> assert_has("li", text: "Aragorn")
     end
 
     test "succeeds if more than one element matches selector and text", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> assert_has(".multiple_links", text: "Multiple links")
     end
 
     test "succeeds if text difference is only a matter of truncation", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> assert_has(".has_extra_space", text: "Has extra space")
     end
 
     test "asserts input with label", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#email-form", fn conn ->
         assert_has(conn, "input", label: "Email")
       end)
@@ -601,7 +601,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "asserts input with value", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#email-form", fn conn ->
         conn
         |> fill_in("Email", with: "someone@example.com")
@@ -611,7 +611,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "asserts input with label and value", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#email-form", fn conn ->
         conn
         |> fill_in("Email", with: "someone@example.com")
@@ -621,20 +621,20 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "succeed if CSS selector that matches multiple nodes", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("#pre-rendered-data-form input[name=comments]")
     end
 
     test "succed with value option if CSS selector matches multiple nodes", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#owner-form", &fill_in(&1, "Name", with: "Gandalf"))
       |> assert_has("input[name=name]", value: "Gandalf")
     end
 
     test "succeed with value option if label selector matches multiple nodes", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> within("#owner-form", &fill_in(&1, "Name", with: "Gandalf"))
       |> assert_has("input", label: "Name", value: "Gandalf")
     end
@@ -642,14 +642,14 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises an error if the element cannot be found at all", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> assert_has("#nonexistent-id", text: "Main page")
       end
     end
 
     test "accepts a `count` option", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> assert_has(".multiple_links", count: 2)
       |> assert_has(".multiple_links", text: "Multiple links", count: 2)
       |> assert_has("h1", count: 1)
@@ -657,7 +657,7 @@ defmodule PhoenixTest.PlaywrightTest do
     end
 
     test "raises an error if count is more than expected count", %{conn: conn} do
-      conn = visit(conn, "/page/index")
+      conn = visit(conn, "/pw/page/index")
 
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         assert_has(conn, ".multiple_links", count: 1)
@@ -665,7 +665,7 @@ defmodule PhoenixTest.PlaywrightTest do
     end
 
     test "raises an error if count is less than expected count", %{conn: conn} do
-      conn = visit(conn, "/page/index")
+      conn = visit(conn, "/pw/page/index")
 
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         assert_has(conn, "h1", count: 2)
@@ -674,7 +674,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "accepts an `exact` option to match text exactly", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> assert_has("h1", text: "Main", exact: false)
       |> assert_has("h1", text: "Main page", exact: true)
     end
@@ -682,7 +682,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises if `exact` text doesn't match", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> assert_has("h1", text: "Main", exact: true)
       end
     end
@@ -690,7 +690,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises if it cannot find element at `at` position", %{conn: conn} do
       assert_raise AssertionError, ~r/Could not find element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> assert_has("#multiple-items li", at: 2, text: "Aragorn")
       end
     end
@@ -699,20 +699,20 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "refute_has/2" do
     test "title without text", %{conn: conn} do
       conn
-      |> visit("/live/index_no_layout")
+      |> visit("/pw/live/index_no_layout")
       |> refute_has("title")
     end
 
     test "succeeds if no element is found with CSS selector", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> refute_has("#some-invalid-id")
       |> refute_has("[data-role='invalid-role']")
     end
 
     test "accepts a `count` option", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> refute_has("h1", count: 2)
       |> refute_has("h1", text: "Main page", count: 2)
       |> refute_has(".multiple_links", count: 1)
@@ -722,7 +722,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises if element is found", %{conn: conn} do
       assert_raise AssertionError, ~r/Found element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> refute_has("h1")
       end
     end
@@ -730,7 +730,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises an error if multiple elements are found", %{conn: conn} do
       assert_raise AssertionError, ~r/Found element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> refute_has(".multiple_links")
       end
     end
@@ -738,7 +738,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises if there is one element and count is 1", %{conn: conn} do
       assert_raise AssertionError, ~r/Found element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> refute_has("h1", count: 1)
       end
     end
@@ -746,14 +746,14 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises if there are the same number of elements as refuted", %{conn: conn} do
       assert_raise AssertionError, ~r/Found element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> refute_has(".multiple_links", count: 2)
       end
     end
 
     test "retries if element initially visible", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> click_button("Button with push navigation")
       |> refute_has("h1", text: "main page", timeout: Config.global(:timeout))
     end
@@ -762,7 +762,7 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "refute_has/3" do
     test "succeeds if no element is found with CSS selector and text", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> refute_has("h1", text: "Not main page")
       |> refute_has("h2", text: "Main page")
       |> refute_has("#incorrect-id", text: "Main page")
@@ -772,7 +772,7 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises an error if one element is found", %{conn: conn} do
       assert_raise AssertionError, ~r/Found element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> refute_has("#title", text: "Main page")
       end
     end
@@ -780,34 +780,34 @@ defmodule PhoenixTest.PlaywrightTest do
     test "raises an error if multiple elements are found", %{conn: conn} do
       assert_raise AssertionError, ~r/Found element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> refute_has(".multiple_links", text: "Multiple links")
       end
     end
 
     test "accepts an `exact` option to match text exactly", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> refute_has("h1", text: "Main", exact: true)
     end
 
     test "raises if `exact` text makes refutation false", %{conn: conn} do
       assert_raise AssertionError, ~r/Found element/, fn ->
         conn
-        |> visit("/page/index")
+        |> visit("/pw/page/index")
         |> refute_has("h1", text: "Main", exact: false)
       end
     end
 
     test "accepts an `at` option (without text) to refute on a specific element", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> refute_has("#single-list-item li", at: 2)
     end
 
     test "accepts an `at` option with text to refute on a specific element", %{conn: conn} do
       conn
-      |> visit("/page/index")
+      |> visit("/pw/page/index")
       |> refute_has("#multiple-items li", at: 2, text: "Aragorn")
     end
   end
@@ -815,49 +815,49 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "assert_path" do
     test "it is set on visit", %{conn: conn} do
       conn
-      |> visit("/live/index")
-      |> assert_path("/live/index")
+      |> visit("/pw/live/index")
+      |> assert_path("/pw/live/index")
     end
 
     test "it is set on visit with query string", %{conn: conn} do
       conn
-      |> visit("/live/index?foo=bar")
-      |> assert_path("/live/index", query_params: %{foo: "bar"})
+      |> visit("/pw/live/index?foo=bar")
+      |> assert_path("/pw/live/index", query_params: %{foo: "bar"})
     end
 
     test "it is updated on href navigation", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> click_link("Navigate to non-liveview")
-      |> assert_path("/page/index", query_params: %{details: "true", foo: "bar"})
+      |> assert_path("/pw/page/index", query_params: %{details: "true", foo: "bar"})
     end
 
     test "it is updated on push patch", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> click_button("Button with push patch")
-      |> assert_path("/live/index", query_params: %{foo: "bar"})
+      |> assert_path("/pw/live/index", query_params: %{foo: "bar"})
     end
 
     test "asserts query params are the same", %{conn: conn} do
       conn
-      |> visit("/page/index?hello=world")
-      |> assert_path("/page/index", query_params: %{"hello" => "world"})
+      |> visit("/pw/page/index?hello=world")
+      |> assert_path("/pw/page/index", query_params: %{"hello" => "world"})
     end
   end
 
   describe "refute_path" do
     test "refutes query params are the same", %{conn: conn} do
       conn
-      |> visit("/page/index?hello=world")
-      |> refute_path("/page/index", query_params: %{"hello" => "not-world"})
+      |> visit("/pw/page/index?hello=world")
+      |> refute_path("/pw/page/index", query_params: %{"hello" => "not-world"})
     end
   end
 
   describe "type/3" do
     test "fills in a single text field based on the label", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> type("#email", "someone@example.com")
       |> assert_has("#form-data", text: "email: someone@example.com")
     end
@@ -866,17 +866,17 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "press/3" do
     test "submits a form via Enter key", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> type("#redirect-form-name", "name")
       |> press("#redirect-form-name", "Enter")
-      |> assert_path("/live/page_2")
+      |> assert_path("/pw/live/page_2")
     end
   end
 
   describe "drag/3" do
     test "triggers a javascript event handler", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> refute_has("#drag-status", text: "dropped")
       |> drag(Selector.text("Drag this"), to: Selector.text("Drop here"))
       |> assert_has("#drag-status", text: "dropped")
@@ -887,33 +887,33 @@ defmodule PhoenixTest.PlaywrightTest do
     test "sets a plain cookie", %{conn: conn} do
       conn
       |> add_cookies([[name: "name", value: "42"]])
-      |> visit("/page/cookies")
+      |> visit("/pw/page/cookies")
       |> assert_has("#form-data", text: "name: 42")
     end
 
     test "sets an encrypted cookie", %{conn: conn} do
       conn
       |> add_cookies([[name: "name", value: "42", encrypt: true]])
-      |> visit("/page/cookies?encrypted[]=")
+      |> visit("/pw/page/cookies?encrypted[]=")
       |> assert_has("#form-data", text: "name:")
       |> refute_has("#form-data", text: "name: 42")
 
       conn
       |> add_cookies([[name: "name", value: "42", encrypt: true]])
-      |> visit("/page/cookies?encrypted[]=name")
+      |> visit("/pw/page/cookies?encrypted[]=name")
       |> assert_has("#form-data", text: "name: 42")
     end
 
     test "sets a signed cookie", %{conn: conn} do
       conn
       |> add_cookies([[name: "name", value: "42", sign: true]])
-      |> visit("/page/cookies?signed[]=")
+      |> visit("/pw/page/cookies?signed[]=")
       |> assert_has("#form-data", text: "name:")
       |> refute_has("#form-data", text: "name: 42")
 
       conn
       |> add_cookies([[name: "name", value: "42", sign: true]])
-      |> visit("/page/cookies?signed[]=name")
+      |> visit("/pw/page/cookies?signed[]=name")
       |> assert_has("#form-data", text: "name: 42")
     end
   end
@@ -924,7 +924,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
       conn
       |> add_session_cookie(cookie, PhoenixTest.Endpoint.session_options())
-      |> visit("/page/session")
+      |> visit("/pw/page/session")
       |> assert_has("#form-data", text: "secret: monty_python")
     end
   end
@@ -933,10 +933,10 @@ defmodule PhoenixTest.PlaywrightTest do
     test "removes all cookies", %{conn: conn} do
       conn
       |> add_cookies([[name: "name", value: "42"]])
-      |> visit("/page/cookies")
+      |> visit("/pw/page/cookies")
       |> assert_has("#form-data", text: "name: 42")
       |> clear_cookies()
-      |> visit("/page/cookies")
+      |> visit("/pw/page/cookies")
       |> refute_has("#form-data", text: "name: 42")
     end
   end
@@ -946,18 +946,18 @@ defmodule PhoenixTest.PlaywrightTest do
       log =
         capture_log(fn ->
           conn
-          |> visit("/page/js_script_console_error")
+          |> visit("/pw/page/js_script_console_error")
           |> assert_has("body")
         end)
 
-      assert log =~ "TESTME 42 (http://localhost:4002/page/js_script_console_error:13)"
+      assert log =~ "TESTME 42 (http://localhost:4002/pw/page/js_script_console_error:13)"
     end
 
     test "logs without location if unknown", %{conn: conn} do
       log =
         capture_log(fn ->
           conn
-          |> visit("/live/index")
+          |> visit("/pw/live/index")
           |> tap(&PhoenixTest.Playwright.Frame.evaluate(&1.frame_id, "console.error('TESTME 42')"))
         end)
 

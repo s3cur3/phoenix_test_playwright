@@ -6,7 +6,7 @@ defmodule PhoenixTest.PlaywrightBrowserPoolTest do
 
   test "navigates to page", %{conn: conn} do
     conn
-    |> visit("/page/index")
+    |> visit("/pw/page/index")
     |> assert_has("h1", text: "Main page")
   end
 end

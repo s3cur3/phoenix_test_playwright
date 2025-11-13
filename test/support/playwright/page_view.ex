@@ -1,4 +1,4 @@
-defmodule PhoenixTest.PageView do
+defmodule PhoenixTest.Playwright.PageView do
   use Phoenix.Component
 
   def render("empty_layout.html", assigns) do
@@ -31,14 +31,14 @@ defmodule PhoenixTest.PageView do
     ~H"""
     <h1 id="title" class="title" data-role="title">Main page</h1>
 
-    <a href="/page/page_2?foo=bar">Page 2</a>
+    <a href="/pw/page/page_2?foo=bar">Page 2</a>
 
-    <a href="/page/no_page?redirect_to=/page/index">Navigate away and redirect back</a>
+    <a href="/pw/page/no_page?redirect_to=/pw/page/index">Navigate away and redirect back</a>
 
-    <a class="multiple_links" href="/page/page_3">Multiple links</a>
-    <a class="multiple_links" href="/page/page_4">Multiple links</a>
+    <a class="multiple_links" href="/pw/page/page_3">Multiple links</a>
+    <a class="multiple_links" href="/pw/page/page_4">Multiple links</a>
 
-    <a href="/live/index">To LiveView!</a>
+    <a href="/pw/live/index">To LiveView!</a>
 
     <ul id="multiple-items">
       <li>Aragorn</li>
@@ -54,12 +54,12 @@ defmodule PhoenixTest.PageView do
       &nbsp; Has extra space &nbsp;
     </div>
 
-    <a href="/users/2" data-method="delete">Incomplete data-method Delete</a>
+    <a href="/pw/users/2" data-method="delete">Incomplete data-method Delete</a>
 
     <a
-      href="/page/delete_record"
+      href="/pw/page/delete_record"
       data-method="delete"
-      data-to="/page/delete_record"
+      data-to="/pw/page/delete_record"
       data-csrf="sometoken"
     >
       Data-method Delete
@@ -67,42 +67,42 @@ defmodule PhoenixTest.PageView do
 
     <button data-method="delete">Incomplete data-method Delete</button>
 
-    <button data-method="delete" data-to="/page/delete_record" data-csrf="sometoken">
+    <button data-method="delete" data-to="/pw/page/delete_record" data-csrf="sometoken">
       Data-method Delete
     </button>
 
-    <form action="/page/get_record">
+    <form action="/pw/page/get_record">
       <button>Get record</button>
     </form>
 
-    <form action="/page/update_record" method="post">
+    <form action="/pw/page/update_record" method="post">
       <input name="_method" type="hidden" value="put" />
       <button>Mark as active</button>
     </form>
 
-    <form action="/page/delete_record" method="post">
+    <form action="/pw/page/delete_record" method="post">
       <input name="_method" type="hidden" value="delete" />
       <button>Delete record</button>
     </form>
 
-    <form action="/page/create_record" method="post" id="email-form">
+    <form action="/pw/page/create_record" method="post" id="email-form">
       <label for="email">Email</label>
       <input type="text" id="email" name="email" />
       <button type="submit">Save Email</button>
     </form>
 
-    <form id="update-form" action="/page/update_record" method="post">
+    <form id="update-form" action="/pw/page/update_record" method="post">
       <input name="_method" type="hidden" value="put" />
       <label for="update-form-name">Name</label>
       <input id="update-form-name" name="name" />
     </form>
 
-    <form action="/page/create_record" method="post" id="no-submit-button-form">
+    <form action="/pw/page/create_record" method="post" id="no-submit-button-form">
       <label for="no-submit-button-form-name">Name</label>
       <input id="no-submit-button-form-name" name="name" />
     </form>
 
-    <form action="/page/create_record" method="post" id="pre-rendered-data-form">
+    <form action="/pw/page/create_record" method="post" id="pre-rendered-data-form">
       <label>
         Pre Rendered Input <input name="input" value="value" />
       </label>
@@ -125,7 +125,7 @@ defmodule PhoenixTest.PageView do
       <input name="radio" type="radio" value="checked" checked />
     </form>
 
-    <form id="nested-form" method="post" action="/page/create_record">
+    <form id="nested-form" method="post" action="/pw/page/create_record">
       <label for="user_name">User Name</label>
       <input type="text" id="user_name" name="user[name]" />
 
@@ -145,7 +145,7 @@ defmodule PhoenixTest.PageView do
       <button name="user[save-button]" value="nested-form-save">Save Nested Form</button>
     </form>
 
-    <form id="full-form" method="post" action="/page/create_record">
+    <form id="full-form" method="post" action="/pw/page/create_record">
       <label for="name">First Name</label>
       <input type="text" id="name" name="name" />
 
@@ -216,7 +216,7 @@ defmodule PhoenixTest.PageView do
     <form
       id="file-upload-form"
       method="post"
-      action="/page/create_record"
+      action="/pw/page/create_record"
       enctype="multipart/form-data"
     >
       <label for="avatar">Avatar</label>
@@ -234,22 +234,22 @@ defmodule PhoenixTest.PageView do
       <button type="submit">Save File upload Form</button>
     </form>
 
-    <form id="redirect-to-liveview-form" method="post" action="/page/redirect_to_liveview">
+    <form id="redirect-to-liveview-form" method="post" action="/pw/page/redirect_to_liveview">
       <label for="name">Name</label>
       <input name="name" />
       <button type="submit">Save and Redirect to LiveView</button>
     </form>
 
-    <form method="post" action="/page/redirect_to_liveview">
+    <form method="post" action="/pw/page/redirect_to_liveview">
       <button>Post and Redirect</button>
     </form>
 
-    <form id="no-submit-button-and-redirect" method="post" action="/page/redirect_to_liveview">
+    <form id="no-submit-button-and-redirect" method="post" action="/pw/page/redirect_to_liveview">
       <label for="no-submit-and-redirect-name">Name</label>
       <input id="no-submit-and-redirect-name" name="name" />
     </form>
 
-    <form id="no-button-form" method="post" action="/page/create_record">
+    <form id="no-button-form" method="post" action="/pw/page/create_record">
       <label for="no-button-form-country">Country of Origin</label>
       <input type="text" id="no-button-form-country" name="country" />
     </form>
@@ -263,13 +263,13 @@ defmodule PhoenixTest.PageView do
 
     <button type="button">Actionless Button</button>
 
-    <form action="/page/create_record" method="post" id="owner-form">
+    <form action="/pw/page/create_record" method="post" id="owner-form">
       <label for="owner-form-name">Name</label>
       <input type="text" id="owner-form-name" name="name" />
     </form>
     <button form="owner-form">Save Owner Form</button>
 
-    <form id="complex-labels" method="post" action="/page/create_record">
+    <form id="complex-labels" method="post" action="/pw/page/create_record">
       <label for="complex-name">
         Name <span>*</span>
       </label>
@@ -303,7 +303,7 @@ defmodule PhoenixTest.PageView do
       <button type="submit">Save</button>
     </form>
 
-    <form id="same-labels" action="/page/create_record" method="post">
+    <form id="same-labels" action="/pw/page/create_record" method="post">
       <fieldset>
         <legend>Do you like Elixir:</legend>
 

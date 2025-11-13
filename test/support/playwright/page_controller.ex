@@ -1,11 +1,13 @@
-defmodule PhoenixTest.PageController do
+defmodule PhoenixTest.Playwright.PageController do
   use Phoenix.Controller, formats: [html: "View"]
 
-  plug(:put_layout, {PhoenixTest.PageView, :layout})
+  alias PhoenixTest.Playwright.PageView
+
+  plug(:put_layout, {PageView, :layout})
 
   def show(conn, %{"page" => "index_no_layout"}) do
     conn
-    |> put_layout({PhoenixTest.PageView, :empty_layout})
+    |> put_layout({PageView, :empty_layout})
     |> render("index.html")
   end
 
@@ -34,11 +36,11 @@ defmodule PhoenixTest.PageController do
   end
 
   def redirect_to_liveview(conn, _) do
-    redirect(conn, to: "/live/index")
+    redirect(conn, to: "/pw/live/index")
   end
 
   def redirect_to_static(conn, _) do
-    redirect(conn, to: "/page/index")
+    redirect(conn, to: "/pw/page/index")
   end
 
   def unauthorized(conn, _) do

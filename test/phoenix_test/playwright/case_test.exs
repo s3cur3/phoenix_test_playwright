@@ -5,7 +5,7 @@ defmodule PhoenixTest.Playwright.CaseTest do
     @tag :screenshot
     test "saves screenshot on test exit (for verification in CI)", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("h1")
     end
   end
@@ -14,7 +14,7 @@ defmodule PhoenixTest.Playwright.CaseTest do
     @tag :trace
     test "saves trace on test exit (for verification in CI)", %{conn: conn} do
       conn
-      |> visit("/live/index")
+      |> visit("/pw/live/index")
       |> assert_has("h1")
     end
   end
@@ -26,7 +26,7 @@ defmodule PhoenixTest.Playwright.CaseTest do
   describe "browser_context_opts" do
     test "overide locale via setup", %{conn: conn} do
       conn
-      |> visit("/page/headers")
+      |> visit("/pw/page/headers")
       |> assert_has("li", text: "accept-language: de")
     end
   end

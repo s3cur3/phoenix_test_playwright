@@ -9,7 +9,7 @@ defmodule PhoenixTest.Router do
     plug(:fetch_live_flash)
   end
 
-  scope "/", PhoenixTest do
+  scope "/pw", PhoenixTest.Playwright do
     pipe_through([:browser])
 
     post("/page/create_record", PageController, :create)
@@ -23,7 +23,7 @@ defmodule PhoenixTest.Router do
     get("/page/session", PageController, :session)
     get("/page/:page", PageController, :show)
 
-    live_session :live_pages, root_layout: {PhoenixTest.PageView, :layout} do
+    live_session :live_pages, root_layout: {PhoenixTest.Playwright.PageView, :layout} do
       live("/live/index", IndexLive)
       live("/live/page_2", Page2Live)
     end

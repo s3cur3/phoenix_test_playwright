@@ -1,4 +1,4 @@
-defmodule PhoenixTest.RedirectLive do
+defmodule PhoenixTest.Playwright.RedirectLive do
   @moduledoc false
   use Phoenix.LiveView
 
@@ -11,10 +11,10 @@ defmodule PhoenixTest.RedirectLive do
   def mount(%{"redirect_type" => redirect_type}, _, socket) do
     case redirect_type do
       "push_navigate" ->
-        {:ok, push_navigate(socket, to: "/live/index")}
+        {:ok, push_navigate(socket, to: "/pw/live/index")}
 
       "redirect" ->
-        {:ok, redirect(socket, to: "/live/index")}
+        {:ok, redirect(socket, to: "/pw/live/index")}
     end
   end
 end
