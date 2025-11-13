@@ -17,6 +17,8 @@ Freddy.
 
 **Example:** [ftes/phoenix_test_playwright_example](https://github.com/ftes/phoenix_test_playwright_example)
 
+**Standalone Playwright client:** [ftes/playwright_ex](https://github.com/ftes/playwright_ex)
+
 ## Contributing
 
 To run the tests locally, you'll need to:

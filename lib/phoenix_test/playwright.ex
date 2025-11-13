@@ -32,6 +32,8 @@ defmodule PhoenixTest.Playwright do
 
   Enjoy! Freddy.
 
+  P.S. Looking for a standalone Playwright client? See [playwright_ex](https://hexdocs.pm/playwright_ex/).
+
 
   ## Getting started
   1. Add dependency
