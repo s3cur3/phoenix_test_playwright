@@ -4,6 +4,7 @@ defmodule PhoenixTest.LiveTest do
   alias ExUnit.AssertionError
   alias PhoenixTest.Driver
   alias PhoenixTest.Html
+  alias PhoenixTest.Playwright.Case
 
   describe "render_page_title/1" do
     @tag skip: "investigate"
