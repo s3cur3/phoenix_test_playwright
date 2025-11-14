@@ -28,8 +28,8 @@ defmodule PhoenixTest.Playwright.PortServer do
   @doc """
   Start the PortServer and link it to the connection process.
   """
-  def start_link(connection_pid) do
-    GenServer.start_link(__MODULE__, connection_pid, name: @name)
+  def start_link([]) do
+    GenServer.start_link(__MODULE__, :no_init_arg, name: @name)
   end
 
   @doc """
@@ -40,7 +40,7 @@ defmodule PhoenixTest.Playwright.PortServer do
   end
 
   @impl GenServer
-  def init(_connection_pid) do
+  def init(:no_init_arg) do
     port =
       Port.open({:spawn_executable, Config.global(:runner)}, [
         :binary,

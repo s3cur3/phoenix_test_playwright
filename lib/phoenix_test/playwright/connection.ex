@@ -89,7 +89,6 @@ defmodule PhoenixTest.Playwright.Connection do
 
   @impl :gen_statem
   def init(:no_init_arg) do
-    {:ok, _port_server} = PortServer.start_link(self())
     msg = %{guid: "", params: %{sdk_language: :javascript}, method: :initialize, metadata: %{}}
     PortServer.post(msg)
 
