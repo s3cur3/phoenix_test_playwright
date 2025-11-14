@@ -101,6 +101,16 @@ schema_opts = [
     type: {:custom, PhoenixTest.Playwright.Config, :__validate_cli__, []},
     deprecated: "Use `assets_dir` instead."
   ],
+  ecto_sandbox_stop_owner_delay: [
+    default: 0,
+    type: :non_neg_integer,
+    doc: """
+    Delay in milliseconds before shutting down the Ecto sandbox owner after a
+    test ends. Use this to allow LiveViews and other processes in your app
+    time to stop using database connections before the sandbox owner is
+    terminated.
+    """
+  ],
   executable_path: browser_opts[:executable_path],
   headless: browser_opts[:headless],
   js_logger: [
@@ -117,16 +127,6 @@ schema_opts = [
     doc: """
     The JS package runner to use to run the Playwright CLI.
     Accepts either a binary executable exposed in PATH or the absolute path to it.
-    """
-  ],
-  sandbox_shutdown_delay: [
-    default: 0,
-    type: :non_neg_integer,
-    doc: """
-    Delay in milliseconds before shutting down the Ecto sandbox owner after a
-    test ends. Use this to allow LiveViews and other processes in your app
-    time to stop using database connections before the sandbox owner is
-    terminated. Default is 0 (immediate shutdown).
     """
   ],
   screenshot: [
@@ -169,7 +169,7 @@ schema_opts = [
 schema = NimbleOptions.new!(schema_opts)
 
 setup_all_keys = ~w(browser_pool browser browser_launch_timeout executable_path headless slow_mo)a
-setup_keys = ~w(accept_dialogs sandbox_shutdown_delay screenshot trace browser_context_opts browser_page_opts)a
+setup_keys = ~w(accept_dialogs ecto_sandbox_stop_owner_delay screenshot trace browser_context_opts browser_page_opts)a
 
 defmodule PhoenixTest.Playwright.Config do
   @moduledoc """

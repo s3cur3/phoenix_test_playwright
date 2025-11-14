@@ -189,7 +189,7 @@ defmodule PhoenixTest.Playwright do
   ** (DBConnection.OwnershipError) cannot find owner for ...
   ```
 
-  To prevent this, the `sandbox_shutdown_delay` option allows you to delay the
+  To prevent this, the `ecto_sandbox_stop_owner_delay` option allows you to delay the
   sandbox owner's shutdown, giving LiveViews and other processes time to close
   their database connections. The delay happens during
   `ExUnit.Callbacks.on_exit/1`, which blocks the running of the next test, so
@@ -200,7 +200,7 @@ defmodule PhoenixTest.Playwright do
   tests that need it, using `@tag` (or `@describetag` or `@moduletag`) like:
 
   ```
-  @tag sandbox_shutdown_delay: 100 # 100ms
+  @tag ecto_sandbox_stop_owner_delay: 100 # 100ms
   test "does something" do
     # ...
   end
@@ -212,7 +212,7 @@ defmodule PhoenixTest.Playwright do
   ```elixir
   # config/test.exs
   config :phoenix_test, playwright: [
-    sandbox_shutdown_delay: 50  # 50ms
+    ecto_sandbox_stop_owner_delay: 50  # 50ms
   ]
   ```
 

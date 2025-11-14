@@ -1,9 +1,12 @@
-defmodule PhoenixTest.Playwright.EctoSandboxTest do
-  use PhoenixTest.Playwright.Case, async: true
+defmodule PhoenixTest.Playwright.EctoSandboxAsyncFalseTest do
+  use PhoenixTest.Playwright.Case, async: false
 
   for delay_ms <- [0, 100] do
     @delay_ms delay_ms
-    describe "delay: #{delay_ms}ms does not require ecto_sandbox_stop_owner_delay" do
+
+    describe "delay: #{delay_ms}ms requires ecto_sandbox_stop_owner_delay to prevent 'is still using a connection from owner' errors" do
+      @describetag ecto_sandbox_stop_owner_delay: delay_ms + 100
+
       setup %{conn: conn} do
         [conn: visit(conn, "/pw/live/ecto?delay_ms=#{@delay_ms}")]
       end

@@ -171,15 +171,15 @@ defmodule PhoenixTest.Playwright.Case do
       repos = Application.get_env(otp_app, :ecto_repos, [])
 
       repos
-      |> Enum.map(&maybe_start_sandbox_owner(&1, context, config))
+      |> Enum.map(&maybe_start_sandbox_owner(&1, config, context))
       |> Phoenix.Ecto.SQL.Sandbox.metadata_for(self())
       |> Phoenix.Ecto.SQL.Sandbox.encode_metadata()
     end
 
-    defp maybe_start_sandbox_owner(repo, context, config) do
+    defp maybe_start_sandbox_owner(repo, config, context) do
       case start_sandbox_owner(repo, context) do
         {:ok, pid} ->
-          on_exit(fn -> stop_sandbox_owner(pid, config[:sandbox_shutdown_delay], context.async) end)
+          on_exit(fn -> stop_sandbox_owner(pid, config, context) end)
 
         _ ->
           :ok
@@ -189,21 +189,22 @@ defmodule PhoenixTest.Playwright.Case do
     end
 
     defp start_sandbox_owner(repo, context) do
-      pid = Sandbox.start_owner!(repo, shared: !context.async)
+      pid = Sandbox.start_owner!(repo, shared: not context.async)
       {:ok, pid}
     rescue
       _ -> {:error, :probably_already_started}
     end
 
-    defp stop_sandbox_owner(checkout_pid, delay, async?) do
-      if async? do
-        spawn(fn -> do_stop_sandbox_owner(checkout_pid, delay) end)
+    defp stop_sandbox_owner(checkout_pid, config, context) do
+      if context.async do
+        spawn(fn -> do_stop_sandbox_owner(checkout_pid, config) end)
       else
-        do_stop_sandbox_owner(checkout_pid, delay)
+        do_stop_sandbox_owner(checkout_pid, config)
       end
     end
 
-    defp do_stop_sandbox_owner(checkout_pid, delay) do
+    defp do_stop_sandbox_owner(checkout_pid, config) do
+      delay = Keyword.fetch!(config, :ecto_sandbox_stop_owner_delay)
       if delay > 0, do: Process.sleep(delay)
       Sandbox.stop_owner(checkout_pid)
     end
