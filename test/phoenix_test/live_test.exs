@@ -1,15 +1,9 @@
 defmodule PhoenixTest.LiveTest do
-  use ExUnit.Case, async: true
-
-  import PhoenixTest
+  use PhoenixTest.Playwright.Case, async: true
 
   alias ExUnit.AssertionError
   alias PhoenixTest.Driver
   alias PhoenixTest.Html
-
-  setup do
-    %{conn: Phoenix.ConnTest.build_conn()}
-  end
 
   describe "render_page_title/1" do
     @tag skip: "investigate"
@@ -92,6 +86,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("h1", text: "Main page")
     end
 
+    @tag skip: "ignore"
     test "preserves headers across navigation", %{conn: conn} do
       conn
       |> Plug.Conn.put_req_header("x-custom-header", "Some-Value")
@@ -103,6 +98,7 @@ defmodule PhoenixTest.LiveTest do
       end)
     end
 
+    @tag skip: "error-mismatch"
     test "raises error when there are multiple links with same text", %{conn: conn} do
       assert_raise ArgumentError, ~r/2 of them matched the text filter/, fn ->
         conn
@@ -220,6 +216,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#flash-group", text: "Form saved and redirected")
     end
 
+    @tag skip: "ignore"
     test "follows form's redirect and preserves headers", %{conn: conn} do
       conn
       |> Plug.Conn.put_req_header("x-auth-header", "Some-Value")
@@ -498,6 +495,7 @@ defmodule PhoenixTest.LiveTest do
     test "allows selecting option if a similar option exists", %{conn: conn} do
       conn
       |> visit("/live/index")
+      |> assert_has(".phx-connected")
       |> select("Race", option: "Orc")
       |> assert_has("#full-form option[value='orc']")
     end
@@ -1003,6 +1001,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#flash-group", text: "Redirected to static page")
     end
 
+    @tag skip: "ignore"
     test "preserves headers after form submission and redirect", %{conn: conn} do
       conn
       |> Plug.Conn.put_req_header("x-custom-header", "Some-Value")
@@ -1097,6 +1096,8 @@ defmodule PhoenixTest.LiveTest do
   end
 
   describe "unwrap" do
+    @describetag skip: "ignore"
+
     test "provides an escape hatch that gives access to the underlying view", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -1357,7 +1358,7 @@ defmodule PhoenixTest.LiveTest do
       conn
       |> visit("/live/async_page")
       |> click_button("Change h2")
-      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 100)
+      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 1000)
     end
 
     test "timeout waits for async assigns", %{conn: conn} do

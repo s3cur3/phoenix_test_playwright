@@ -62,6 +62,7 @@ defmodule PhoenixTestPlaywright.MixProject do
   def cli do
     [
       preferred_envs: [
+        format: :test,
         setup: :test,
         check: :test,
         "assets.setup": :test,
@@ -88,7 +89,8 @@ defmodule PhoenixTestPlaywright.MixProject do
       "assets.setup": [
         "esbuild.install --if-missing",
         "cmd npm install --prefix priv/static/assets",
-        "cmd npm exec --prefix priv/static/assets playwright -- install chromium --with-deps --only-shell"
+        "cmd npm exec --prefix priv/static/assets playwright -- install chromium --with-deps --only-shell",
+        "cmd npm exec --prefix priv/static/assets playwright -- install firefox --with-deps --only-shell"
       ],
       "assets.build": ["esbuild default"],
       check: [
