@@ -1,5 +1,7 @@
 import Config
 
+alias PhoenixTest.Playwright.Repo
+
 config :esbuild,
   version: "0.25.9",
   default: [
@@ -36,3 +38,14 @@ config :phoenix_test_playwright, PhoenixTest.Endpoint,
     formats: [html: PhoenixTest.WebApp.ErrorView],
     layout: false
   ]
+
+config :phoenix_test_playwright, Repo,
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: System.schedulers_online() * 2,
+  database: "phoenix_test_playwright_test#{System.get_env("MIX_TEST_PARTITION")}",
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost"
+
+config :phoenix_test_playwright,
+  ecto_repos: [Repo]

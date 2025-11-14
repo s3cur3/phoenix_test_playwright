@@ -29,6 +29,7 @@ defmodule PhoenixTest.Router do
     live_session :playwright_live_pages do
       live("/live/index", IndexLive)
       live("/live/page_2", Page2Live)
+      live("/live/ecto", EctoLive)
     end
 
     live("/live/index_no_layout", IndexLive)

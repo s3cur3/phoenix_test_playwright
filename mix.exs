@@ -40,7 +40,8 @@ defmodule PhoenixTestPlaywright.MixProject do
       {:phoenix_test, "~> 0.8", runtime: false},
       {:plug_cowboy, "~> 2.7", only: :test, runtime: false},
       {:phoenix_ecto, "~> 4.5", optional: true},
-      {:ecto_sql, "~> 3.10", optional: true},
+      {:ecto_sql, "~> 3.10", only: :test},
+      {:postgrex, ">= 0.0.0", only: :test},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:styler, "~> 1.3", only: [:dev, :test], runtime: false},
       {:makeup_diff, "~> 0.1", only: :dev},
@@ -85,7 +86,7 @@ defmodule PhoenixTestPlaywright.MixProject do
 
   defp aliases do
     [
-      setup: ["deps.get", "assets.setup", "assets.build"],
+      setup: ["deps.get", "assets.setup", "assets.build", "ecto.create"],
       "assets.setup": [
         "esbuild.install --if-missing",
         "cmd npm install --prefix priv/static/assets",
