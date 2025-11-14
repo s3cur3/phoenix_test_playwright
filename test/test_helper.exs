@@ -1,6 +1,6 @@
 alias PhoenixTest.Endpoint
 
-ExUnit.start(capture_log: true)
+ExUnit.start(capture_log: false)
 
 {:ok, _} = PhoenixTest.Playwright.Repo.start_link()
 {:ok, _} = Supervisor.start_link([{Phoenix.PubSub, name: PhoenixTest.PubSub}], strategy: :one_for_one)
