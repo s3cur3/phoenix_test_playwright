@@ -714,7 +714,7 @@ defmodule PhoenixTest.Playwright do
   def render_html(conn) do
     selector = conn |> maybe_within() |> Selector.build()
     {:ok, html} = Frame.inner_html(conn.frame_id, selector)
-    html
+    LazyHTML.from_document(html)
   end
 
   @doc """

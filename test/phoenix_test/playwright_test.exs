@@ -25,9 +25,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
   describe "render_html/2" do
     test "doesn't fail", %{conn: conn} do
-      assert conn
-             |> visit("/pw/live/index")
-             |> Playwright.render_html() =~ "<body"
+      assert conn |> visit("/pw/live/index") |> Playwright.render_html() |> LazyHTML.to_html() =~ "<body"
     end
   end
 
