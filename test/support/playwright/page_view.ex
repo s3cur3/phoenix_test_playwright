@@ -25,9 +25,9 @@ defmodule PhoenixTest.Playwright.PageView do
   def render("data.html", assigns) do
     ~H"""
     <dl id={@id}>
-        <%= for {key, value} <- @data do %>
-            <dt>{key}:</dt> <dd>{value}</dd>
-        <% end %>
+      <%= for {key, value} <- @data do %>
+        <dt>{key}:</dt> <dd>{value}</dd>
+      <% end %>
     </dl>
     """
   end

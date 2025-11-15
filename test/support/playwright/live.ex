@@ -8,26 +8,26 @@ defmodule PhoenixTest.Playwright.Live do
     <a href="/pw/other">Navigate</a>
     <a data-confirm="Are you sure?" href="/pw/other">Confirm to navigate</a>
 
-    <form phx-change="validate" phx-submit="save">
-        <input id="text-input" name="text" />
-    </form>
+    <.form for={%{}} phx-change="validate" phx-submit="save">
+      <input id="text-input" name="text" />
+    </.form>
 
     <dl id="changed-form-data">
-        <%= for {key, value} <- @changed_form_data do %>
-            <dt>{key}:</dt> <dd>{value}</dd>
-        <% end %>
+      <%= for {key, value} <- @changed_form_data do %>
+        <dt>{key}:</dt> <dd>{value}</dd>
+      <% end %>
     </dl>
 
     <dl id="submitted-form-data">
-        <%= for {key, value} <- @changed_form_data do %>
-            <dt>{key}:</dt> <dd>{value}</dd>
-        <% end %>
+      <%= for {key, value} <- @changed_form_data do %>
+        <dt>{key}:</dt> <dd>{value}</dd>
+      <% end %>
     </dl>
 
     <div id="drag-and-drop">
-        <div id="drag-status">pending</div>
-        <div id="drag-source" style="background: yellow;" draggable="true">Drag this</div>
-        <div id="drag-target" style="border: 1px dashed black;" ondrop="document.getElementById('drag-status').innerHTML = 'dropped'">Drop here</div>
+      <div id="drag-status">pending</div>
+      <div id="drag-source" style="background: yellow;" draggable="true">Drag this</div>
+      <div id="drag-target" style="border: 1px dashed black;" ondrop="document.getElementById('drag-status').innerHTML = 'dropped'">Drop here</div>
     </div>
     """
   end
