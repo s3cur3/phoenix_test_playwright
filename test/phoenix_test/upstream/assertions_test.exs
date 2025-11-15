@@ -17,7 +17,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises an error if the element cannot be found at all", %{conn: conn} do
       conn = visit(conn, "/page/index")
 
-      msg = ~r/Could not find element #nonexistent-id/
+      msg = ~r/Could not find element "#nonexistent-id"/
 
       assert_raise AssertionError, msg, fn ->
         assert_has(conn, "#nonexistent-id")
@@ -180,7 +180,7 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Could not find element h1.*"Super page"
+        Could not find element "h1".*"Super page"
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -306,7 +306,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises if `exact` text doesn't match", %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Could not find element h1.*"Main"
+        Could not find element "h1".*"Main"
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -326,7 +326,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises if it cannot find element at `at` position", %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Could not find element #multiple-items li.*at: 2.*"Aragorn"
+        Could not find element "#multiple-items li".*at: 2.*"Aragorn"
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -401,7 +401,7 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Found element .multiple_links
+        Found element ".multiple_links"
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -414,7 +414,7 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Found element h1
+        Found element "h1"
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -427,7 +427,7 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Found element .multiple_links
+        Found element ".multiple_links"
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -541,7 +541,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises if `exact` text makes refutation false", %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Found element h1.*"Main"
+        Found element "h1".*"Main"
         """)
 
       assert_raise AssertionError, msg, fn ->

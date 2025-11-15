@@ -632,7 +632,7 @@ defmodule PhoenixTest.Playwright do
   end
 
   def assert_has(conn, selector, opts) do
-    if not found?(conn, selector, opts), do: flunk("Could not find element #{selector} #{inspect(opts)}")
+    if not found?(conn, selector, opts), do: flunk("Could not find element \"#{selector}\" #{inspect(opts)}")
     conn
   end
 
@@ -651,7 +651,7 @@ defmodule PhoenixTest.Playwright do
   end
 
   def refute_has(conn, selector, opts) do
-    if found?(conn, selector, opts, is_not: true), do: flunk("Found element #{selector} #{inspect(opts)}")
+    if found?(conn, selector, opts, is_not: true), do: flunk("Found element \"#{selector}\" #{inspect(opts)}")
     conn
   end
 
@@ -935,13 +935,13 @@ defmodule PhoenixTest.Playwright do
     case result do
       {:error, %{error: %{error: %{name: "TimeoutError"}}} = error} ->
         raise ArgumentError,
-              "Could not find element with selector #{debug_selector}#{timeout_suffix(error)}\n" <>
+              "Could not find element with selector \"#{debug_selector}\"#{timeout_suffix(error)}\n" <>
                 more_info(error)
 
       {:error, %{error: %{error: %{message: "Error: strict mode violation: " <> _ = message}}}} ->
         short_message = String.replace(message, "Error: strict mode violation: ", "")
 
-        raise ArgumentError, "Found more than one element matching selector #{debug_selector}:\n#{short_message}"
+        raise ArgumentError, "Found more than one element matching selector \"#{debug_selector}\":\n#{short_message}"
 
       {:error, %{error: %{error: %{name: "Error", message: ^checkbox_msg}}}} ->
         :ok
