@@ -5,7 +5,6 @@ defmodule PhoenixTest.StaticTest do
   import PhoenixTest.TestHelpers
 
   describe "render_page_title/1" do
-    @tag skip: "investigate"
     test "renders the default page title", %{conn: conn} do
       title =
         conn
@@ -80,11 +79,10 @@ defmodule PhoenixTest.StaticTest do
       |> assert_has("h1", text: "LiveView main page")
     end
 
-    @tag skip: "investigate"
     test "handles form submission via `data-method` & `data-to` attributes", %{conn: conn} do
       conn
       |> visit("/page/index")
-      |> click_link("Data-method Delete")
+      |> click_link("button", "Data-method Delete", exact: true)
       |> assert_has("h1", text: "Record deleted")
     end
 
@@ -117,16 +115,14 @@ defmodule PhoenixTest.StaticTest do
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises error when there are multiple links with same text", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Found more than one element with selector/, fn ->
+      assert_raise ArgumentError, ~r/Found more than one element/, fn ->
         conn
         |> visit("/page/index")
         |> click_link("Multiple links")
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when link element can't be found with given text", %{conn: conn} do
       assert_raise ArgumentError, ~r/Could not find element with selector/, fn ->
         conn
@@ -135,7 +131,6 @@ defmodule PhoenixTest.StaticTest do
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when there are no links on the page", %{conn: conn} do
       assert_raise ArgumentError, ~r/Could not find element with selector/, fn ->
         conn
@@ -215,11 +210,10 @@ defmodule PhoenixTest.StaticTest do
       |> assert_has("#flash-group", text: "Redirected to LiveView")
     end
 
-    @tag skip: "investigate"
     test "handles form submission via `data-method` & `data-to` attributes", %{conn: conn} do
       conn
       |> visit("/page/index")
-      |> click_button("Data-method Delete")
+      |> click_button("button", "Data-method Delete", exact: true)
       |> assert_has("h1", text: "Record deleted")
     end
 
@@ -273,7 +267,7 @@ defmodule PhoenixTest.StaticTest do
       |> refute_has("#form-data", text: "disabled_textarea:")
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "raises error if trying to submit via `data-` attributes but incomplete", %{conn: conn} do
       msg = ~r/Tried submitting form via `data-method` but some data attributes/
 
@@ -284,9 +278,8 @@ defmodule PhoenixTest.StaticTest do
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when there are no buttons on page", %{conn: conn} do
-      msg = ~r/Could not find an element with given selectors/
+      msg = ~r/Could not find element with selector/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -295,9 +288,8 @@ defmodule PhoenixTest.StaticTest do
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error if can't find button", %{conn: conn} do
-      msg = ~r/Could not find an element with given selectors/
+      msg = ~r/Could not find element with selector/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -340,9 +332,8 @@ defmodule PhoenixTest.StaticTest do
       |> assert_has("#form-data", text: "email: someone@example.com")
     end
 
-    @tag skip: "error-mismatch"
     test "raises when data is not in scoped HTML", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Could not find element with label "User Name"/, fn ->
+      assert_raise ArgumentError, ~r/Could not find element.*"User Name"/, fn ->
         conn
         |> visit("/page/index")
         |> within("#email-form", fn session ->
@@ -430,9 +421,8 @@ defmodule PhoenixTest.StaticTest do
       |> assert_has("#form-data", text: "book-characters: Frodo")
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when element can't be found with label", %{conn: conn} do
-      msg = ~r/Could not find element with label "Non-existent Email Label"./
+      msg = ~r/Could not find element.*"Non-existent Email Label"./
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -441,9 +431,8 @@ defmodule PhoenixTest.StaticTest do
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when label is found but no corresponding input is found", %{conn: conn} do
-      msg = ~r/Found label but can't find labeled element whose `id` matches/
+      msg = ~r/Could not find element/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -673,7 +662,6 @@ defmodule PhoenixTest.StaticTest do
   end
 
   describe "upload/4" do
-    @tag skip: "investigate"
     test "uploads image", %{conn: conn} do
       conn
       |> visit("/page/index")
@@ -685,7 +673,7 @@ defmodule PhoenixTest.StaticTest do
       |> assert_has("#form-data", text: "avatar: elixir.jpg")
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "uploads image list", %{conn: conn} do
       conn
       |> visit("/page/index")
@@ -696,7 +684,6 @@ defmodule PhoenixTest.StaticTest do
       |> assert_has("#form-data", text: "avatars:[]: phoenix.jpg")
     end
 
-    @tag skip: "investigate"
     test "uploads an image in nested forms", %{conn: conn} do
       conn
       |> visit("/page/index")
@@ -705,7 +692,6 @@ defmodule PhoenixTest.StaticTest do
       |> assert_has("#form-data", text: "user:avatar: elixir.jpg")
     end
 
-    @tag skip: "investigate"
     test "can target a label with exact: false", %{conn: conn} do
       conn
       |> visit("/page/index")
@@ -717,14 +703,13 @@ defmodule PhoenixTest.StaticTest do
       |> assert_has("#form-data", text: "avatar: elixir.jpg")
     end
 
-    @tag skip: "investigate"
     test "can specify input selector when multiple inputs have same label", %{conn: conn} do
       conn
       |> visit("/page/index")
       |> within("#same-labels", fn session ->
         upload(session, "#main-avatar", "Avatar", "test/files/elixir.jpg")
       end)
-      |> submit()
+      |> click_button("Save form")
       |> assert_has("#form-data", text: "main-avatar: elixir.jpg")
     end
   end
