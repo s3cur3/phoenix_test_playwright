@@ -1,62 +1,37 @@
 defmodule PhoenixTest.Playwright.PageController do
   use Phoenix.Controller, formats: [html: "View"]
 
-  alias PhoenixTest.Playwright.PageView
-
-  def show(conn, %{"page" => "index_no_layout"}) do
-    conn
-    |> put_layout({PageView, :empty_layout})
-    |> render("index.html")
+  def other(conn, _) do
+    render(conn, "other.html")
   end
 
-  def show(conn, %{"redirect_to" => path}) do
-    redirect(conn, to: path)
+  def longer_than_viewport(conn, _) do
+    render(conn, "longer_than_viewport.html")
   end
 
-  def show(conn, %{"page" => page}) do
-    render(conn, page <> ".html")
-  end
-
-  def create(conn, params) do
-    conn
-    |> assign(:params, params)
-    |> render("record_created.html")
-  end
-
-  def update(conn, params) do
-    conn
-    |> assign(:params, params)
-    |> render("record_updated.html")
-  end
-
-  def delete(conn, _) do
-    render(conn, "record_deleted.html")
-  end
-
-  def redirect_to_liveview(conn, _) do
-    redirect(conn, to: "/pw/live/index")
-  end
-
-  def redirect_to_static(conn, _) do
-    redirect(conn, to: "/pw/page/index")
-  end
-
-  def unauthorized(conn, _) do
-    conn
-    |> put_status(:unauthorized)
-    |> render("unauthorized.html")
+  def js_script_console_error(conn, _) do
+    render(conn, "js_script_console_error.html")
   end
 
   def cookies(conn, params) do
     conn
+    |> assign(:id, "cookies")
     |> fetch_cookies(encrypted: params["encrypted"] || [], signed: params["signed"] || [])
-    |> then(&assign(&1, :params, &1.cookies))
-    |> render("record_created.html")
+    |> then(&assign(&1, :data, &1.cookies))
+    |> render("data.html")
   end
 
   def session(conn, _) do
     conn
-    |> assign(:params, get_session(conn))
-    |> render("record_created.html")
+    |> assign(:id, "session")
+    |> assign(:data, get_session(conn))
+    |> render("data.html")
+  end
+
+  def headers(conn, _) do
+    conn
+    |> assign(:id, "headers")
+    |> assign(:data, conn.req_headers)
+    |> render("data.html")
   end
 end

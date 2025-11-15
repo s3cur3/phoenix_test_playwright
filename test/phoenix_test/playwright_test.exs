@@ -13,25 +13,19 @@ defmodule PhoenixTest.PlaywrightTest do
   alias PhoenixTest.Playwright.Selector
 
   describe "screenshot/3" do
+    setup %{conn: conn} do
+      [conn: conn |> visit("/pw/longer-than-viewport") |> assert_has("h1", text: "Longer than viewport")]
+    end
+
     test "takes a screenshot of the current page as a PNG", %{conn: conn} do
       name = "png_#{:erlang.system_time(:second)}.png"
-
-      conn
-      |> visit("/pw/live/index")
-      |> assert_has("h1", text: "LiveView main page")
-      |> screenshot(name, full_page: false, omit_background: true)
-
+      screenshot(conn, name, full_page: false, omit_background: true)
       assert File.exists?("screenshots/#{name}")
     end
 
     test "takes a screenshot of the current page as a JPEG", %{conn: conn} do
       name = "jpg_#{:erlang.system_time(:second)}.jpg"
-
-      conn
-      |> visit("/pw/live/index")
-      |> assert_has("h1", text: "LiveView main page")
-      |> screenshot(name)
-
+      screenshot(conn, name)
       assert File.exists?("screenshots/#{name}")
     end
 
@@ -40,8 +34,6 @@ defmodule PhoenixTest.PlaywrightTest do
       viewport_name = "viewport_#{:erlang.system_time(:second)}.png"
 
       conn
-      |> visit("/pw/live/index")
-      |> assert_has("h1", text: "LiveView main page")
       |> screenshot(full_page_name, full_page: true)
       |> screenshot(viewport_name, full_page: false)
 
@@ -55,16 +47,16 @@ defmodule PhoenixTest.PlaywrightTest do
   describe "browser dialog handling: accept_dialogs config and with_dialog/3" do
     test "accepts dialog by default", %{conn: conn} do
       conn
-      |> visit("/pw/live/index")
+      |> visit("/pw/live")
       |> click_link("Confirm to navigate")
-      |> assert_path("/pw/live/page_2")
+      |> assert_path("/pw/other")
     end
 
     @tag accept_dialogs: false
     test "override config via tag: dismisses dialog and fails click_link", %{conn: conn} do
       assert_raise AssertionError, fn ->
         conn
-        |> visit("/pw/live/index")
+        |> visit("/pw/live")
         |> click_link("Confirm to navigate")
       end
     end
@@ -72,13 +64,14 @@ defmodule PhoenixTest.PlaywrightTest do
     @tag accept_dialogs: false
     test "with_dialog/3 accepts dialog conditionally", %{conn: conn} do
       conn
-      |> visit("/pw/live/index")
+      |> visit("/pw/live")
+      |> assert_has("h1", text: "Playwright")
       |> with_dialog(
         fn %{message: "Are you sure?"} -> :accept end,
         fn conn ->
           conn
           |> click_link("Confirm to navigate")
-          |> assert_path("/pw/live/page_2")
+          |> assert_path("/pw/other")
         end
       )
     end
@@ -99,47 +92,47 @@ defmodule PhoenixTest.PlaywrightTest do
 
     test "opens the browser ", %{conn: conn, open_fun: open_fun} do
       conn
-      |> visit("/pw/page/index")
+      |> visit("/pw/live")
       |> open_browser(open_fun)
-      |> assert_has("h1", text: "Main page")
+      |> assert_has("h1", text: "Playwright")
     end
   end
 
   describe "unwrap" do
     test "provides an escape hatch that gives access to the underlying frame", %{conn: conn} do
       conn
-      |> visit("/pw/live/index")
+      |> visit("/pw/live")
       |> unwrap(fn %{frame_id: frame_id} ->
-        selector = Selector.role("link", "Navigate link")
+        selector = Selector.role("link", "Navigate", exact: true)
         {:ok, _} = Playwright.Frame.click(frame_id, selector)
       end)
-      |> assert_has("h1", text: "LiveView page 2")
+      |> assert_has("h1", text: "Other")
     end
   end
 
   describe "type/3" do
     test "fills in a single text field based on the label", %{conn: conn} do
       conn
-      |> visit("/pw/live/index")
-      |> type("#email", "someone@example.com")
-      |> assert_has("#form-data", text: "email: someone@example.com")
+      |> visit("/pw/live")
+      |> type("#text-input", "My text")
+      |> assert_has("#changed-form-data", text: "text: My text")
     end
   end
 
   describe "press/3" do
     test "submits a form via Enter key", %{conn: conn} do
       conn
-      |> visit("/pw/live/index")
-      |> type("#redirect-form-name", "name")
-      |> press("#redirect-form-name", "Enter")
-      |> assert_path("/pw/live/page_2")
+      |> visit("/pw/live")
+      |> type("#text-input", "My text")
+      |> press("#text-input", "Enter")
+      |> assert_has("#submitted-form-data", text: "text: My text")
     end
   end
 
   describe "drag/3" do
     test "triggers a javascript event handler", %{conn: conn} do
       conn
-      |> visit("/pw/live/index")
+      |> visit("/pw/live")
       |> refute_has("#drag-status", text: "dropped")
       |> drag(Selector.text("Drag this"), to: Selector.text("Drop here"))
       |> assert_has("#drag-status", text: "dropped")
@@ -150,34 +143,34 @@ defmodule PhoenixTest.PlaywrightTest do
     test "sets a plain cookie", %{conn: conn} do
       conn
       |> add_cookies([[name: "name", value: "42"]])
-      |> visit("/pw/page/cookies")
-      |> assert_has("#form-data", text: "name: 42")
+      |> visit("/pw/cookies")
+      |> assert_has("#cookies", text: "name: 42")
     end
 
     test "sets an encrypted cookie", %{conn: conn} do
       conn
       |> add_cookies([[name: "name", value: "42", encrypt: true]])
-      |> visit("/pw/page/cookies?encrypted[]=")
-      |> assert_has("#form-data", text: "name:")
-      |> refute_has("#form-data", text: "name: 42")
+      |> visit("/pw/cookies?encrypted[]=")
+      |> assert_has("#cookies", text: "name:")
+      |> refute_has("#cookies", text: "name: 42")
 
       conn
       |> add_cookies([[name: "name", value: "42", encrypt: true]])
-      |> visit("/pw/page/cookies?encrypted[]=name")
-      |> assert_has("#form-data", text: "name: 42")
+      |> visit("/pw/cookies?encrypted[]=name")
+      |> assert_has("#cookies", text: "name: 42")
     end
 
     test "sets a signed cookie", %{conn: conn} do
       conn
       |> add_cookies([[name: "name", value: "42", sign: true]])
-      |> visit("/pw/page/cookies?signed[]=")
-      |> assert_has("#form-data", text: "name:")
-      |> refute_has("#form-data", text: "name: 42")
+      |> visit("/pw/cookies?signed[]=")
+      |> assert_has("#cookies", text: "name:")
+      |> refute_has("#cookies", text: "name: 42")
 
       conn
       |> add_cookies([[name: "name", value: "42", sign: true]])
-      |> visit("/pw/page/cookies?signed[]=name")
-      |> assert_has("#form-data", text: "name: 42")
+      |> visit("/pw/cookies?signed[]=name")
+      |> assert_has("#cookies", text: "name: 42")
     end
   end
 
@@ -187,8 +180,8 @@ defmodule PhoenixTest.PlaywrightTest do
 
       conn
       |> add_session_cookie(cookie, PhoenixTest.Endpoint.session_options())
-      |> visit("/pw/page/session")
-      |> assert_has("#form-data", text: "secret: monty_python")
+      |> visit("/pw/session")
+      |> assert_has("#session", text: "secret: monty_python")
     end
   end
 
@@ -196,11 +189,11 @@ defmodule PhoenixTest.PlaywrightTest do
     test "removes all cookies", %{conn: conn} do
       conn
       |> add_cookies([[name: "name", value: "42"]])
-      |> visit("/pw/page/cookies")
-      |> assert_has("#form-data", text: "name: 42")
+      |> visit("/pw/cookies")
+      |> assert_has("#cookies", text: "name: 42")
       |> clear_cookies()
-      |> visit("/pw/page/cookies")
-      |> refute_has("#form-data", text: "name: 42")
+      |> visit("/pw/cookies")
+      |> refute_has("#cookies", text: "name: 42")
     end
   end
 
@@ -208,17 +201,17 @@ defmodule PhoenixTest.PlaywrightTest do
     test "logs file and line number", %{conn: conn} do
       log =
         capture_log(fn ->
-          visit(conn, "/pw/page/js_script_console_error")
+          visit(conn, "/pw/js-script-console-error")
         end)
 
-      assert log =~ "TESTME 42 (http://localhost:4002/pw/page/js_script_console_error:16)"
+      assert log =~ "TESTME 42 (http://localhost:4002/pw/js-script-console-error:16)"
     end
 
     test "logs without location if unknown", %{conn: conn} do
       log =
         capture_log(fn ->
           conn
-          |> visit("/pw/live/index")
+          |> visit("/pw/live")
           |> tap(&PhoenixTest.Playwright.Frame.evaluate(&1.frame_id, "console.error('TESTME 42')"))
         end)
 

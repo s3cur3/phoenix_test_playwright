@@ -15,25 +15,14 @@ defmodule PhoenixTest.Router do
   scope "/pw", PhoenixTest.Playwright do
     pipe_through([:browser])
 
-    post("/page/create_record", PageController, :create)
-    put("/page/update_record", PageController, :update)
-    delete("/page/delete_record", PageController, :delete)
-    get("/page/unauthorized", PageController, :unauthorized)
-    get("/page/redirect_to_static", PageController, :redirect_to_static)
-    post("/page/redirect_to_liveview", PageController, :redirect_to_liveview)
-    post("/page/redirect_to_static", PageController, :redirect_to_static)
-    get("/page/cookies", PageController, :cookies)
-    get("/page/session", PageController, :session)
-    get("/page/:page", PageController, :show)
-
-    live_session :playwright_live_pages do
-      live("/live/index", IndexLive)
-      live("/live/page_2", Page2Live)
-      live("/live/ecto", EctoLive)
-    end
-
-    live("/live/index_no_layout", IndexLive)
-    live("/live/redirect_on_mount/:redirect_type", RedirectLive)
+    live("/live", Live)
+    live("/live/ecto", EctoLive)
+    get("/other", PageController, :other)
+    get("/longer-than-viewport", PageController, :longer_than_viewport)
+    get("/cookies", PageController, :cookies)
+    get("/session", PageController, :session)
+    get("/headers", PageController, :headers)
+    get("/js-script-console-error", PageController, :js_script_console_error)
   end
 
   scope "/", PhoenixTest.WebApp do

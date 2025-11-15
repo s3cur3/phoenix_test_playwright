@@ -5,7 +5,7 @@ defmodule PhoenixTest.Playwright.MultipleBrowsersParameterizeTest do
 
   test "run the same test in multiple browsers (checkout from pools)", %{conn: conn} do
     conn
-    |> visit("/pw/live/index")
+    |> visit("/pw/live")
     |> assert_has("h1")
   end
 end

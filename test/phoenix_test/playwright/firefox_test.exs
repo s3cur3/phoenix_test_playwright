@@ -3,7 +3,7 @@ defmodule PhoenixTest.Playwright.FirefoxTest do
 
   test "uses firefox browser from pool", %{conn: conn} do
     conn
-    |> visit("/pw/live/index")
+    |> visit("/pw/live")
     |> assert_has("h1")
   end
 end
