@@ -1,4 +1,12 @@
 defmodule PhoenixTest.Router do
+  @moduledoc """
+  Copied from https://github.com/germsel/phoenix_test
+
+  This support file helps run upstream tests against the Playwright driver to ensure continued compatability with the `pheonix_test` API.
+  It is copied regularly.
+
+  This file should be changed as little as possible, to make future updates easy.
+  """
   use Phoenix.Router
 
   import Phoenix.LiveView.Router
@@ -10,10 +18,17 @@ defmodule PhoenixTest.Router do
     plug(:fetch_session)
     plug(:fetch_live_flash)
     plug(:put_root_layout, html: {LayoutView, :root})
+    # plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
+  end
+
+  # phoenix_test upstream tests don't include CSRF tokens in forms (use <form>, not <.form>)
+  pipeline :csrf do
+    plug(:protect_from_forgery)
   end
 
   scope "/pw", PhoenixTest.Playwright do
-    pipe_through([:browser])
+    pipe_through([:browser, :csrf])
 
     live("/live", Live)
     live("/live/ecto", EctoLive)

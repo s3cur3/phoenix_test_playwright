@@ -37,9 +37,9 @@ defmodule PhoenixTest.Playwright.CookieArgsTest do
       session_options = PhoenixTest.Endpoint.session_options()
 
       assert CookieArgs.from_session_options(cookie, session_options) == %{
-               name: "_phoenix_test_key",
+               name: "_phoenix_key",
                url: "http://localhost:4002",
-               value: "SFMyNTY.g3QAAAABbQAAAAZzZWNyZXRtAAAADG1vbnR5X3B5dGhvbg.ba-LglcAlWpORJb__q8ViNoEXZq4kRKEwgXcmzrft1E"
+               value: "SFMyNTY.g3QAAAABbQAAAAZzZWNyZXRtAAAADG1vbnR5X3B5dGhvbg.fgc5Hcsik_B4PSRMNkRdPd3Jo147_w5_msEz39ILXJw"
              }
     end
   end
