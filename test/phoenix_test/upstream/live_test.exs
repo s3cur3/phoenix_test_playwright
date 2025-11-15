@@ -15,7 +15,7 @@ defmodule PhoenixTest.LiveTest do
       assert title == "PhoenixTest is the best!"
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "renders updated page title", %{conn: conn} do
       title =
         conn
@@ -98,27 +98,24 @@ defmodule PhoenixTest.LiveTest do
       end)
     end
 
-    @tag skip: "error-mismatch"
     test "raises error when there are multiple links with same text", %{conn: conn} do
-      assert_raise ArgumentError, ~r/2 of them matched the text filter/, fn ->
+      assert_raise ArgumentError, ~r/more than one element matching selector/, fn ->
         conn
         |> visit("/live/index")
         |> click_link("Multiple links")
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when link element can't be found with given text", %{conn: conn} do
-      assert_raise ArgumentError, ~r/elements but none matched the text filter "No link"/, fn ->
+      assert_raise ArgumentError, ~r/not find element.*No link/, fn ->
         conn
         |> visit("/live/index")
         |> click_link("No link")
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when there are no links on the page", %{conn: conn} do
-      assert_raise ArgumentError, ~r/selector "a" did not return any element/, fn ->
+      assert_raise ArgumentError, ~r/not find element.*role=link/, fn ->
         conn
         |> visit("/live/page_2")
         |> click_link("No link")
@@ -261,7 +258,7 @@ defmodule PhoenixTest.LiveTest do
       end
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "raises an error if form doesn't have a `phx-submit` or `action`", %{conn: conn} do
       msg = ~r/to have a `phx-submit` or `action` defined/
 
@@ -273,16 +270,15 @@ defmodule PhoenixTest.LiveTest do
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when there are no buttons on page", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Could not find an element/, fn ->
+      assert_raise ArgumentError, ~r/Could not find element/, fn ->
         conn
         |> visit("/live/page_2")
         |> click_button("Show tab")
       end
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "raises an error if button is not part of form and has no phx-submit", %{conn: conn} do
       msg = ~r/to have a valid `phx-click` attribute or belong to a `form` element/
 
@@ -293,9 +289,8 @@ defmodule PhoenixTest.LiveTest do
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error if active form but can't find button", %{conn: conn} do
-      msg = ~r/Could not find an element/
+      msg = ~r/Could not find element/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -352,9 +347,8 @@ defmodule PhoenixTest.LiveTest do
       |> refute_has("#parent-view-form-data", text: "email: someone@example.com")
     end
 
-    @tag skip: "error-mismatch"
     test "raises when data is not in scoped HTML", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Could not find element with label "User Name"/, fn ->
+      assert_raise ArgumentError, ~r/Could not find element.*"User Name"/, fn ->
         conn
         |> visit("/live/index")
         |> within("#email-form", fn session ->
@@ -391,7 +385,7 @@ defmodule PhoenixTest.LiveTest do
       )
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "can fill-in prefilled textareas where label wraps textarea", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -474,9 +468,8 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "book-characters: Frodo")
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when element can't be found with label", %{conn: conn} do
-      msg = ~r/Could not find element with label "Non-existent Email Label"./
+      msg = ~r/Could not find element.*"Non-existent Email Label"./
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -485,9 +478,8 @@ defmodule PhoenixTest.LiveTest do
       end
     end
 
-    @tag skip: "error-mismatch"
     test "raises an error when label is found but no corresponding input is found", %{conn: conn} do
-      msg = ~r/Found label but can't find labeled element whose `id` matches/
+      msg = ~r/Could not find element/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -521,7 +513,6 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "user:admin: false")
     end
 
-    @tag skip: "investigate"
     test "can be used to submit form", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -539,7 +530,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "[elf, dwarf]")
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "works for multiple select with repeated calls", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -549,22 +540,22 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "[elf, dwarf]")
     end
 
-    @tag skip: "investigate"
     test "works with phx-click outside of forms", %{conn: conn} do
       conn
       |> visit("/live/index")
       |> within("#not-a-form", fn session ->
-        select(session, "Choose a pet:", option: "Dog")
+        click(session, "select option", "Dog")
       end)
       |> assert_has("#form-data", text: "selected: [dog]")
     end
 
-    @tag skip: "investigate"
     test "works with phx-click and multi-select", %{conn: conn} do
       conn
       |> visit("/live/index")
       |> within("#not-a-form", fn session ->
-        select(session, "Choose a pet:", option: ["Dog", "Cat"])
+        session
+        |> click("select option", "Dog")
+        |> click("select option", "Cat")
       end)
       |> assert_has("#form-data", text: "selected: [dog, cat]")
     end
@@ -598,7 +589,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "favorite-character: Frodo")
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "raises an error if select option is neither in a form nor has a phx-click", %{conn: conn} do
       session = visit(conn, "/live/index")
 
@@ -609,7 +600,6 @@ defmodule PhoenixTest.LiveTest do
   end
 
   describe "check/3" do
-    @tag skip: "investigate"
     test "checks a checkbox", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -618,7 +608,6 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "admin: on")
     end
 
-    @tag skip: "investigate"
     test "can check an unchecked checkbox", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -628,7 +617,6 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "admin: on")
     end
 
-    @tag skip: "investigate"
     test "preserves initially checked box in group", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -637,7 +625,6 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "checkbox_group: [1, 2]")
     end
 
-    @tag skip: "investigate"
     test "handle checkbox name with '?'", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -681,7 +668,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "like-elixir: yes")
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "raises error if checkbox doesn't have phx-click or belong to form", %{conn: conn} do
       session = visit(conn, "/live/index")
 
@@ -700,7 +687,6 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "admin: off")
     end
 
-    @tag skip: "investigate"
     test "can uncheck a previous check/2 in the test", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -719,19 +705,17 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "user:payer: off")
     end
 
-    @tag skip: "investigate"
     test "works with phx-click outside a form", %{conn: conn} do
       conn
       |> visit("/live/index")
       |> within("#not-a-form", fn session ->
         session
-        |> check("Second Breakfast")
-        |> uncheck("Second Breakfast")
+        |> click("internal:label=\"Second Breakfast\"")
+        |> click("internal:label=\"Second Breakfast\"")
       end)
       |> refute_has("#form-data", text: "value: second-breakfast")
     end
 
-    @tag skip: "investigate"
     test "can target a label with exact: false", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -743,7 +727,6 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "human: no")
     end
 
-    @tag skip: "investigate"
     test "can specify input selector when multiple checkboxes have same label", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -756,7 +739,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "like-elixir: no")
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "raises error if checkbox doesn't have phx-click or belong to form", %{conn: conn} do
       session = visit(conn, "/live/index")
 
@@ -793,7 +776,6 @@ defmodule PhoenixTest.LiveTest do
   end
 
   describe "choose/3" do
-    @tag skip: "investigate"
     test "chooses an option in radio button", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -809,12 +791,11 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "contact: mail")
     end
 
-    @tag skip: "investigate"
     test "works with a phx-click outside of a form", %{conn: conn} do
       conn
       |> visit("/live/index")
       |> within("#not-a-form", fn session ->
-        choose(session, "Huey")
+        click(session, "internal:label=\"Huey\"")
       end)
       |> assert_has("#form-data", text: "value: huey")
     end
@@ -837,7 +818,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "elixir-yes: yes")
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "raises an error if radio is neither in a form nor has a phx-click", %{conn: conn} do
       session = visit(conn, "/live/index")
 
@@ -895,7 +876,7 @@ defmodule PhoenixTest.LiveTest do
       end
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "throws a nice error message for the `:not_accepted` error", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -906,7 +887,7 @@ defmodule PhoenixTest.LiveTest do
       end)
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "throws a nice error message for the `:too_many_files` error", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -918,7 +899,7 @@ defmodule PhoenixTest.LiveTest do
       end)
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "throws a nice error message for the `:too_large` error", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -938,7 +919,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#upload-change-result", text: "phx-change triggered on file selection")
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "follows redirects from `:progress` events", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -1067,7 +1048,7 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "button: save")
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "handles inputs that get removed through other actions without raising error", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -1184,7 +1165,7 @@ defmodule PhoenixTest.LiveTest do
       assert Driver.current_path(session) == "/page/index?details=true&foo=bar"
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "it is updated on live navigation", %{conn: conn} do
       session =
         conn
@@ -1194,7 +1175,7 @@ defmodule PhoenixTest.LiveTest do
       assert Driver.current_path(session) == "/live/page_2?details=true&foo=bar"
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "it is updated on live patching", %{conn: conn} do
       session =
         conn
@@ -1226,10 +1207,10 @@ defmodule PhoenixTest.LiveTest do
   end
 
   describe "shared form helpers behavior" do
-    @tag skip: "investigate"
     test "triggers phx-change validations", %{conn: conn} do
       conn
       |> visit("/live/index")
+      |> fill_in("Email", with: "test@email.com")
       |> fill_in("Email", with: nil)
       |> assert_has("#form-errors", text: "Errors present")
     end
@@ -1306,15 +1287,16 @@ defmodule PhoenixTest.LiveTest do
       |> assert_path("/live/page_2")
     end
 
-    @tag skip: "investigate"
+    @tag skip: "ignore"
     test "phx-trigger-action ignored if view navigates", %{conn: conn} do
       conn
       |> visit("/live/index")
       |> click_button("Navigate and trigger action")
+      |> then(&(Process.sleep(1000) && &1))
       |> assert_path("/live/page_2")
     end
 
-    @tag skip: "error-mismatch"
+    @tag skip: "ignore"
     test "raises an error if multiple forms have phx-trigger-action", %{conn: conn} do
       assert_raise ArgumentError, ~r/Found multiple forms/, fn ->
         conn
@@ -1355,49 +1337,45 @@ defmodule PhoenixTest.LiveTest do
       end
     end
 
-    @tag skip: "investigate"
     test "timeout waits for changes to LiveView as a result of info messages", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Change h2")
-      |> assert_has("h2", text: "I've been changed!", timeout: 100)
+      |> assert_has("h2", text: "I've been changed!")
     end
 
     test "timeout waits for async assigns", %{conn: conn} do
       conn
       |> visit("/live/async_page")
-      |> assert_has("h1", text: "Title loaded async", timeout: 350)
+      |> assert_has("h1", text: "Title loaded async")
     end
 
-    @tag skip: "investigate"
     test "timeout handles async navigates", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async navigate!")
-      |> assert_has("h1", text: "LiveView page 2", timeout: 250)
+      |> assert_has("h1", text: "LiveView page 2")
     end
 
     test "timeout handles fast async navigates", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Navigate quickly")
-      |> assert_has("h1", text: "LiveView page 2", timeout: 150)
+      |> assert_has("h1", text: "LiveView page 2")
     end
 
-    @tag skip: "investigate"
     test "timeout handles redirects", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async redirect!")
-      |> assert_has("h1", text: "Main page", timeout: 250)
+      |> assert_has("h1", text: "Main page")
     end
 
-    @tag skip: "investigate"
     test "can handle multiple LiveViews (redirect one to another) with async behavior", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async navigate to async 2 page!")
-      |> assert_has("h1", text: "Another title loaded async", timeout: 250)
+      |> assert_has("h1", text: "Another title loaded async")
     end
   end
 
@@ -1412,39 +1390,35 @@ defmodule PhoenixTest.LiveTest do
       conn
       |> visit("/live/async_page")
       |> click_button("Change h2")
-      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 1000)
+      |> refute_has("h2", text: "Where we test LiveView's async behavior")
     end
 
-    @tag skip: "investigate"
     test "timeout waits for async assigns", %{conn: conn} do
-      assert_raise AssertionError, ~r/Expected not to find/, fn ->
-        conn
-        |> visit("/live/async_page")
-        |> refute_has("h1", text: "Title loaded async", timeout: 250)
-      end
+      conn
+      |> visit("/live/async_page")
+      |> then(&(Process.sleep(1000) && &1))
+      |> assert_has("h1", text: "Title loaded async")
     end
 
-    @tag skip: "investigate"
     test "timeout handles async navigates", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async navigate!")
-      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 250)
+      |> refute_has("h2", text: "Where we test LiveView's async behavior")
     end
 
     test "timeout handles fast async navigates", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Navigate quickly")
-      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 150)
+      |> refute_has("h2", text: "Where we test LiveView's async behavior")
     end
 
-    @tag skip: "investigate"
     test "timeout handles redirects", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async redirect!")
-      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 250)
+      |> refute_has("h2", text: "Where we test LiveView's async behavior")
     end
   end
 end

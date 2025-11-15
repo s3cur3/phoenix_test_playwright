@@ -8,7 +8,6 @@ defmodule PhoenixTest.PlaywrightTest do
 
   import ExUnit.CaptureLog, only: [capture_log: 1]
 
-  alias ExUnit.AssertionError
   alias PhoenixTest.Playwright
   alias PhoenixTest.Playwright.Selector
 
@@ -54,7 +53,7 @@ defmodule PhoenixTest.PlaywrightTest do
 
     @tag accept_dialogs: false
     test "override config via tag: dismisses dialog and fails click_link", %{conn: conn} do
-      assert_raise AssertionError, fn ->
+      assert_raise ArgumentError, fn ->
         conn
         |> visit("/pw/live")
         |> click_link("Confirm to navigate")

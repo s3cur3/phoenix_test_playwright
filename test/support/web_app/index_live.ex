@@ -160,7 +160,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <button type="button" phx-click={JS.toggle()}>Non submit button</button>
     </form>
 
-    <form id="full-form" phx-submit="save-form" phx-change="upload-change">
+    <.form for={@form_data} id="full-form" phx-submit="save-form" phx-change="upload-change">
       <label for="first_name">First Name</label>
       <input id="first_name" name="first_name" />
 
@@ -240,7 +240,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <.live_file_input upload={@uploads.avatar} />
 
       <button type="submit" name="full_form_button" value="save">Save Full Form</button>
-    </form>
+    </.form>
 
     <form id="redirect-form" phx-submit="save-redirect-form">
       <label for="redirect-form-name">Name</label>
@@ -320,7 +320,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <input id="email-on-change" name="email" />
     </form>
 
-    <form id="complex-labels" phx-change="change-form" phx-submit="save-form">
+    <.form for={%{}} id="complex-labels" phx-change="change-form" phx-submit="save-form">
       <label for="complex-name">
         Name <span>*</span>
       </label>
@@ -352,9 +352,9 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <.live_file_input upload={@uploads.avatar_2} />
 
       <button type="submit">Save</button>
-    </form>
+    </.form>
 
-    <form id="same-labels" phx-submit="save-form" phx-change="change-form">
+    <.form for={%{}} id="same-labels" phx-submit="save-form" phx-change="change-form">
       <fieldset name="like-elixir">
         <legend>Do you like Elixir:</legend>
 
@@ -439,7 +439,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <button type="submit">
         Submit Form
       </button>
-    </form>
+    </.form>
 
     <form id="changes-hidden-input-form" phx-change="set-hidden-race">
       <input type="hidden" name="hidden_race" value={@hidden_input_race} />
@@ -448,7 +448,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <label>Name for hidden <input type="name" name="name" /></label>
     </form>
 
-    <div id="not-a-form">
+    <div id="not-a-form" phx-update="ignore">
       <fieldset>
         <legend>Select a maintenance drone:</legend>
 
@@ -531,7 +531,8 @@ defmodule PhoenixTest.WebApp.IndexLive do
 
     <button phx-click="trigger-multiple-forms">Trigger multiple</button>
 
-    <form
+    <.form
+      for={%{}}
       id="redirect-and-trigger-form"
       phx-change="patch-and-trigger-form"
       phx-trigger-action={@redirect_and_trigger_submit}
@@ -543,7 +544,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       </label>
       <button phx-click="redirect-and-trigger-form">Redirect and trigger action</button>
       <button phx-click="navigate-and-trigger-form">Navigate and trigger action</button>
-    </form>
+    </.form>
 
     <form id="conditional-inputs" phx-change="save-form" phx-submit="save-form">
       <label>
@@ -646,7 +647,10 @@ defmodule PhoenixTest.WebApp.IndexLive do
   end
 
   defp handle_progress(:redirect_avatar, entry, socket) do
+    raise "there"
+
     if entry.done? do
+      raise "here"
       {:noreply, push_navigate(socket, to: "/live/page_2", replace: true)}
     else
       {:noreply, socket}
@@ -799,8 +803,8 @@ defmodule PhoenixTest.WebApp.IndexLive do
   def handle_event("select-pet", %{"value" => value}, socket) do
     form_data =
       case socket.assigns.form_data do
-        %{selected: values} -> %{selected: values ++ [value]}
-        %{} -> %{selected: [value]}
+        %{"selected" => values} -> %{"selected" => values ++ [value]}
+        %{} -> %{"selected" => [value]}
       end
 
     socket

@@ -934,15 +934,14 @@ defmodule PhoenixTest.Playwright do
 
     case result do
       {:error, %{error: %{error: %{name: "TimeoutError"}}} = error} ->
-        flunk(
-          "Could not find element with selector #{debug_selector}#{timeout_suffix(error)}\n" <>
-            more_info(error)
-        )
+        raise ArgumentError,
+              "Could not find element with selector #{debug_selector}#{timeout_suffix(error)}\n" <>
+                more_info(error)
 
       {:error, %{error: %{error: %{message: "Error: strict mode violation: " <> _ = message}}}} ->
         short_message = String.replace(message, "Error: strict mode violation: ", "")
 
-        flunk("Found more than one element matching selector #{debug_selector}:\n#{short_message}")
+        raise ArgumentError, "Found more than one element matching selector #{debug_selector}:\n#{short_message}"
 
       {:error, %{error: %{error: %{name: "Error", message: ^checkbox_msg}}}} ->
         :ok
