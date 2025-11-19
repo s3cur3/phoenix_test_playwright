@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 ### Changed
 - Ecto sandbox ownership: Use a separate sandbox owner process instead of the test process. This reduces ownership errors when LiveViews continue to use database connections after the test terminates. Commit [7577d5e]
+- Use `playwright_ex`. Channel modules have moved e.g. to `PlaywrightEx.Frame`. Channel functions now always expect to args: channel `guid` + keyword `opts`. Timeout must always be passed. `PhoenixTest.Playwright.Case` provides a `@timeout` module attribute for convenience.
 ### Added
 - Config option `ecto_sandbox_stop_owner_delay`: Delay in milliseconds before shutting down the Ecto sandbox owner. Use when LiveViews or other processes need time to stop using the connections. Commit [7577d5e]
 

@@ -15,7 +15,8 @@ defmodule PhoenixTest.Playwright.Case do
 
   use ExUnit.CaseTemplate
 
-  alias Ecto.Adapters.SQL.Sandbox
+  alias Ecto.Adapters.SQL.Sandbox, as: EctoSandbox
+  alias Phoenix.Ecto.SQL.Sandbox, as: PhoenixSandbox
   alias PhoenixTest.Playwright
   alias PhoenixTest.Playwright.BrowserPool
   alias PlaywrightEx.Browser
@@ -50,6 +51,7 @@ defmodule PhoenixTest.Playwright.Case do
         ]
 
       @moduletag Keyword.delete(unquote(opts), :async)
+      @timeout PhoenixTest.Playwright.Config.global(:timeout)
     end
   end
 
@@ -172,8 +174,7 @@ defmodule PhoenixTest.Playwright.Case do
     String.replace("#{module}.#{test}_#{time}#{suffix}", ~r/[^a-zA-Z0-9\.]/, "_")
   end
 
-  @includes_ecto Code.ensure_loaded?(Sandbox) &&
-                   Code.ensure_loaded?(Phoenix.Ecto.SQL.Sandbox)
+  @includes_ecto Code.ensure_loaded?(EctoSandbox) && Code.ensure_loaded?(PhoenixSandbox)
 
   if @includes_ecto do
     defp checkout_ecto_repos(config, context) do
@@ -182,8 +183,8 @@ defmodule PhoenixTest.Playwright.Case do
 
       repos
       |> Enum.map(&maybe_start_sandbox_owner(&1, config, context))
-      |> Phoenix.Ecto.SQL.Sandbox.metadata_for(self())
-      |> Phoenix.Ecto.SQL.Sandbox.encode_metadata()
+      |> PhoenixSandbox.metadata_for(self())
+      |> PhoenixSandbox.encode_metadata()
     end
 
     defp maybe_start_sandbox_owner(repo, config, context) do
@@ -199,7 +200,7 @@ defmodule PhoenixTest.Playwright.Case do
     end
 
     defp start_sandbox_owner(repo, context) do
-      pid = Sandbox.start_owner!(repo, shared: not context.async)
+      pid = EctoSandbox.start_owner!(repo, shared: not context.async)
       {:ok, pid}
     rescue
       _ -> {:error, :probably_already_started}
@@ -216,7 +217,7 @@ defmodule PhoenixTest.Playwright.Case do
     defp do_stop_sandbox_owner(checkout_pid, config) do
       delay = Keyword.fetch!(config, :ecto_sandbox_stop_owner_delay)
       if delay > 0, do: Process.sleep(delay)
-      Sandbox.stop_owner(checkout_pid)
+      EctoSandbox.stop_owner(checkout_pid)
     end
   else
     defp checkout_ecto_repos(_, _) do

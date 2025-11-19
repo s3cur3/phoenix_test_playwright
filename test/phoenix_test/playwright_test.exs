@@ -10,8 +10,6 @@ defmodule PhoenixTest.PlaywrightTest do
 
   alias PlaywrightEx.Selector
 
-  @timeout PhoenixTest.Playwright.Config.global(:timeout)
-
   describe "screenshot/3" do
     setup %{conn: conn} do
       [conn: conn |> visit("/pw/longer-than-viewport") |> assert_has("h1", text: "Longer than viewport")]
