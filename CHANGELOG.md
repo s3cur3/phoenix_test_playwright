@@ -5,16 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
-## [Unreleased]
+## [0.10.0-rc.0] 2025-11-19
+### Breaking changes
+- Use browser pool by default, instead of starting new browser per test suite. Commit [095e216]
+  ```diff
+    # test_helper.exs
+  + {:ok, _} = PhoenixTest.Playwright.Supervisor.start_link()
+    Application.put_env(:phoenix_test, :base_url, MyAppWeb.Endpoint.url())
+  ```
+- Changes required if internals (beyond `PhoenixTest` and `PhoenixTest.Playwright` modules) were used. Phoenix-agnostic modules moved to `PlaywrightEx`, with slight API changes. Example:
+  ```diff
+  - |> unwrap(& {:ok, _} = PhoenixTest.Playwright.Frame.click(&1.frame_id, selector))
+  + |> unwrap(& {:ok, _} = PlaywrightEx.Frame.click(&1.frame_id, selector: selector, timeout: @timeout))
+  ```
 ### Changed
-- Ecto sandbox ownership: Use a separate sandbox owner process instead of the test process. This reduces ownership errors when LiveViews continue to use database connections after the test terminates. Commit [7577d5e]
-- Use `playwright_ex`. Channel modules have moved e.g. to `PlaywrightEx.Frame`. Channel functions now always expect to args: channel `guid` + keyword `opts`. Timeout must always be passed. `PhoenixTest.Playwright.Case` provides a `@timeout` module attribute for convenience.
+- Ecto sandbox ownership: Use a separate sandbox owner process instead of the test process. This reduces ownership errors when LiveViews continue to use database connections after the test terminates. Commit [3b54699]
 ### Added
-- Config option `ecto_sandbox_stop_owner_delay`: Delay in milliseconds before shutting down the Ecto sandbox owner. Use when LiveViews or other processes need time to stop using the connections. Commit [7577d5e]
+- Config option `ecto_sandbox_stop_owner_delay`: Delay in milliseconds before shutting down the Ecto sandbox owner. Use when LiveViews or other processes need time to stop using the connections. Commit [2f4a8cf]
 
 ## [0.9.1] 2025-10-29
 ### Added
-- Browser pooling (opt-in): Reduced memory, higher speed. See `PhoenixTest.Playwright.BrowserPool`. Commit [00e75c6]
+- Browser pooling (opt-in): Reduced memory, higher speed.. Commit [00e75c6]
 
 ## [0.9.0] 2025-10-26
 ### Fixed
@@ -133,7 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 - `@tag trace: :open` to auto open recorded Playwright trace in viewer
 
-[7577d5e]: https://github.com/ftes/phoenix_test_playwright/commit/7577d5e
+[3b54699]: https://github.com/ftes/phoenix_test_playwright/commit/3b54699
 [5ff530]: https://github.com/ftes/phoenix_test_playwright/commit/5ff530
 [becf5e]: https://github.com/ftes/phoenix_test_playwright/commit/becf5e
 [72edd9]: https://github.com/ftes/phoenix_test_playwright/commit/72edd9
@@ -152,3 +163,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [968d5cd]: https://github.com/ftes/phoenix_test_playwright/commit/968d5cd
 [f4161bd]: https://github.com/ftes/phoenix_test_playwright/commit/f4161bd
 [00e75c6]: https://github.com/ftes/phoenix_test_playwright/commit/00e75c6
+[2f4a8cf]: https://github.com/ftes/phoenix_test_playwright/commit/2f4a8cf
+[095e216]: https://github.com/ftes/phoenix_test_playwright/commit/095e216

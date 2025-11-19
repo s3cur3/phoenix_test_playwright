@@ -1,7 +1,7 @@
 defmodule PhoenixTestPlaywright.MixProject do
   use Mix.Project
 
-  @version "0.9.1"
+  @version "0.10.0-rc.0"
   @source_url "https://github.com/ftes/phoenix_test_playwright"
   @description """
   Execute PhoenixTest cases in an actual browser via Playwright.
@@ -81,7 +81,8 @@ defmodule PhoenixTestPlaywright.MixProject do
       extras: [
         "CHANGELOG.md": [title: "Changelog"]
       ],
-      nest_modules_by_prefix: [PhoenixTest.Playwright]
+      nest_modules_by_prefix: [PhoenixTest.Playwright],
+      filter_modules: fn _, metadata -> not String.contains?(to_string(metadata.source_path), "/internal/") end
     ]
   end
 

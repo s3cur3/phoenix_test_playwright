@@ -81,7 +81,6 @@ schema_opts = [
     type: :atom,
     doc: """
     Reuse a browser from this pool instead of launching a new browser per test suite.
-    See `PhoenixTest.Playwright.BrowserPool`.
     """
   ],
   browser_pool_checkout_timeout: [
@@ -198,6 +197,7 @@ defmodule PhoenixTest.Playwright.Config do
   @doc false
   def schema_opts, do: @schema_opts
 
+  @doc false
   def validate!(config) when is_map(config), do: config |> Keyword.new() |> validate!()
 
   def validate!(config) when is_list(config) do
@@ -207,6 +207,7 @@ defmodule PhoenixTest.Playwright.Config do
     |> normalize()
   end
 
+  @doc false
   def global do
     :phoenix_test
     |> Application.get_env(:playwright, [])
@@ -214,9 +215,13 @@ defmodule PhoenixTest.Playwright.Config do
     |> normalize()
   end
 
+  @doc false
   def global(key), do: Keyword.fetch!(global(), key)
 
+  @doc false
   def setup_all_keys, do: @setup_all_keys
+
+  @doc false
   def setup_keys, do: @setup_keys
 
   defp normalize(config), do: Keyword.new(config, fn {key, value} -> {key, normalize(key, value)} end)

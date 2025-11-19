@@ -26,7 +26,7 @@ defmodule PhoenixTest.Playwright do
 
   Enjoy! Freddy.
 
-  P.S. Looking for a standalone Playwright client? See [playwright_ex](https://hexdocs.pm/playwright_ex/).
+  P.S. Looking for a standalone Playwright client? See `PlaywrightEx`.
 
 
   ## Getting started
@@ -232,98 +232,22 @@ defmodule PhoenixTest.Playwright do
   If you think others might benefit, please [open a PR](https://github.com/ftes/phoenix_test_playwright/pulls).
 
   Here is some inspiration:
-      def choose_styled_radio_with_hidden_input_button(session, label, opts \\ []) do
+      def choose_styled_radio_with_hidden_input_button(conn, label, opts \\ []) do
         opts = Keyword.validate!(opts, exact: true)
-        click(Selector.text(label, opts))
+        PhoenixTest.Playwright.click(conn, PlaywrightEx.Selector.text(label, opts))
       end
 
       defp assert_a11y(conn) do
-        Frame.evaluate(conn.frame_id, A11yAudit.JS.axe_core())
-        {:ok, json} = Frame.evaluate(conn.frame_id, "axe.run()")
+        PlaywrightEx.Frame.evaluate(conn.frame_id, expression: A11yAudit.JS.axe_core(), timeout: @timeout)
+        {:ok, json} = PlaywrightEx.Frame.evaluate(conn.frame_id, expression: "axe.run()", timeout: @timeout)
         results = A11yAudit.Results.from_json(json)
         A11yAudit.Assertions.assert_no_violations(results)
 
         conn
       end
 
-      # In your test, first call `|> tap(&Connection.subscribe(&1.page_id))`
-      def assert_download(conn, name, contains: content) do
-        assert_receive({:playwright, %{method: :download} = download_msg}, 2000)
-        path = Connection.initializer(download_msg.params.artifact.guid).absolute_path
-        wait_for_file(path)
-
-        assert download_msg.params.suggested_filename =~ name
-        assert File.read!(path) =~ content
-
-        conn
-      end
-
-      def assert_has_selected(conn, label, value, opts \\ []) do
-        opts = Keyword.validate!(opts, exact: true)
-
-        assert_found(conn,
-          selector: label |> Selector.label(opts) |> Selector.concat("option[selected]"),
-          expression: "to.have.text",
-          expectedText: [%{string: value}]
-        )
-      end
-
-      def assert_is_chosen(conn, label, opts \\ []) do
-        opts = Keyword.validate!(opts, exact: true)
-
-        assert_found(conn,
-          selector: Selector.label(label, opts),
-          expression: "to.have.attribute",
-          expressionArg: "checked"
-        )
-      end
-
-      def assert_is_editable(conn, label, opts \\ []) do
-        opts = Keyword.validate!(opts, exact: true)
-
-        assert_found(conn,
-          selector: Selector.label(label, opts),
-          expression: "to.be.editable"
-        )
-      end
-
-      def refute_is_editable(conn, label, opts \\ []) do
-        opts = Keyword.validate!(opts, exact: true)
-
-        assert_found(
-          conn,
-          [
-            selector: Selector.label(label, opts),
-            expression: "to.be.editable"
-          ],
-          is_not: true
-        )
-      end
-
-      def assert_found(conn, params, opts \\ []) do
-        is_not = Keyword.get(opts, :is_not, false)
-        params = Enum.into(params, %{is_not: is_not})
-
-        unwrap(conn, fn frame_id ->
-          {:ok, found} = Frame.expect(frame_id, params)
-          if is_not, do: refute(found), else: assert(found)
-        end)
-      end
-
-      defp wait_for_file(path, remaining_ms \\ 2000, wait_for_ms \\ 100)
-      defp wait_for_file(path, remaining_ms, _) when remaining_ms <= 0, do: flunk("File #{path} does not exist")
-
-      defp wait_for_file(path, remaining_ms, wait_for_ms) do
-        if File.exists?(path) do
-          :ok
-        else
-          Process.sleep(wait_for_ms)
-          wait_for_file(path, remaining_ms - wait_for_ms, wait_for_ms)
-        end
-      end
-
-      defp within_iframe(selector \\ "iframe", fun) when is_function(fun, 1) do
-        within("#{selector} >> internal:control=enter-frame", fun)
+      defp within_iframe(conn, selector \\ "iframe", fun) when is_function(fun, 1) do
+        within(conn, "#{selector} >> internal:control=enter-frame", fun)
       end
   """
 
@@ -410,7 +334,33 @@ defmodule PhoenixTest.Playwright do
   As such, this function is not appropriate for signed `Plug.Session` cookies.
   For signed session cookies, use `add_session_cookie/3`
 
-  See `PhoenixTest.Playwright.CookieArgs` for the type of the cookie.
+    A cookie's value must be a binary unless the cookie is signed/encrypted
+
+  ## Cookie fields
+
+  | key          | type        | description |
+  | -----------  | ----------- | ----------- |
+  | `:name`      | `binary()`  | |
+  | `:value`     | `binary()`  | |
+  | `:url`       | `binary()`  | *(optional)* either url or domain / path are required |
+  | `:domain`    | `binary()`  | *(optional)* either url or domain / path are required |
+  | `:path`      | `binary()`  | *(optional)* either url or domain / path are required |
+  | `:max_age`   | `float()`   | *(optional)* The cookie max age, in seconds. |
+  | `:http_only` | `boolean()` | *(optional)* |
+  | `:secure`    | `boolean()` | *(optional)* |
+  | `:encrypt`   | `boolean()` | *(optional)* |
+  | `:sign`      | `boolean()` | *(optional)* |
+  | `:same_site` | `binary()`  | *(optional)* one of "Strict", "Lax", "None" |
+
+  Two of the cookie fields mean nothing to Playwright. These are:
+
+  1. `:encrypt`
+  2. `:sign`
+
+  The `:max_age` cookie field means the same thing as documented in `Plug.Conn.put_resp_cookie/4`.
+  The `:max_age` value is used to infer the correct `expires` value that Playwright requires.
+
+  See https://playwright.dev/docs/api/class-browsercontext#browser-context-add-cookies
   """
   def add_cookies(conn, cookies) do
     cookies = Enum.map(cookies, &CookieArgs.from_cookie/1)
@@ -602,6 +552,7 @@ defmodule PhoenixTest.Playwright do
     conn
   end
 
+  @doc false
   def assert_path(conn, path, opts \\ []) do
     if opts[:query_params] do
       retry(fn -> Assertions.assert_path(conn, path, opts) end, timeout(opts))
@@ -610,6 +561,7 @@ defmodule PhoenixTest.Playwright do
     end
   end
 
+  @doc false
   def refute_path(conn, path, opts \\ []) do
     if opts[:query_params] do
       retry(fn -> Assertions.refute_path(conn, path, opts) end, timeout(opts))

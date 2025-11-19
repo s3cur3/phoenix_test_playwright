@@ -1,35 +1,5 @@
 defmodule PhoenixTest.Playwright.CookieArgs do
-  @moduledoc """
-  Functions to assist with adding cookies to the browser context
-
-  A cookie's value must be a binary unless the cookie is signed/encrypted
-
-  ## Cookie fields
-
-  | key          | type        | description |
-  | -----------  | ----------- | ----------- |
-  | `:name`      | `binary()`  | |
-  | `:value`     | `binary()`  | |
-  | `:url`       | `binary()`  | *(optional)* either url or domain / path are required |
-  | `:domain`    | `binary()`  | *(optional)* either url or domain / path are required |
-  | `:path`      | `binary()`  | *(optional)* either url or domain / path are required |
-  | `:max_age`   | `float()`   | *(optional)* The cookie max age, in seconds. |
-  | `:http_only` | `boolean()` | *(optional)* |
-  | `:secure`    | `boolean()` | *(optional)* |
-  | `:encrypt`   | `boolean()` | *(optional)* |
-  | `:sign`      | `boolean()` | *(optional)* |
-  | `:same_site` | `binary()`  | *(optional)* one of "Strict", "Lax", "None" |
-
-  Two of the cookie fields mean nothing to Playwright. These are:
-
-  1. `:encrypt`
-  2. `:sign`
-
-  The `:max_age` cookie field means the same thing as documented in `Plug.Conn.put_resp_cookie/4`.
-  The `:max_age` value is used to infer the correct `expires` value that Playwright requires.
-
-  See https://playwright.dev/docs/api/class-browsercontext#browser-context-add-cookies
-  """
+  @moduledoc false
 
   alias Plug.Conn
   alias Plug.Session
