@@ -3,10 +3,7 @@ defmodule PhoenixTest.Playwright.Supervisor do
 
   use Supervisor
 
-  alias PhoenixTest.Playwright.BrowserPool
   alias PhoenixTest.Playwright.Config
-  alias PhoenixTest.Playwright.Connection
-  alias PhoenixTest.Playwright.PortServer
 
   def start_link do
     Supervisor.start_link(__MODULE__, :no_init_arg, name: __MODULE__)
@@ -14,8 +11,8 @@ defmodule PhoenixTest.Playwright.Supervisor do
 
   @impl true
   def init(:no_init_arg) do
-    pools = Config.global(:browser_pools)
-    children = [PortServer, Connection | Enum.map(pools, &Supervisor.child_spec({BrowserPool, &1}, id: &1))]
+    playwright_config = Keyword.take(Config.global(), ~w(timeout js_logger assets_dir runner)a)
+    children = [{PlaywrightEx.Supervisor, playwright_config}, PhoenixTest.Playwright.BrowserPoolSupervisor]
     Supervisor.init(children, strategy: :rest_for_one)
   end
 end

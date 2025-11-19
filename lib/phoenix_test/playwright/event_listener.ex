@@ -12,8 +12,6 @@ defmodule PhoenixTest.Playwright.EventListener do
   """
   use GenServer
 
-  alias PhoenixTest.Playwright.Connection
-
   defstruct [:filter, :callbacks]
 
   # Public API
@@ -34,7 +32,7 @@ defmodule PhoenixTest.Playwright.EventListener do
 
   @impl GenServer
   def init(%{guid: guid, filter: filter, callback: callback}) when is_function(callback, 1) do
-    Connection.subscribe(self(), guid)
+    PlaywrightEx.subscribe(self(), guid)
     {:ok, %__MODULE__{filter: filter, callbacks: [callback]}}
   end
 

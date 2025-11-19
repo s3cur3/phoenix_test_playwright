@@ -45,7 +45,8 @@ defmodule PhoenixTestPlaywright.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:styler, "~> 1.3", only: [:dev, :test], runtime: false},
       {:makeup_diff, "~> 0.1", only: :dev},
-      {:nimble_options, "~> 1.1"}
+      {:nimble_options, "~> 1.1"},
+      {:playwright_ex, path: "../playwright_ex", only: :test}
     ]
   end
 

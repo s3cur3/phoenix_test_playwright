@@ -6,8 +6,6 @@ defmodule PhoenixTest.Playwright.EventRecorder do
   """
   use GenServer
 
-  alias PhoenixTest.Playwright.Connection
-
   # Public API
 
   def events(name) do
@@ -22,7 +20,7 @@ defmodule PhoenixTest.Playwright.EventRecorder do
 
   @impl GenServer
   def init(%{guid: guid, filter: filter}) do
-    Connection.subscribe(self(), guid)
+    PlaywrightEx.subscribe(self(), guid)
     {:ok, %{filter: filter, events: []}}
   end
 

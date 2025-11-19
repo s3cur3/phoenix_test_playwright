@@ -226,7 +226,7 @@ defmodule PhoenixTest.Playwright do
 
   But it does not wrap the entire Playwright API, which is quite large.
   You should be able to add any missing functionality yourself
-  using `PhoenixTest.unwrap/2`, [`Frame`](`PhoenixTest.Playwright.Frame`), [`Selector`](`PhoenixTest.Playwright.Selector`),
+  using `PhoenixTest.unwrap/2`, [`Frame`](`PlaywrightEx.Frame`), [`Selector`](`PlaywrightEx.Selector`),
   and the [Playwright code](https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/client/frame.ts).
 
   If you think others might benefit, please [open a PR](https://github.com/ftes/phoenix_test_playwright/pulls).
@@ -331,15 +331,15 @@ defmodule PhoenixTest.Playwright do
 
   alias PhoenixTest.Assertions
   alias PhoenixTest.OpenBrowser
-  alias PhoenixTest.Playwright.BrowserContext
   alias PhoenixTest.Playwright.Config
   alias PhoenixTest.Playwright.CookieArgs
-  alias PhoenixTest.Playwright.Dialog
   alias PhoenixTest.Playwright.EventListener
   alias PhoenixTest.Playwright.EventRecorder
-  alias PhoenixTest.Playwright.Frame
-  alias PhoenixTest.Playwright.Page
-  alias PhoenixTest.Playwright.Selector
+  alias PlaywrightEx.BrowserContext
+  alias PlaywrightEx.Dialog
+  alias PlaywrightEx.Frame
+  alias PlaywrightEx.Page
+  alias PlaywrightEx.Selector
 
   require Logger
 
@@ -381,7 +381,7 @@ defmodule PhoenixTest.Playwright do
 
   defp start_dialog_listener(page_id, auto_accept?) do
     filter = &match?(%{method: :__create__, params: %{type: "Dialog"}}, &1)
-    callback = &if(auto_accept?, do: {:ok, _} = Dialog.accept(&1.params.guid))
+    callback = &if(auto_accept?, do: {:ok, _} = Dialog.accept(&1.params.guid, timeout: timeout()))
     args = %{guid: page_id, filter: filter, callback: callback}
     ExUnit.Callbacks.start_supervised!({EventListener, args}, id: "#{page_id}-dialog-listener")
   end
@@ -407,7 +407,7 @@ defmodule PhoenixTest.Playwright do
         _ -> Application.fetch_env!(:phoenix_test, :base_url) <> path
       end
 
-    tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, url)))
+    tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, url, timeout: timeout())))
   end
 
   @doc """
@@ -421,14 +421,14 @@ defmodule PhoenixTest.Playwright do
   """
   def add_cookies(conn, cookies) do
     cookies = Enum.map(cookies, &CookieArgs.from_cookie/1)
-    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, cookies)))
+    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, cookies, timeout: timeout())))
   end
 
   @doc """
   Removes all cookies from the context
   """
   def clear_cookies(conn, opts \\ []) do
-    tap(conn, &({:ok, _} = BrowserContext.clear_cookies(&1.context_id, opts)))
+    tap(conn, &({:ok, _} = BrowserContext.clear_cookies(&1.context_id, ensure_timeout(opts))))
   end
 
   @doc """
@@ -451,7 +451,7 @@ defmodule PhoenixTest.Playwright do
   """
   def add_session_cookie(conn, cookie, session_options) do
     cookie = CookieArgs.from_session_options(cookie, session_options)
-    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, [cookie])))
+    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, [cookie], timeout: timeout())))
   end
 
   @screenshot_opts_schema [
@@ -489,7 +489,7 @@ defmodule PhoenixTest.Playwright do
     File.mkdir_p!(dir)
 
     path = Path.join(dir, file_path)
-    {:ok, binary_img} = Page.screenshot(conn.page_id, opts)
+    {:ok, binary_img} = Page.screenshot(conn.page_id, ensure_timeout(opts))
     File.write!(path, Base.decode64!(binary_img))
 
     conn
@@ -521,7 +521,7 @@ defmodule PhoenixTest.Playwright do
     opts = NimbleOptions.validate!(opts, @type_opts_schema)
 
     conn.frame_id
-    |> Frame.type(selector, text, opts)
+    |> Frame.type(selector, text, ensure_timeout(opts))
     |> handle_response(selector)
 
     conn
@@ -562,7 +562,7 @@ defmodule PhoenixTest.Playwright do
     opts = NimbleOptions.validate!(opts, @press_opts_schema)
 
     conn.frame_id
-    |> Frame.press(selector, key, opts)
+    |> Frame.press(selector, key, ensure_timeout(opts))
     |> handle_response(selector)
 
     conn
@@ -595,7 +595,7 @@ defmodule PhoenixTest.Playwright do
     target_selector = conn |> maybe_within() |> Selector.concat(target_selector)
 
     conn.frame_id
-    |> Frame.drag_and_drop(source_selector, target_selector)
+    |> Frame.drag_and_drop(source_selector, target_selector, timeout: timeout())
     |> handle_response(source_selector)
 
     conn
@@ -733,9 +733,9 @@ defmodule PhoenixTest.Playwright do
     event_callback = fn %{params: %{guid: guid, initializer: %{message: message}}} ->
       {:ok, _} =
         case callback.(%{guid: guid, message: message}) do
-          :accept -> Dialog.accept(guid)
-          {:accept, prompt_text} -> Dialog.accept(guid, prompt_text: prompt_text)
-          :dismiss -> Dialog.dismiss(guid)
+          :accept -> Dialog.accept(guid, timeout: timeout())
+          {:accept, prompt_text} -> Dialog.accept(guid, prompt_text: prompt_text, timeout: timeout())
+          :dismiss -> Dialog.dismiss(guid, timeout: timeout())
           _ -> {:ok, :ignore}
         end
     end
@@ -748,7 +748,7 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def render_page_title(conn) do
-    case Frame.title(conn.frame_id) do
+    case Frame.title(conn.frame_id, timeout: timeout()) do
       {:ok, ""} -> nil
       {:ok, title} -> title
     end
@@ -757,7 +757,7 @@ defmodule PhoenixTest.Playwright do
   @doc false
   def render_html(conn) do
     selector = conn |> maybe_within() |> Selector.build()
-    {:ok, html} = Frame.inner_html(conn.frame_id, selector)
+    {:ok, html} = Frame.inner_html(conn.frame_id, selector, timeout: timeout())
     LazyHTML.from_document(html)
   end
 
@@ -767,7 +767,7 @@ defmodule PhoenixTest.Playwright do
   @spec click(t(), selector()) :: t()
   def click(conn, selector) do
     conn.frame_id
-    |> Frame.click(selector)
+    |> Frame.click(selector, timeout: timeout())
     |> handle_response(selector)
 
     conn
@@ -797,7 +797,7 @@ defmodule PhoenixTest.Playwright do
       |> Selector.concat(Selector.text(text, opts))
 
     conn.frame_id
-    |> Frame.click(selector)
+    |> Frame.click(selector, timeout: timeout())
     |> handle_response(selector)
 
     conn
@@ -824,7 +824,7 @@ defmodule PhoenixTest.Playwright do
       |> Selector.build()
 
     conn.frame_id
-    |> Frame.click(selector)
+    |> Frame.click(selector, timeout: timeout())
     |> handle_response(selector)
 
     conn
@@ -851,7 +851,7 @@ defmodule PhoenixTest.Playwright do
       |> Selector.build()
 
     conn.frame_id
-    |> Frame.click(selector)
+    |> Frame.click(selector, timeout: timeout())
     |> handle_response(selector)
 
     conn
@@ -917,7 +917,7 @@ defmodule PhoenixTest.Playwright do
     |> handle_response(selector)
 
     # trigger phx-change if phx-debounce="blur"
-    Frame.blur(conn.frame_id, selector)
+    Frame.blur(conn.frame_id, selector, timeout: timeout(opts))
 
     %{conn | last_input_selector: selector}
   end
@@ -933,17 +933,17 @@ defmodule PhoenixTest.Playwright do
     checkbox_msg = "Clicking the checkbox did not change its state"
 
     case result do
-      {:error, %{error: %{error: %{name: "TimeoutError"}}} = error} ->
+      {:error, %{error: %{name: "TimeoutError"}} = error} ->
         raise ArgumentError,
               "Could not find element with selector \"#{debug_selector}\"#{timeout_suffix(error)}\n" <>
                 more_info(error)
 
-      {:error, %{error: %{error: %{message: "Error: strict mode violation: " <> _ = message}}}} ->
+      {:error, %{error: %{message: "Error: strict mode violation: " <> _ = message}}} ->
         short_message = String.replace(message, "Error: strict mode violation: ", "")
 
         raise ArgumentError, "Found more than one element matching selector \"#{debug_selector}\":\n#{short_message}"
 
-      {:error, %{error: %{error: %{name: "Error", message: ^checkbox_msg}}}} ->
+      {:error, %{error: %{name: "Error", message: ^checkbox_msg}}} ->
         :ok
 
       {:ok, result} ->
@@ -967,7 +967,7 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def submit(conn) do
-    Frame.press(conn.frame_id, conn.last_input_selector, "Enter")
+    Frame.press(conn.frame_id, conn.last_input_selector, "Enter", timeout: timeout())
     conn
   end
 
@@ -977,7 +977,7 @@ defmodule PhoenixTest.Playwright do
 
     # Await any pending navigation
     Process.sleep(100)
-    {:ok, raw_html} = Frame.content(conn.frame_id)
+    {:ok, raw_html} = Frame.content(conn.frame_id, timeout: timeout())
 
     fixed_html =
       raw_html
@@ -997,9 +997,9 @@ defmodule PhoenixTest.Playwright do
 
   Invokes `fun` with various Playwright IDs.
   These can be used to interact with the Playwright
-  [`BrowserContext`](`PhoenixTest.Playwright.BrowserContext`),
-  [`Page`](`PhoenixTest.Playwright.Page`) and
-  [`Frame`](`PhoenixTest.Playwright.Frame`).
+  [`BrowserContext`](`PlaywrightEx.BrowserContext`),
+  [`Page`](`PlaywrightEx.Page`) and
+  [`Frame`](`PlaywrightEx.Frame`).
 
   ## Examples
       |> unwrap(&Frame.evaluate(&1.frame_id, "console.log('Hey')"))
@@ -1016,9 +1016,9 @@ defmodule PhoenixTest.Playwright do
     [uri.path, uri.query] |> Enum.reject(&is_nil/1) |> Enum.join("?")
   end
 
-  defp timeout(opts) do
-    Keyword.get_lazy(opts, :timeout, fn -> Config.global(:timeout) end)
-  end
+  defp timeout, do: Config.global(:timeout)
+  defp timeout(opts), do: Keyword.get_lazy(opts, :timeout, &timeout/0)
+  defp ensure_timeout(opts), do: Keyword.put_new_lazy(opts, :timeout, &timeout/0)
 end
 
 defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do

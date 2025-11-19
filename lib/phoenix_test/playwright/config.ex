@@ -114,10 +114,10 @@ schema_opts = [
   executable_path: browser_opts[:executable_path],
   headless: browser_opts[:headless],
   js_logger: [
-    default: PhoenixTest.Playwright.JsLoggerDefault,
+    default: PhoenixTest.Playwright.JsLogger,
     type: :atom,
     type_doc: "`module | false`",
-    doc: "`false` to disable, or a module that implements the `PhoenixTest.Playwright.JsLogger` behaviour."
+    doc: "`false` to disable, or a module that implements the `PlaywrightEx.JsLogger` behaviour."
   ],
   runner: [
     default: "npx",

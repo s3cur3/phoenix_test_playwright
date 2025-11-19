@@ -1,14 +1,14 @@
-defmodule PhoenixTest.Playwright.JsLoggerDefaultTest do
+defmodule PhoenixTest.Playwright.JsLoggerTest do
   use ExUnit.Case, async: true
 
   import ExUnit.CaptureLog
 
-  alias PhoenixTest.Playwright.JsLoggerDefault
+  alias PhoenixTest.Playwright.JsLogger
 
   describe "log/3" do
     test "succeeds on unknown message structure" do
       msg = %{a: 1}
-      assert capture_log(fn -> JsLoggerDefault.log(:error, "Hi", msg) end) =~ "Hi"
+      assert capture_log(fn -> JsLogger.log(:error, "Hi", msg) end) =~ "Hi"
     end
 
     test "adds complete file location" do
@@ -21,7 +21,7 @@ defmodule PhoenixTest.Playwright.JsLoggerDefaultTest do
           }
         )
 
-      assert capture_log(fn -> JsLoggerDefault.log(:error, "Hi", msg) end) =~
+      assert capture_log(fn -> JsLogger.log(:error, "Hi", msg) end) =~
                "Hi (http://localhost:4002/assets/app.js:7085)"
     end
 
@@ -35,7 +35,7 @@ defmodule PhoenixTest.Playwright.JsLoggerDefaultTest do
           }
         )
 
-      assert capture_log(fn -> JsLoggerDefault.log(:error, "Hi", msg) end) =~ "Hi (http://localhost:4002/file.css)"
+      assert capture_log(fn -> JsLogger.log(:error, "Hi", msg) end) =~ "Hi (http://localhost:4002/file.css)"
     end
 
     test "ignores line number 0" do
@@ -47,17 +47,17 @@ defmodule PhoenixTest.Playwright.JsLoggerDefaultTest do
           }
         )
 
-      assert capture_log(fn -> JsLoggerDefault.log(:error, "Hi", msg) end) =~ "Hi (http://localhost:4002/assets/app.js)"
+      assert capture_log(fn -> JsLogger.log(:error, "Hi", msg) end) =~ "Hi (http://localhost:4002/assets/app.js)"
     end
 
     test "handles missing line number" do
       msg = log_msg(location: %{url: "http://localhost:4002/assets/app.js"})
-      assert capture_log(fn -> JsLoggerDefault.log(:error, "Hi", msg) end) =~ "Hi (http://localhost:4002/assets/app.js)"
+      assert capture_log(fn -> JsLogger.log(:error, "Hi", msg) end) =~ "Hi (http://localhost:4002/assets/app.js)"
     end
 
     test "handles blank url" do
       msg = log_msg(location: %{url: ""})
-      assert capture_log(fn -> JsLoggerDefault.log(:error, "Hi", msg) end) =~ "Hi"
+      assert capture_log(fn -> JsLogger.log(:error, "Hi", msg) end) =~ "Hi"
     end
   end
 

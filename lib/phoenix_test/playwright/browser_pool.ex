@@ -11,7 +11,6 @@ defmodule PhoenixTest.Playwright.BrowserPool do
   use GenServer
 
   alias __MODULE__, as: State
-  alias PhoenixTest.Playwright
   alias PhoenixTest.Playwright.Config
 
   defstruct [
@@ -59,9 +58,9 @@ defmodule PhoenixTest.Playwright.BrowserPool do
         {:reply, browser_id, state}
 
       map_size(state.in_use) < state.size ->
-        browser_id = launch(state.config)
-        state = do_checkout(state, from, browser_id)
-        {:reply, browser_id, state}
+        {:ok, browser} = launch(state.config)
+        state = do_checkout(state, from, browser.guid)
+        {:reply, browser.guid, state}
 
       true ->
         state = Map.update!(state, :waiting, &(&1 ++ [from]))
@@ -79,9 +78,11 @@ defmodule PhoenixTest.Playwright.BrowserPool do
 
   defp launch(config) do
     config = config |> Config.validate!() |> Keyword.take(Config.setup_all_keys())
+    {launch_timeout, opts} = Keyword.pop!(config, :browser_launch_timeout)
+    {browser, opts} = Keyword.pop!(opts, :browser)
+    opts = Keyword.put(opts, :timeout, launch_timeout)
 
-    {type, config} = Keyword.pop!(config, :browser)
-    Playwright.Connection.launch_browser(type, config)
+    PlaywrightEx.launch_browser(browser, opts)
   end
 
   defp do_checkout(state, from, browser_id) do

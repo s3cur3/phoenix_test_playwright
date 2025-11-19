@@ -8,8 +8,9 @@ defmodule PhoenixTest.PlaywrightTest do
 
   import ExUnit.CaptureLog, only: [capture_log: 1]
 
-  alias PhoenixTest.Playwright
-  alias PhoenixTest.Playwright.Selector
+  alias PlaywrightEx.Selector
+
+  @timeout PhoenixTest.Playwright.Config.global(:timeout)
 
   describe "screenshot/3" do
     setup %{conn: conn} do
@@ -103,7 +104,7 @@ defmodule PhoenixTest.PlaywrightTest do
       |> visit("/pw/live")
       |> unwrap(fn %{frame_id: frame_id} ->
         selector = Selector.role("link", "Navigate", exact: true)
-        {:ok, _} = Playwright.Frame.click(frame_id, selector)
+        {:ok, _} = PlaywrightEx.Frame.click(frame_id, selector, timeout: @timeout)
       end)
       |> assert_has("h1", text: "Other")
     end
@@ -211,7 +212,7 @@ defmodule PhoenixTest.PlaywrightTest do
         capture_log(fn ->
           conn
           |> visit("/pw/live")
-          |> tap(&PhoenixTest.Playwright.Frame.evaluate(&1.frame_id, "console.error('TESTME 42')"))
+          |> tap(&PlaywrightEx.Frame.evaluate(&1.frame_id, "console.error('TESTME 42')", timeout: @timeout))
         end)
 
       assert log =~ "TESTME 42\n"
