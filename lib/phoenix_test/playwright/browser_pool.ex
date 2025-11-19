@@ -80,7 +80,7 @@ defmodule PhoenixTest.Playwright.BrowserPool do
     config = config |> Config.validate!() |> Keyword.take(Config.setup_all_keys())
     {launch_timeout, opts} = Keyword.pop!(config, :browser_launch_timeout)
     {browser, opts} = Keyword.pop!(opts, :browser)
-    opts = Keyword.put(opts, :timeout, launch_timeout)
+    opts = opts |> Keyword.put(:timeout, launch_timeout) |> Keyword.delete(:browser_pool)
 
     PlaywrightEx.launch_browser(browser, opts)
   end

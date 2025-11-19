@@ -104,7 +104,7 @@ defmodule PhoenixTest.PlaywrightTest do
       |> visit("/pw/live")
       |> unwrap(fn %{frame_id: frame_id} ->
         selector = Selector.role("link", "Navigate", exact: true)
-        {:ok, _} = PlaywrightEx.Frame.click(frame_id, selector, timeout: @timeout)
+        {:ok, _} = PlaywrightEx.Frame.click(frame_id, selector: selector, timeout: @timeout)
       end)
       |> assert_has("h1", text: "Other")
     end
@@ -212,7 +212,7 @@ defmodule PhoenixTest.PlaywrightTest do
         capture_log(fn ->
           conn
           |> visit("/pw/live")
-          |> tap(&PlaywrightEx.Frame.evaluate(&1.frame_id, "console.error('TESTME 42')", timeout: @timeout))
+          |> tap(&PlaywrightEx.Frame.evaluate(&1.frame_id, expression: "console.error('TESTME 42')", timeout: @timeout))
         end)
 
       assert log =~ "TESTME 42\n"

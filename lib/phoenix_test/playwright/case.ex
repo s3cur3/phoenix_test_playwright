@@ -68,7 +68,7 @@ defmodule PhoenixTest.Playwright.Case do
     if pool = config[:browser_pool] do
       [browser_id: BrowserPool.checkout(pool)]
     else
-      [browser_id: launch_browser(config)]
+      [browser_id: config |> Keyword.delete(:browser_pool) |> launch_browser()]
     end
   end
 
@@ -93,15 +93,13 @@ defmodule PhoenixTest.Playwright.Case do
 
   def new_session(config, context) do
     user_agent = checkout_ecto_repos(config, context) || "No user agent"
-
-    context_opts =
-      Enum.into(config[:browser_context_opts], %{locale: "en", user_agent: user_agent, timeout: config[:timeout]})
-
-    page_opts = Enum.into(config[:browser_page_opts], %{timeout: config[:timeout]})
-
+    base_url = Application.fetch_env!(:phoenix_test, :base_url)
+    context_opts_defaults = [base_url: base_url, locale: "en", user_agent: user_agent, timeout: config[:timeout]]
+    context_opts = Keyword.validate!(config[:browser_context_opts], context_opts_defaults)
     {:ok, browser_context} = Browser.new_context(context.browser_id, context_opts)
     register_selector_engines!(browser_context.guid, config)
 
+    page_opts = Keyword.validate!(config[:browser_page_opts], timeout: config[:timeout])
     {:ok, page} = BrowserContext.new_page(browser_context.guid, page_opts)
     {:ok, _} = Page.update_subscription(page.guid, event: :console, enabled: true, timeout: config[:timeout])
     {:ok, _} = Page.update_subscription(page.guid, event: :dialog, enabled: true, timeout: config[:timeout])
@@ -121,12 +119,16 @@ defmodule PhoenixTest.Playwright.Case do
   defp register_selector_engines!(browser_context_id, config) do
     for {name, source} <- PhoenixTest.Playwright.Selector.Engines.custom() do
       {:ok, _} =
-        BrowserContext.register_selector_engine(browser_context_id, to_string(name), source, timeout: config[:timeout])
+        BrowserContext.register_selector_engine(browser_context_id,
+          selector_engine: [name: to_string(name), source: source],
+          timeout: config[:timeout]
+        )
     end
   end
 
   defp trace(tracing_id, config, context) do
-    {:ok, _} = Tracing.tracing_start(tracing_id, timeout: config[:timeout])
+    opts = [screenshots: true, snapshots: true, sources: true, timeout: config[:timeout]]
+    {:ok, _} = Tracing.tracing_start(tracing_id, opts)
     {:ok, _} = Tracing.tracing_start_chunk(tracing_id, timeout: config[:timeout])
 
     File.mkdir_p!(config[:trace_dir])

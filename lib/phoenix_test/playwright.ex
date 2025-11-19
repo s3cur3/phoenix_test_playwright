@@ -400,14 +400,7 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def visit(conn, path) do
-    url =
-      case path do
-        "http://" <> _ -> path
-        "https://" <> _ -> path
-        _ -> Application.fetch_env!(:phoenix_test, :base_url) <> path
-      end
-
-    tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, url, timeout: timeout())))
+    tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, url: path, timeout: timeout())))
   end
 
   @doc """
@@ -421,7 +414,7 @@ defmodule PhoenixTest.Playwright do
   """
   def add_cookies(conn, cookies) do
     cookies = Enum.map(cookies, &CookieArgs.from_cookie/1)
-    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, cookies, timeout: timeout())))
+    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, cookies: cookies, timeout: timeout())))
   end
 
   @doc """
@@ -451,7 +444,7 @@ defmodule PhoenixTest.Playwright do
   """
   def add_session_cookie(conn, cookie, session_options) do
     cookie = CookieArgs.from_session_options(cookie, session_options)
-    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, [cookie], timeout: timeout())))
+    tap(conn, &({:ok, _} = BrowserContext.add_cookies(&1.context_id, cookies: [cookie], timeout: timeout())))
   end
 
   @screenshot_opts_schema [
@@ -518,10 +511,14 @@ defmodule PhoenixTest.Playwright do
           unquote(NimbleOptions.option_typespec(@type_opts_schema))
         ]) :: t()
   def type(conn, selector, text, opts \\ []) when is_binary(text) do
-    opts = NimbleOptions.validate!(opts, @type_opts_schema)
+    opts =
+      opts
+      |> NimbleOptions.validate!(@type_opts_schema)
+      |> Keyword.merge(selector: selector, text: text)
+      |> ensure_timeout()
 
     conn.frame_id
-    |> Frame.type(selector, text, ensure_timeout(opts))
+    |> Frame.type(opts)
     |> handle_response(selector)
 
     conn
@@ -559,10 +556,14 @@ defmodule PhoenixTest.Playwright do
           unquote(NimbleOptions.option_typespec(@press_opts_schema))
         ]) :: t()
   def press(conn, selector, key, opts \\ []) when is_binary(key) do
-    opts = NimbleOptions.validate!(opts, @press_opts_schema)
+    opts =
+      opts
+      |> NimbleOptions.validate!(@press_opts_schema)
+      |> Keyword.merge(selector: selector, key: key)
+      |> ensure_timeout()
 
     conn.frame_id
-    |> Frame.press(selector, key, ensure_timeout(opts))
+    |> Frame.press(opts)
     |> handle_response(selector)
 
     conn
@@ -595,7 +596,7 @@ defmodule PhoenixTest.Playwright do
     target_selector = conn |> maybe_within() |> Selector.concat(target_selector)
 
     conn.frame_id
-    |> Frame.drag_and_drop(source_selector, target_selector, timeout: timeout())
+    |> Frame.drag_and_drop(source: source_selector, target: target_selector, timeout: timeout())
     |> handle_response(source_selector)
 
     conn
@@ -656,20 +657,25 @@ defmodule PhoenixTest.Playwright do
   end
 
   defp has_title?(conn, opts, params \\ []) do
-    opts = Keyword.validate!(opts, [:text, exact: false])
+    {text, opts} = opts |> Keyword.validate!([:text, exact: false]) |> Keyword.pop!(:text)
 
     params =
-      Enum.into(params, %{
-        expression: "to.have.title",
-        expected_text: [%{string: Keyword.fetch!(opts, :text), match_substring: not opts[:exact]}],
-        timeout: timeout(opts)
-      })
+      Keyword.merge(
+        [
+          expression: "to.have.title",
+          expected_text: [%{string: text, match_substring: not opts[:exact]}],
+          timeout: timeout(opts)
+        ],
+        params
+      )
 
     {:ok, matches?} = Frame.expect(conn.frame_id, params)
     matches?
   end
 
-  defp found?(conn, selector, opts, other_params \\ []) do
+  defp found?(conn, selector, opts, other_opts \\ []) do
+    other_opts = Keyword.validate!(other_opts, is_not: false)
+
     selector =
       conn
       |> maybe_within()
@@ -685,14 +691,14 @@ defmodule PhoenixTest.Playwright do
           raise(ArgumentError, message: "Options `count` and `at` can not be used together")
 
         %{count: count} ->
-          %{expression: "to.have.count", expected_number: count, selector: Selector.build(selector)}
+          [expression: "to.have.count", expected_number: count, selector: Selector.build(selector)]
 
         _ ->
           selector = Selector.concat(selector, Selector.at(opts[:at] || 0))
-          %{expression: "to.be.visible", selector: selector}
+          [expression: "to.be.visible", selector: selector]
       end
 
-    params = Enum.into(params, Enum.into(other_params, %{timeout: timeout(opts)}))
+    params = [timeout: timeout(opts)] |> Keyword.merge(other_opts) |> Keyword.merge(params)
     {:ok, found?} = Frame.expect(conn.frame_id, params)
     found?
   end
@@ -757,7 +763,7 @@ defmodule PhoenixTest.Playwright do
   @doc false
   def render_html(conn) do
     selector = conn |> maybe_within() |> Selector.build()
-    {:ok, html} = Frame.inner_html(conn.frame_id, selector, timeout: timeout())
+    {:ok, html} = Frame.inner_html(conn.frame_id, selector: selector, timeout: timeout())
     LazyHTML.from_document(html)
   end
 
@@ -767,7 +773,7 @@ defmodule PhoenixTest.Playwright do
   @spec click(t(), selector()) :: t()
   def click(conn, selector) do
     conn.frame_id
-    |> Frame.click(selector, timeout: timeout())
+    |> Frame.click(selector: selector, timeout: timeout())
     |> handle_response(selector)
 
     conn
@@ -797,7 +803,7 @@ defmodule PhoenixTest.Playwright do
       |> Selector.concat(Selector.text(text, opts))
 
     conn.frame_id
-    |> Frame.click(selector, timeout: timeout())
+    |> Frame.click(selector: selector, timeout: timeout())
     |> handle_response(selector)
 
     conn
@@ -824,7 +830,7 @@ defmodule PhoenixTest.Playwright do
       |> Selector.build()
 
     conn.frame_id
-    |> Frame.click(selector, timeout: timeout())
+    |> Frame.click(selector: selector, timeout: timeout())
     |> handle_response(selector)
 
     conn
@@ -851,7 +857,7 @@ defmodule PhoenixTest.Playwright do
       |> Selector.build()
 
     conn.frame_id
-    |> Frame.click(selector, timeout: timeout())
+    |> Frame.click(selector: selector, timeout: timeout())
     |> handle_response(selector)
 
     conn
@@ -860,7 +866,7 @@ defmodule PhoenixTest.Playwright do
   @doc false
   def fill_in(conn, css_selector \\ nil, label, opts) do
     {value, opts} = Keyword.pop!(opts, :with)
-    fun = &Frame.fill(conn.frame_id, &1, to_string(value), &2)
+    fun = &Frame.fill(conn.frame_id, selector: &1, value: to_string(value), timeout: timeout(opts))
     input(conn, css_selector, label, opts, fun)
   end
 
@@ -870,32 +876,32 @@ defmodule PhoenixTest.Playwright do
 
     {label, opts} = Keyword.pop!(opts, :from)
     options = option_labels |> List.wrap() |> Enum.map(&%{label: &1})
-    fun = &Frame.select_option(conn.frame_id, &1, options, &2)
+    fun = &Frame.select_option(conn.frame_id, selector: &1, options: options, timeout: timeout(opts))
     input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
   def check(conn, css_selector \\ nil, label, opts) do
-    fun = &Frame.check(conn.frame_id, &1, &2)
+    fun = &Frame.check(conn.frame_id, selector: &1, timeout: timeout(opts))
     input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
   def uncheck(conn, css_selector \\ nil, label, opts) do
-    fun = &Frame.uncheck(conn.frame_id, &1, &2)
+    fun = &Frame.uncheck(conn.frame_id, selector: &1, timeout: timeout(opts))
     input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
   def choose(conn, css_selector \\ nil, label, opts) do
-    fun = &Frame.check(conn.frame_id, &1, &2)
+    fun = &Frame.check(conn.frame_id, selector: &1, timeout: timeout(opts))
     input(conn, css_selector, label, opts, fun)
   end
 
   @doc false
   def upload(conn, css_selector \\ nil, label, paths, opts) do
     paths = paths |> List.wrap() |> Enum.map(&Path.expand/1)
-    fun = &Frame.set_input_files(conn.frame_id, &1, paths, &2)
+    fun = &Frame.set_input_files(conn.frame_id, selector: &1, local_paths: paths, timeout: timeout(opts))
     input(conn, css_selector, label, opts, fun)
   end
 
@@ -913,11 +919,11 @@ defmodule PhoenixTest.Playwright do
       |> Selector.build()
 
     selector
-    |> fun.(%{timeout: timeout(opts)})
+    |> fun.()
     |> handle_response(selector)
 
     # trigger phx-change if phx-debounce="blur"
-    Frame.blur(conn.frame_id, selector, timeout: timeout(opts))
+    Frame.blur(conn.frame_id, selector: selector, timeout: timeout(opts))
 
     %{conn | last_input_selector: selector}
   end
@@ -967,7 +973,7 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def submit(conn) do
-    Frame.press(conn.frame_id, conn.last_input_selector, "Enter", timeout: timeout())
+    Frame.press(conn.frame_id, selector: conn.last_input_selector, key: "Enter", timeout: timeout())
     conn
   end
 
