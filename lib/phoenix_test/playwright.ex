@@ -238,8 +238,8 @@ defmodule PhoenixTest.Playwright do
       end
 
       defp assert_a11y(conn) do
-        PlaywrightEx.Frame.evaluate(conn.frame_id, expression: A11yAudit.JS.axe_core(), timeout: @timeout)
-        {:ok, json} = PlaywrightEx.Frame.evaluate(conn.frame_id, expression: "axe.run()", timeout: @timeout)
+        PlaywrightEx.Frame.evaluate(conn.frame_id, expression: A11yAudit.JS.axe_core(), timeout: timeout())
+        {:ok, json} = PlaywrightEx.Frame.evaluate(conn.frame_id, expression: "axe.run()", timeout: timeout())
         results = A11yAudit.Results.from_json(json)
         A11yAudit.Assertions.assert_no_violations(results)
 

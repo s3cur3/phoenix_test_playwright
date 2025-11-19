@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Changes required if internals (beyond `PhoenixTest` and `PhoenixTest.Playwright` modules) were used. Phoenix-agnostic modules moved to `PlaywrightEx`, with slight API changes. Example:
   ```diff
   - |> unwrap(& {:ok, _} = PhoenixTest.Playwright.Frame.click(&1.frame_id, selector))
-  + |> unwrap(& {:ok, _} = PlaywrightEx.Frame.click(&1.frame_id, selector: selector, timeout: @timeout))
+  + |> unwrap(& {:ok, _} = PlaywrightEx.Frame.click(&1.frame_id, selector: selector, timeout: timeout())
   ```
 ### Changed
 - Ecto sandbox ownership: Use a separate sandbox owner process instead of the test process. This reduces ownership errors when LiveViews continue to use database connections after the test terminates. Commit [3b54699]
