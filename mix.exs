@@ -78,6 +78,7 @@ defmodule PhoenixTestPlaywright.MixProject do
   defp docs do
     [
       main: "PhoenixTest.Playwright",
+      source_ref: "v#{@version}",
       extras: [
         "CHANGELOG.md": [title: "Changelog"]
       ],
