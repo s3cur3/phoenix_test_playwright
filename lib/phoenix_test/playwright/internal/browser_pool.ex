@@ -44,7 +44,6 @@ defmodule PhoenixTest.Playwright.BrowserPool do
 
   @impl GenServer
   def init(state) do
-    # Trap exits so we can clean up browsers on shutdown
     Process.flag(:trap_exit, true)
     {:ok, state}
   end
@@ -73,6 +72,15 @@ defmodule PhoenixTest.Playwright.BrowserPool do
     case Enum.find_value(state.in_use, fn {browser_id, tracked} -> tracked == {pid, ref} and browser_id end) do
       nil -> {:noreply, state}
       browser_id -> {:noreply, do_checkin(state, browser_id)}
+    end
+  end
+
+  @impl GenServer
+  def terminate(_reason, state) do
+    timeout = Config.global(:timeout)
+
+    for browser_id <- state.available ++ Map.keys(state.in_use) do
+      spawn(fn -> PlaywrightEx.Browser.close(browser_id, timeout: timeout) end)
     end
   end
 

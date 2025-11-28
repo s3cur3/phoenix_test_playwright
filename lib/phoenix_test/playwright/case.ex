@@ -51,7 +51,7 @@ defmodule PhoenixTest.Playwright.Case do
         ]
 
       @moduletag Keyword.delete(unquote(opts), :async)
-      def timeout(), do: PhoenixTest.Playwright.Config.global(:timeout)
+      def timeout, do: PhoenixTest.Playwright.Config.global(:timeout)
     end
   end
 
