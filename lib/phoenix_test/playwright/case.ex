@@ -147,14 +147,7 @@ defmodule PhoenixTest.Playwright.Case do
 
   defp maybe_open_trace(:open, path) do
     # Spawn to avoid blocking the test exit
-    spawn(fn ->
-      System.cmd(
-        Playwright.Config.global(:runner),
-        ["playwright", "show-trace", Path.join(File.cwd!(), path)],
-        cd: Playwright.Config.global(:assets_dir)
-      )
-    end)
-
+    spawn(fn -> System.cmd(Playwright.Config.executable(), ["show-trace", Path.join(File.cwd!(), path)]) end)
     :ok
   end
 

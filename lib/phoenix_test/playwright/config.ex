@@ -119,14 +119,11 @@ schema_opts = [
     doc: "`false` to disable, or a module that implements the `PlaywrightEx.JsLogger` behaviour."
   ],
   runner: [
-    default: "npx",
-    type_spec: quote(do: binary()),
-    type_doc: "`t:binary/0`",
-    type: {:custom, PhoenixTest.Playwright.Config, :__validate_runner__, []},
-    doc: """
-    The JS package runner to use to run the Playwright CLI.
-    Accepts either a binary executable exposed in PATH or the absolute path to it.
-    """
+    deprecated: """
+    You can safely remove this option.
+    `<assets_dir>/node_modules/playwright/cli.js` is now called directly, without needing `npx` or `bunx`.
+    """,
+    type: :string
   ],
   screenshot: [
     default: false,
@@ -198,6 +195,11 @@ defmodule PhoenixTest.Playwright.Config do
   def schema_opts, do: @schema_opts
 
   @doc false
+  def executable do
+    [global()[:assets_dir], "node_modules", "playwright", "cli.js"] |> Path.join() |> Path.expand()
+  end
+
+  @doc false
   def validate!(config) when is_map(config), do: config |> Keyword.new() |> validate!()
 
   def validate!(config) when is_list(config) do
@@ -228,23 +230,6 @@ defmodule PhoenixTest.Playwright.Config do
 
   defp normalize(:screenshot, true), do: NimbleOptions.validate!([], @screenshot_opts_schema)
   defp normalize(_key, value), do: value
-
-  def __validate_runner__(runner) do
-    if executable = System.find_executable(runner) do
-      {:ok, executable}
-    else
-      message = """
-      could not find runner executable at `#{runner}`.
-
-      To resolve this please
-      1. Install a JS package runner like `npx` or `bunx`
-      2. Configure the preferred runner in `config/test.exs`, e.g.: `config :phoenix_test, playwright: [runner: "npx"]`
-      3. Ensure either the runner is in your PATH or the `runner` value is a absolute path to the executable (e.g. `Path.absname("_build/bun")`)
-      """
-
-      {:error, message}
-    end
-  end
 
   def __validate_assets_dir__(assets_dir) do
     playwright_json = Path.join([assets_dir, "node_modules", "playwright", "package.json"])

@@ -11,7 +11,8 @@ defmodule PhoenixTest.Playwright.Supervisor do
 
   @impl true
   def init(:no_init_arg) do
-    playwright_config = Keyword.take(Config.global(), ~w(timeout js_logger assets_dir runner)a)
+    config = Config.global()
+    playwright_config = [executable: Config.executable()] ++ Keyword.take(config, ~w(timeout js_logger)a)
     children = [{PlaywrightEx.Supervisor, playwright_config}, PhoenixTest.Playwright.BrowserPoolSupervisor]
     Supervisor.init(children, strategy: :rest_for_one)
   end
