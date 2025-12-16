@@ -324,7 +324,7 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def visit(conn, path, opts \\ []) do
-    opts = Keyword.validate!(opts, [timeout: timeout()])
+    opts = Keyword.validate!(opts, timeout: timeout())
     tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, Keyword.put(opts, :url, path))))
   end
 
