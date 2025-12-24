@@ -6,10 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
 
-## [0.10.0-rc.1]
-
+## [0.10.0] 2025-12-24
 ### Fixed
-- Correctly handle custom options via `browser_context_opts` and `browser_page_opts`. Commit [6182699]
+- Correctly handle custom options via `browser_context_opts` and `browser_page_opts` config. Commit [2b80c87] @melucasleite
+### Added
+- Support `timeout` opt in `PhoenixTest.Playwright.visit/3`. Commit [7073add] @s3cur3
+### Removed
+- `runner` config: Don't fequired `npm` or `bun`, invoke `cli.js` directly. Commit [1605dce] 
 
 ## [0.10.0-rc.0] 2025-11-19
 ### Breaking changes
@@ -31,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.9.1] 2025-10-29
 ### Added
-- Browser pooling (opt-in): Reduced memory, higher speed.. Commit [00e75c6]
+- Browser pooling (opt-in): Reduced memory, higher speed. Commit [00e75c6]
 
 ## [0.9.0] 2025-10-26
 ### Fixed
@@ -46,15 +49,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.8.0] 2025-09-17
 ### Removed
-- Config option `cli`. Use `assets_dir` instead. Commit [9e95e54]
+- Config option `cli`. Use `assets_dir` instead. Commit [9e95e54] @Wigny
 
 ### Added
-- Support `bunx` JS runner. Added config options `runner` and `assets_dir`. Commit [9e95e54]
+- Support `bunx` JS runner. Added config options `runner` and `assets_dir`. Commit [9e95e54] @Wigny
 - Support missing `assert_has/refute_has` options: `label` and `value`. Commit [2e92cbe]
 - Support `phoenix_test` `0.8` (lazy_html). Commit [1074cde]
 
 ### Changed
-- Include source location when logging javascript errors and browser console logs. Commit [6b148f]
+- Include source location when logging javascript errors and browser console logs. Commit [6b148f] @tomfarm
 - Only consider visible inputs for fill_in etc. Commit [86c2e3d]
 - Speed up `refute_has`: Use playwright browser internal retry. Commit [aac0497]
 
@@ -160,7 +163,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [6b148f]: https://github.com/ftes/phoenix_test_playwright/commit/6b148f
 [9e95e54]: https://github.com/ftes/phoenix_test_playwright/commit/9e95e54
 [2e92cbe]: https://github.com/ftes/phoenix_test_playwright/commit/2e92cbe
-[6b148f]: https://github.com/ftes/phoenix_test_playwright/commit/6b148f
 [1074cde]: https://github.com/ftes/phoenix_test_playwright/commit/1074cde
 [86c2e3d]: https://github.com/ftes/phoenix_test_playwright/commit/86c2e3d
 [aac0497]: https://github.com/ftes/phoenix_test_playwright/commit/aac0497
@@ -171,4 +173,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [00e75c6]: https://github.com/ftes/phoenix_test_playwright/commit/00e75c6
 [2f4a8cf]: https://github.com/ftes/phoenix_test_playwright/commit/2f4a8cf
 [095e216]: https://github.com/ftes/phoenix_test_playwright/commit/095e216
-[6182699]: https://github.com/ftes/phoenix_test_playwright/commit/6182699
+[2b80c87]: https://github.com/ftes/phoenix_test_playwright/commit/2b80c87
+[7073add]: https://github.com/ftes/phoenix_test_playwright/commit/7073add
+[1605dce]: https://github.com/ftes/phoenix_test_playwright/commit/1605dce
