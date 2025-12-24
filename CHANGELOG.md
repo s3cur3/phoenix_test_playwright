@@ -8,9 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.10.0] 2025-12-24
 ### Fixed
-- Correctly handle custom options via `browser_context_opts` and `browser_page_opts` config. Commit [2b80c87] @melucasleite
+- Correctly handle custom options via `browser_context_opts` and `browser_page_opts` config. Commit [2b80c87], [@melucasleite]
 ### Added
-- Support `timeout` opt in `PhoenixTest.Playwright.visit/3`. Commit [7073add] @s3cur3
+- Support `timeout` opt in `PhoenixTest.Playwright.visit/3`. Commit [7073add], [@s3cur3]
 ### Removed
 - `runner` config: Don't fequired `npm` or `bun`, invoke `cli.js` directly. Commit [1605dce] 
 
@@ -49,15 +49,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.8.0] 2025-09-17
 ### Removed
-- Config option `cli`. Use `assets_dir` instead. Commit [9e95e54] @Wigny
+- Config option `cli`. Use `assets_dir` instead. Commit [9e95e54], [@Wigny]
 
 ### Added
-- Support `bunx` JS runner. Added config options `runner` and `assets_dir`. Commit [9e95e54] @Wigny
+- Support `bunx` JS runner. Added config options `runner` and `assets_dir`. Commit [9e95e54], [@Wigny]
 - Support missing `assert_has/refute_has` options: `label` and `value`. Commit [2e92cbe]
 - Support `phoenix_test` `0.8` (lazy_html). Commit [1074cde]
 
 ### Changed
-- Include source location when logging javascript errors and browser console logs. Commit [6b148f] @tomfarm
+- Include source location when logging javascript errors and browser console logs. Commit [6b148f], [@tomfarm]
 - Only consider visible inputs for fill_in etc. Commit [86c2e3d]
 - Speed up `refute_has`: Use playwright browser internal retry. Commit [aac0497]
 
@@ -79,7 +79,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.6.3] 2025-05-05
 ### Added
-- Add locale to avoid console warnings. Commit [becf5e6] @peaceful-james
+- Add locale to avoid console warnings. Commit [becf5e6], [@peaceful-james]
 
 ### Fixed
 - Trigger `phx-change` event for input with `phx-debounce="blur"`. Commit [72edd9]
@@ -98,8 +98,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.6.0] 2025-03-18
 ### Added
-- Add and remove cookies: `add_cookies/2`, `add_session_cookie/3`, `clear_cookies/{1,2}` @peaceful-james
-- Add option `browser_launch_timeout` for more fine-grained control (is typically a lot slower than other actions) @s3cur3
+- Add and remove cookies: `add_cookies/2`, `add_session_cookie/3`, `clear_cookies/{1,2}` [@peaceful-james]
+- Add option `browser_launch_timeout` for more fine-grained control (is typically a lot slower than other actions) [@s3cur3]
 
 ## [0.5.0] 2025-02-14
 ### Added
@@ -119,7 +119,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.4.0] 2025-02-03
 ### Added
-- Screenshots: `screenshot/{2,3}` function and `screenshot: true` config for auto-capture @s3cur3
+- Screenshots: `screenshot/{2,3}` function and `screenshot: true` config for auto-capture [@s3cur3]
 
 ### Changed
 - Config: flattened list (remove nested `browser` config), override via top-level ExUnit `@tag ...`s (remove nested `@tag playwright: [...]`)
@@ -139,11 +139,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.2.1] 2025-01-17
 ### Added
-- Add more config options (browser, JS console) @s3cur3
+- Add more config options (browser, JS console) [@s3cur3]
 
 ### Changed
-- Improve error messages @s3cur3
-- Improve setup and docs for contributors @s3cur3
+- Improve error messages [@s3cur3]
+- Improve setup and docs for contributors [@s3cur3]
 
 ## [0.2.0] 2025-01-09
 ### Added
@@ -152,6 +152,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.1.5] 2024-12-15
 ### Added
 - `@tag trace: :open` to auto open recorded Playwright trace in viewer
+
+[@melucasleite]: https://github.com/melucasleite
+[@s3cur3]: https://github.com/s3cur3
+[@Wigny]: https://github.com/Wigny
+[@tomfarm]: https://github.com/tomfarm
+[@peaceful-james]: https://github.com/peaceful-james
 
 [3b54699]: https://github.com/ftes/phoenix_test_playwright/commit/3b54699
 [5ff530]: https://github.com/ftes/phoenix_test_playwright/commit/5ff530
