@@ -323,8 +323,8 @@ defmodule PhoenixTest.Playwright do
   end
 
   @doc false
-  def visit(conn, path) do
-    tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, url: path, timeout: timeout())))
+  def visit(conn, path, opts \\ []) do
+    tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, url: path, timeout: timeout(opts))))
   end
 
   @doc """
