@@ -88,7 +88,7 @@ defmodule PhoenixTest.Playwright do
         use PhoenixTest.Playwright.Case,
           async: true,
           # Launch new browser for this test suite with custom options below
-          browser_pool: :nil,
+          browser_pool: nil,
           # Show browser and pause 1 second between every interaction
           headless: false,
           slow_mo: :timer.seconds(1)
