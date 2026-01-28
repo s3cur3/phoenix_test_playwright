@@ -213,7 +213,8 @@ defmodule PhoenixTest.PlaywrightTest do
           |> tap(&PlaywrightEx.Frame.evaluate(&1.frame_id, expression: "console.error('TESTME 42')", timeout: timeout()))
         end)
 
-      assert log =~ "TESTME 42\n"
+      assert log =~ "TESTME 42"
+      refute log =~ "localhost"
     end
   end
 end
