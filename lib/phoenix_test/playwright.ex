@@ -181,6 +181,14 @@ defmodule PhoenixTest.Playwright do
       |> assert_has("#my-component[data-connected]")
       # now continue, playwright has waited for LiveComponent to connect
 
+  ### Browser version mismatch
+  Each playwright JS version pins a specific browser version. If you see inconsistent browser
+  versions (e.g. downloading browser vs running test) this indicates two different playwright JS
+  installations are at play.
+
+  Example: `phoenix_live_view` includes `@playwright/test`, which in turn depends on `playwright`.
+  Depending on your `NODE_PATH` this version might be getting in the way.
+
 
   ## Ecto SQL.Sandbox
       defmodule MyTest do
