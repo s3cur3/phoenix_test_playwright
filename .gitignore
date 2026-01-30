@@ -24,6 +24,9 @@ phoenix_test-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Dialyzer PLTs
+/priv/plts/
 /traces/
 /screenshots/
 

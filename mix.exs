@@ -16,6 +16,11 @@ defmodule PhoenixTestPlaywright.MixProject do
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
+      dialyzer: [
+        plt_local_path: "priv/plts/project.plt",
+        plt_core_path: "priv/plts/core.plt",
+        plt_add_apps: [:ex_unit]
+      ],
       name: "PhoenixTestPlaywright",
       source_url: @source_url,
       docs: docs(),
@@ -44,6 +49,7 @@ defmodule PhoenixTestPlaywright.MixProject do
       {:postgrex, ">= 0.0.0", only: :test},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:styler, "~> 1.3", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:makeup_diff, "~> 0.1", only: :dev},
       {:nimble_options, "~> 1.1"},
       # {:playwright_ex, "~> 0.3"}
