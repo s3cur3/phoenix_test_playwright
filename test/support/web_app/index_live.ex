@@ -647,10 +647,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
   end
 
   defp handle_progress(:redirect_avatar, entry, socket) do
-    raise "there"
-
     if entry.done? do
-      raise "here"
       {:noreply, push_navigate(socket, to: "/live/page_2", replace: true)}
     else
       {:noreply, socket}

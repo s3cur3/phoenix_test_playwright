@@ -45,7 +45,10 @@ defmodule PhoenixTest.Playwright.EctoLive do
      socket
      |> assign_async(:version, fn -> {:ok, %{version: version_query()}} end)
      |> assign_async(:long_running, fn -> {:ok, %{long_running: long_running_query(delay_ms)}} end)
-     |> assign_async(:delayed_version, fn -> Process.sleep(delay_ms) && {:ok, %{delayed_version: version_query()}} end)}
+     |> assign_async(:delayed_version, fn ->
+       Process.sleep(delay_ms)
+       {:ok, %{delayed_version: version_query()}}
+     end)}
   end
 
   defp version_query do
