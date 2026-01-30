@@ -19,7 +19,7 @@ defmodule PhoenixTestPlaywright.MixProject do
       dialyzer: [
         plt_local_path: "priv/plts/project.plt",
         plt_core_path: "priv/plts/core.plt",
-        plt_add_apps: [:ex_unit]
+        plt_add_apps: [:ex_unit, :phoenix_test]
       ],
       name: "PhoenixTestPlaywright",
       source_url: @source_url,
@@ -107,6 +107,7 @@ defmodule PhoenixTestPlaywright.MixProject do
         "format --check-formatted",
         "credo",
         "compile --warnings-as-errors",
+        "dialyzer --format github --format dialyxir",
         "assets.build",
         "test --warnings-as-errors"
       ]

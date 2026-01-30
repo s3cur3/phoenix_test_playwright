@@ -95,7 +95,7 @@ defmodule PhoenixTest.Playwright.Case do
   end
 
   def new_session(config, context) do
-    user_agent = checkout_ecto_repos(config, context) || "No user agent"
+    user_agent = checkout_ecto_repos(config, context)
     base_url = Application.fetch_env!(:phoenix_test, :base_url)
     context_opts_defaults = [base_url: base_url, locale: "en", user_agent: user_agent, timeout: config[:timeout]]
     context_opts = Keyword.merge(context_opts_defaults, config[:browser_context_opts])
@@ -109,15 +109,18 @@ defmodule PhoenixTest.Playwright.Case do
     on_exit(fn -> spawn(fn -> BrowserContext.close(browser_context.guid, timeout: config[:timeout]) end) end)
 
     if config[:trace], do: trace(browser_context.tracing.guid, config, context)
-    if config[:screenshot], do: screenshot(page.guid, config, context)
 
-    Playwright.build(%{
+    %{
       context_id: browser_context.guid,
       page_id: page.guid,
       frame_id: page.main_frame.guid,
       tracing_id: browser_context.tracing.guid,
       config: config
-    })
+    }
+    |> Playwright.build()
+    |> tap(fn conn ->
+      if config[:screenshot], do: screenshot(conn, config, context)
+    end)
   end
 
   defp register_selector_engines!(browser_context_id, config) do
@@ -155,11 +158,13 @@ defmodule PhoenixTest.Playwright.Case do
 
   defp maybe_open_trace(_, _), do: :ok
 
-  defp screenshot(page_id, config, context) do
+  # Dialyzer warning suppressed: conn is opaque t() but closure captures struct
+  @dialyzer {:nowarn_function, screenshot: 3}
+  defp screenshot(conn, config, context) do
     file = file_name(".png", context)
 
     on_exit(fn ->
-      Playwright.screenshot(%{page_id: page_id}, file, config[:screenshot])
+      Playwright.screenshot(conn, file, config[:screenshot])
     end)
   end
 
@@ -216,7 +221,7 @@ defmodule PhoenixTest.Playwright.Case do
     end
   else
     defp checkout_ecto_repos(_, _) do
-      nil
+      "Ecto not loaded"
     end
   end
 end

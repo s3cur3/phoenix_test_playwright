@@ -65,7 +65,7 @@ defmodule PhoenixTest.Playwright.CookieArgs do
       name = cookie[:name]
 
       plug_cookie =
-        Conn.put_resp_cookie(%Conn{secret_key_base: secret_key_base}, name, value, opts)
+        Conn.put_resp_cookie(%Conn{secret_key_base: secret_key_base, remote_ip: {127, 0, 0, 1}}, name, value, opts)
 
       plug_cookie.resp_cookies[name].value
     end)
@@ -93,7 +93,7 @@ defmodule PhoenixTest.Playwright.CookieArgs do
     secret_key_base = Application.get_env(otp_app, endpoint)[:secret_key_base]
     name = session_options[:key]
 
-    %Conn{secret_key_base: secret_key_base, owner: self()}
+    %Conn{secret_key_base: secret_key_base, owner: self(), remote_ip: {127, 0, 0, 1}}
     |> Session.call(Session.init(session_options))
     |> Conn.fetch_session()
     |> put_map_value_in_session(value)
