@@ -45,6 +45,7 @@ defmodule PhoenixTest.Playwright.Case do
           press: 4,
           screenshot: 2,
           screenshot: 3,
+          step: 3,
           type: 3,
           type: 4,
           visit: 3,

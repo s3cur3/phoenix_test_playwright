@@ -1,7 +1,6 @@
 defmodule PhoenixTest.StepTest do
   use PhoenixTest.Playwright.Case, async: true
 
-  alias PhoenixTest.Playwright
   alias PlaywrightEx.Tracing
 
   describe "step/3" do
@@ -10,20 +9,20 @@ defmodule PhoenixTest.StepTest do
 
       conn
       |> visit("/pw/live")
-      |> Playwright.step("Fill in form with test data", fn conn ->
+      |> step("Fill in form with test data", fn conn ->
         conn
-        |> Playwright.step("Type into text input", fn conn ->
+        |> step("Type into text input", fn conn ->
           type(conn, "#text-input", "Hello from custom step!")
         end)
-        |> Playwright.step("Verify form data changed", fn conn ->
+        |> step("Verify form data changed", fn conn ->
           assert_has(conn, "#changed-form-data", text: "text: Hello from custom step!")
         end)
       end)
 
       trace = stop_tracing(conn)
-      assert trace =~ ~r/Fill in form with test data.*step_test.exs.*"line":13/
-      assert trace =~ ~r/Type into text input.*"line":15/
-      assert trace =~ ~r/Verify form data changed.*"line":18/
+      assert trace =~ ~r/Fill in form with test data.*step_test.exs.*"line":12/
+      assert trace =~ ~r/Type into text input.*"line":14/
+      assert trace =~ ~r/Verify form data changed.*"line":17/
     end
   end
 
