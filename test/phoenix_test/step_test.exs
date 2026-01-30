@@ -6,8 +6,7 @@ defmodule PhoenixTest.StepTest do
 
   describe "step/3" do
     test "produces labels that can be seen in the trace viewer", %{conn: conn} do
-      {:ok, _} = Tracing.tracing_start(conn.tracing_id, timeout: timeout())
-      {:ok, _} = Tracing.tracing_start_chunk(conn.tracing_id, timeout: timeout())
+      start_tracing(conn)
 
       conn
       |> visit("/pw/live")
@@ -21,16 +20,26 @@ defmodule PhoenixTest.StepTest do
         end)
       end)
 
-      {:ok, zip_file} = Tracing.tracing_stop_chunk(conn.tracing_id, timeout: timeout())
-      {:ok, _} = Tracing.tracing_stop(conn.tracing_id, timeout: timeout())
-
-      {:ok, handle} = :zip.zip_open(String.to_charlist(zip_file.absolute_path), [:memory])
-      {:ok, {_, trace_contents}} = :zip.zip_get(~c"trace.trace", handle)
-      :ok = :zip.zip_close(handle)
-
-      assert trace_contents =~ "Fill in form with test data"
-      assert trace_contents =~ "Type into text input"
-      assert trace_contents =~ "Verify form data changed"
+      trace = stop_tracing(conn)
+      assert trace =~ ~r/Fill in form with test data.*step_test.exs.*"line":13/
+      assert trace =~ ~r/Type into text input.*"line":15/
+      assert trace =~ ~r/Verify form data changed.*"line":18/
     end
+  end
+
+  defp start_tracing(conn) do
+    {:ok, _} = Tracing.tracing_start(conn.tracing_id, timeout: timeout())
+    {:ok, _} = Tracing.tracing_start_chunk(conn.tracing_id, timeout: timeout())
+  end
+
+  defp stop_tracing(conn) do
+    {:ok, zip_file} = Tracing.tracing_stop_chunk(conn.tracing_id, timeout: timeout())
+    {:ok, _} = Tracing.tracing_stop(conn.tracing_id, timeout: timeout())
+
+    {:ok, handle} = :zip.zip_open(String.to_charlist(zip_file.absolute_path), [:memory])
+    {:ok, {_, trace_contents}} = :zip.zip_get(~c"trace.trace", handle)
+    :ok = :zip.zip_close(handle)
+
+    trace_contents
   end
 end
