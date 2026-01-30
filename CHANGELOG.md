@@ -5,11 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
-## Unreleased
-
+## [0.10.1] 2026-01-30
 ### Added
-
-- `step/3` macro to label groups of actions in a Playwright trace.
+- `PhoenixTest.Playwright.step/3`: label groups of actions in a trace with automatic source file and line. Commit [3eaeb5a], [@nathanl]
 
 ## [0.10.0] 2025-12-24
 ### Fixed
@@ -163,6 +161,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [@Wigny]: https://github.com/Wigny
 [@tomfarm]: https://github.com/tomfarm
 [@peaceful-james]: https://github.com/peaceful-james
+[@nathanl]: https://github.com/nathanl
 
 [3b54699]: https://github.com/ftes/phoenix_test_playwright/commit/3b54699
 [5ff530]: https://github.com/ftes/phoenix_test_playwright/commit/5ff530
@@ -187,3 +186,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [2b80c87]: https://github.com/ftes/phoenix_test_playwright/commit/2b80c87
 [7073add]: https://github.com/ftes/phoenix_test_playwright/commit/7073add
 [1605dce]: https://github.com/ftes/phoenix_test_playwright/commit/1605dce
+[3eaeb5a]: https://github.com/ftes/phoenix_test_playwright/commit/3eaeb5a
