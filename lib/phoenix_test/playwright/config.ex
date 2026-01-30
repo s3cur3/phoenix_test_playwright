@@ -96,10 +96,6 @@ schema_opts = [
     #{NimbleOptions.docs(browser_pool_opts, nest_level: 1)}
     """
   ],
-  cli: [
-    type: {:custom, PhoenixTest.Playwright.Config, :__validate_cli__, []},
-    deprecated: "Use `assets_dir` instead."
-  ],
   ecto_sandbox_stop_owner_delay: [
     default: 0,
     type: :non_neg_integer,
@@ -117,13 +113,6 @@ schema_opts = [
     type: :atom,
     type_doc: "`module | false`",
     doc: "`false` to disable, or a module that implements the `PlaywrightEx.JsLogger` behaviour."
-  ],
-  runner: [
-    deprecated: """
-    You can safely remove this option.
-    `<assets_dir>/node_modules/playwright/cli.js` is now called directly, without needing `npx` or `bunx`.
-    """,
-    type: :string
   ],
   screenshot: [
     default: false,
@@ -255,10 +244,5 @@ defmodule PhoenixTest.Playwright.Config do
 
         {:error, message}
     end
-  end
-
-  def __validate_cli__(_cli) do
-    {:error,
-     "it is deprecated. Use `assets_dir` instead if you want to customize the Playwright installation directory path and remove the `cli` option."}
   end
 end
