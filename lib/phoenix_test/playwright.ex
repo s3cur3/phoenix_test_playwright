@@ -36,7 +36,7 @@ defmodule PhoenixTest.Playwright do
 
   2. Install playwright and browser
           npm --prefix assets i -D playwright
-          npm --prefix assets exec -- playwright install chromium --with-deps
+          npx --prefix assets playwright install chromium --with-deps
 
   3. Config
           # config/test.exs
@@ -182,12 +182,16 @@ defmodule PhoenixTest.Playwright do
       # now continue, playwright has waited for LiveComponent to connect
 
   ### Browser version mismatch
-  Each playwright JS version pins a specific browser version. If you see inconsistent browser
-  versions (e.g. downloading browser vs running test) this indicates two different playwright JS
-  installations are at play.
+  If you've installed a browser but can't run tests
+  (`Executable doesn't exist at .../ms-playwright/chromium_headless_shell-1208/`),
+  you probably used the wrong playwright JS version to install the browser.
 
-  Example: `phoenix_live_view` includes `@playwright/test`, which in turn depends on `playwright`.
-  Depending on your `NODE_PATH` this version might be getting in the way.
+  Each playwright JS version pins a specific browser version.
+  Tests are run using `./assets/node_modules/playwright`
+  (see `assets_dir` [config](`m:PhoenixTest.Playwright.Config`)).
+  Make sure to use that same playwright JS version to install the browser,
+  e.g. via `npx --prefix assets playwright install`).
+
 
 
   ## Ecto SQL.Sandbox
