@@ -20,7 +20,7 @@ defmodule PhoenixTest.Playwright.EventRecorder do
 
   @impl GenServer
   def init(%{guid: guid, filter: filter}) do
-    PlaywrightEx.subscribe(self(), guid)
+    PlaywrightEx.subscribe(guid, pid: self())
     {:ok, %{filter: filter, events: []}}
   end
 

@@ -32,7 +32,7 @@ defmodule PhoenixTest.Playwright.EventListener do
 
   @impl GenServer
   def init(%{guid: guid, filter: filter, callback: callback}) when is_function(callback, 1) do
-    PlaywrightEx.subscribe(self(), guid)
+    PlaywrightEx.subscribe(guid, pid: self())
     {:ok, %__MODULE__{filter: filter, callbacks: [callback]}}
   end
 
