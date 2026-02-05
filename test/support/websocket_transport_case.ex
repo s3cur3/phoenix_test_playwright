@@ -63,14 +63,16 @@ defmodule WebsocketTransportCase do
     host_port = Testcontainers.Container.mapped_port(container, 3000)
     ws_endpoint = "ws://localhost:#{host_port}"
 
-    # Update base_url to use host.docker.internal so container can reach the host
-    # This works on macOS and Windows Docker Desktop
+    # Update base_url so container can reach the host
+    # - macOS/Windows Docker Desktop: use host.docker.internal
+    # - Linux: use the Docker bridge gateway IP (typically 172.17.0.1)
     current_base_url = Application.get_env(:phoenix_test, :base_url)
+    docker_host = docker_host_address()
 
     container_accessible_base_url =
       current_base_url
       |> URI.parse()
-      |> Map.put(:host, "host.docker.internal")
+      |> Map.put(:host, docker_host)
       |> URI.to_string()
 
     Application.put_env(:phoenix_test, :base_url, container_accessible_base_url)
@@ -93,5 +95,35 @@ defmodule WebsocketTransportCase do
     end)
 
     [container: container, ws_endpoint: ws_endpoint]
+  end
+
+  # Returns the hostname/IP that Docker containers can use to reach the host machine
+  defp docker_host_address do
+    case :os.type() do
+      {:unix, :darwin} ->
+        # macOS Docker Desktop supports host.docker.internal
+        "host.docker.internal"
+
+      {:unix, :linux} ->
+        # Linux: get the Docker bridge gateway IP
+        case System.cmd("docker", [
+               "network",
+               "inspect",
+               "bridge",
+               "--format",
+               "{{range .IPAM.Config}}{{.Gateway}}{{end}}"
+             ]) do
+          {gateway, 0} -> String.trim(gateway)
+          _ -> "172.17.0.1"
+        end
+
+      {:win32, _} ->
+        # Windows Docker Desktop supports host.docker.internal
+        "host.docker.internal"
+
+      _ ->
+        # Fallback
+        "host.docker.internal"
+    end
   end
 end

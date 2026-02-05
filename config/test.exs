@@ -34,8 +34,8 @@ config :phoenix_test_playwright, PhoenixTest.Endpoint,
   live_view: [signing_salt: "112345678212345678312345678412"],
   secret_key_base: String.duplicate("57689", 50),
   pubsub_server: PhoenixTest.PubSub,
-  # Allow connections from host.docker.internal for containerized Playwright tests
-  check_origin: ["//localhost", "//host.docker.internal"],
+  # Disable origin check to allow connections from Docker containers
+  check_origin: false,
   render_errors: [
     formats: [html: PhoenixTest.WebApp.ErrorView],
     layout: false
