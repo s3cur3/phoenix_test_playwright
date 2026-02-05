@@ -1,5 +1,11 @@
 defmodule PhoenixTest.Playwright.Supervisor do
-  @moduledoc false
+  @moduledoc """
+  Supervises the Playwright connection and browser pools.
+
+  Supports two transport modes:
+  - **Local** (default): Spawns a local Node.js Playwright driver via Erlang Port
+  - **Remote**: Connects to a remote Playwright server via WebSocket when `ws_endpoint` is configured
+  """
 
   use Supervisor
 
@@ -12,8 +18,30 @@ defmodule PhoenixTest.Playwright.Supervisor do
   @impl true
   def init(:no_init_arg) do
     config = Config.global()
-    playwright_config = [executable: Config.executable()] ++ Keyword.take(config, ~w(timeout js_logger)a)
-    children = [{PlaywrightEx.Supervisor, playwright_config}, PhoenixTest.Playwright.BrowserPoolSupervisor]
+
+    children = [
+      {PlaywrightEx.Supervisor, playwright_opts(config)},
+      PhoenixTest.Playwright.BrowserPoolSupervisor
+    ]
+
     Supervisor.init(children, strategy: :rest_for_one)
+  end
+
+  defp playwright_opts(config) do
+    base = Keyword.take(config, ~w(timeout js_logger)a)
+
+    case config[:ws_endpoint] do
+      nil -> Keyword.put(base, :executable, Config.executable())
+      url -> Keyword.put(base, :ws_endpoint, ws_endpoint_with_browser(url, config))
+    end
+  end
+
+  # Playwright's run-server requires the browser type as a query parameter
+  defp ws_endpoint_with_browser(url, config) do
+    browser = config[:browser]
+    url
+    |> URI.parse()
+    |> URI.append_query("browser=#{config[:browser]}")
+    |> URI.to_string()
   end
 end

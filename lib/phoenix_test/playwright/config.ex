@@ -56,6 +56,7 @@ schema_opts = [
     doc: """
     The directory where the JS assets are located and the Playwright CLI is installed.
     Playwright version `#{playwright_recommended_version}` or newer is recommended.
+    Alternatively, use `ws_endpoint` to connect to a remote Playwright server instead, in which case no local node and playwright is required and `assets_dir` is ignored.
     """
   ],
   browser: browser_opts[:browser],
@@ -148,6 +149,19 @@ schema_opts = [
   trace_dir: [
     default: "traces",
     type: :string
+  ],
+  ws_endpoint: [
+    type: :string,
+    doc: """
+    WebSocket endpoint URL for connecting to a remote Playwright server.
+    If provided, uses WebSocket transport instead of spawning a local Node.js process.
+    Example: "ws://localhost:3000/ws"
+
+    This is useful for:
+    - Alpine Linux containers (glibc issues with local Playwright driver)
+    - Containerized CI environments with a separate Playwright server
+    - Connecting to remote/shared Playwright instances
+    """
   ]
 ]
 
@@ -234,6 +248,24 @@ defmodule PhoenixTest.Playwright.Config do
   defp normalize(_key, value), do: value
 
   def __validate_assets_dir__(assets_dir) do
+    all = Application.get_env(:phoenix_test, :playwright, [])
+
+    error_msg = """
+    Could not find Playwright in `#{assets_dir}`.
+
+    To resolve this, either:
+    1. Install Playwright locally: `npm --prefix #{assets_dir} install playwright`
+    2. Or configure a remote Playwright server via `ws_endpoint` option
+    """
+
+    cond do
+      all[:ws_endpoint] -> {:ok, assets_dir}
+      not playwright_installed?(assets_dir) -> {:error, error_msg}
+      true -> {:ok, assets_dir}
+    end
+  end
+
+  defp playwright_installed?(assets_dir) do
     playwright_json = Path.join([assets_dir, "node_modules", "playwright", "package.json"])
 
     with {:ok, string} <- File.read(playwright_json),
@@ -244,18 +276,9 @@ defmodule PhoenixTest.Playwright.Config do
         IO.warn("Playwright version #{version} is below recommended #{@playwright_recommended_version}")
       end
 
-      {:ok, assets_dir}
+      true
     else
-      {:error, error} ->
-        message = """
-        could not find playwright in `#{assets_dir}`.
-        Reason: #{inspect(error)}
-
-        To resolve this please
-        1. Install playwright, e.g. via `npm --prefix assets install playwright`
-        """
-
-        {:error, message}
+      _ -> false
     end
   end
 end
