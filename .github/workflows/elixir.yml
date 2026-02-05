@@ -73,6 +73,8 @@ jobs:
         run: mix setup
       - name: Run tests
         run: "mix test --warnings-as-errors || if [[ $? = 2 ]]; then PW_TRACE=true mix test --failed; else false; fi"
+      - name: Run websocket transport tests
+        run: mix test.websocket --warnings-as-errors
       - name: Fail if screenshot on exit failed
         run: |
           if ! ls screenshots/PhoenixTest.Playwright.CaseTest.test__tag__screenshot_saves_screenshot_on_test_exit* >/dev/null 2>&1; then

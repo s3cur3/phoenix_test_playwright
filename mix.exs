@@ -47,6 +47,8 @@ defmodule PhoenixTestPlaywright.MixProject do
       {:phoenix_ecto, "~> 4.5", optional: true},
       {:ecto_sql, "~> 3.10", optional: true},
       {:postgrex, ">= 0.0.0", only: :test},
+      {:testcontainers, "~> 1.11", only: :test},
+      {:websockex, "~> 0.4", optional: true},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:styler, "~> 1.3", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
@@ -103,13 +105,15 @@ defmodule PhoenixTestPlaywright.MixProject do
         "cmd npx --prefix priv/static/assets playwright install firefox --with-deps --only-shell"
       ],
       "assets.build": ["esbuild default"],
+      "test.websocket": ["cmd sh -c 'WEBSOCKET_TESTS=true PORT=4003 mix test \"$@\"' --"],
       check: [
         "format --check-formatted",
         "credo",
         "compile --warnings-as-errors",
         "dialyzer --format github --format dialyxir",
         "assets.build",
-        "test --warnings-as-errors"
+        "test --warnings-as-errors",
+        "test.websocket --warnings-as-errors"
       ]
     ]
   end

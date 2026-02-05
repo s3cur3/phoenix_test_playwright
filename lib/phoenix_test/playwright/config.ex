@@ -266,19 +266,31 @@ defmodule PhoenixTest.Playwright.Config do
   end
 
   defp playwright_installed?(assets_dir) do
+    case playwright_version(assets_dir) do
+      {:ok, version} ->
+        if Version.compare(version, @playwright_recommended_version) == :lt do
+          IO.warn("Playwright version #{version} is below recommended #{@playwright_recommended_version}")
+        end
+
+        true
+
+      :error ->
+        false
+    end
+  end
+
+  @doc """
+  Returns the installed Playwright version from the assets directory.
+  """
+  def playwright_version(assets_dir \\ global()[:assets_dir]) do
     playwright_json = Path.join([assets_dir, "node_modules", "playwright", "package.json"])
 
     with {:ok, string} <- File.read(playwright_json),
-         {:ok, json} <- Phoenix.json_library().decode(string) do
-      version = json["version"] || "0"
-
-      if Version.compare(version, @playwright_recommended_version) == :lt do
-        IO.warn("Playwright version #{version} is below recommended #{@playwright_recommended_version}")
-      end
-
-      true
+         {:ok, json} <- Phoenix.json_library().decode(string),
+         version when is_binary(version) <- json["version"] do
+      {:ok, version}
     else
-      _ -> false
+      _ -> :error
     end
   end
 end

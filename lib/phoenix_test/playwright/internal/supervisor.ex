@@ -11,13 +11,13 @@ defmodule PhoenixTest.Playwright.Supervisor do
 
   alias PhoenixTest.Playwright.Config
 
-  def start_link do
-    Supervisor.start_link(__MODULE__, :no_init_arg, name: __MODULE__)
+  def start_link(config \\ Config.global()) do
+    Supervisor.start_link(__MODULE__, config, name: __MODULE__)
   end
 
   @impl true
-  def init(:no_init_arg) do
-    config = Config.global()
+  def init(config) do
+    config = Config.validate!(config)
 
     children = [
       {PlaywrightEx.Supervisor, playwright_opts(config)},
@@ -36,7 +36,6 @@ defmodule PhoenixTest.Playwright.Supervisor do
     end
   end
 
-  # Playwright's run-server requires the browser type as a query parameter
   defp ws_endpoint_with_browser(url, config) do
     url
     |> URI.parse()
