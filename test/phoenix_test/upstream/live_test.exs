@@ -1,16 +1,22 @@
 defmodule PhoenixTest.LiveTest do
-  use PhoenixTest.Playwright.Case, async: true
+  use ExUnit.Case, async: true
+
+  import PhoenixTest
 
   alias ExUnit.AssertionError
   alias PhoenixTest.Driver
   alias PhoenixTest.Html
+
+  setup do
+    %{conn: Phoenix.ConnTest.build_conn()}
+  end
 
   describe "render_page_title/1" do
     test "renders the default page title", %{conn: conn} do
       title =
         conn
         |> visit("/live/index")
-        |> Driver.render_page_title()
+        |> PhoenixTest.Driver.render_page_title()
 
       assert title == "PhoenixTest is the best!"
     end
@@ -21,7 +27,7 @@ defmodule PhoenixTest.LiveTest do
         conn
         |> visit("/live/index")
         |> click_button("Change page title")
-        |> Driver.render_page_title()
+        |> PhoenixTest.Driver.render_page_title()
 
       assert title == "Title changed!"
     end
@@ -98,8 +104,15 @@ defmodule PhoenixTest.LiveTest do
       end)
     end
 
+    test "handles form submission via `data-method` & `data-to` attributes", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> click_link("Data-method Delete")
+      |> assert_has("h1", text: "Record deleted")
+    end
+
     test "raises error when there are multiple links with same text", %{conn: conn} do
-      assert_raise ArgumentError, ~r/more than one element matching selector/, fn ->
+      assert_raise ArgumentError, ~r/2 of them matched the text filter/, fn ->
         conn
         |> visit("/live/index")
         |> click_link("Multiple links")
@@ -107,7 +120,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error when link element can't be found with given text", %{conn: conn} do
-      assert_raise ArgumentError, ~r/not find element.*No link/, fn ->
+      assert_raise ArgumentError, ~r/elements but none matched the text filter "No link"/, fn ->
         conn
         |> visit("/live/index")
         |> click_link("No link")
@@ -115,7 +128,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error when there are no links on the page", %{conn: conn} do
-      assert_raise ArgumentError, ~r/not find element.*role=link/, fn ->
+      assert_raise ArgumentError, ~r/selector "a" did not return any element/, fn ->
         conn
         |> visit("/live/page_2")
         |> click_link("No link")
@@ -247,6 +260,13 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "name: Aragorn")
     end
 
+    test "handles form submission via `data-method` & `data-to` attributes", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> click_button("Data-method Delete")
+      |> assert_has("h1", text: "Record deleted")
+    end
+
     @tag skip: "ignore"
     test "Raises an error if button with type 'button' inside form doesn't have valid phx-click", %{conn: conn} do
       msg = ~r/to have a valid `phx-click` attribute or belong to a `form`/
@@ -255,6 +275,16 @@ defmodule PhoenixTest.LiveTest do
         conn
         |> visit("/live/index")
         |> within("#should-not-submit-form", &click_button(&1, "Non submit button"))
+      end
+    end
+
+    test "raises an error if button is disabled", %{conn: conn} do
+      msg = ~r/because it is disabled./
+
+      assert_raise ArgumentError, msg, fn ->
+        conn
+        |> visit("/live/index")
+        |> click_button("Disabled button 1")
       end
     end
 
@@ -271,7 +301,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error when there are no buttons on page", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Could not find element/, fn ->
+      assert_raise ArgumentError, ~r/Could not find an element/, fn ->
         conn
         |> visit("/live/page_2")
         |> click_button("Show tab")
@@ -290,7 +320,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error if active form but can't find button", %{conn: conn} do
-      msg = ~r/Could not find element/
+      msg = ~r/Could not find an element/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -348,7 +378,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises when data is not in scoped HTML", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Could not find element.*"User Name"/, fn ->
+      assert_raise ArgumentError, ~r/Could not find element with label "User Name"/, fn ->
         conn
         |> visit("/live/index")
         |> within("#email-form", fn session ->
@@ -392,6 +422,14 @@ defmodule PhoenixTest.LiveTest do
       |> fill_in("Wrapped notes", with: "Some description")
       |> click_button("Save Full Form")
       |> assert_has("#form-data", text: "wrapped-notes: Some description")
+    end
+
+    test "fill_in triggers phx-change on the input if it is defined", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> fill_in("Input with change", with: "a test value")
+      |> assert_has("#input-with-change-result", text: "_target: input-with-change")
+      |> assert_has("#input-with-change-result", text: "value: a test value")
     end
 
     test "can fill-in complex form fields", %{conn: conn} do
@@ -469,7 +507,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error when element can't be found with label", %{conn: conn} do
-      msg = ~r/Could not find element.*"Non-existent Email Label"./
+      msg = ~r/Could not find element with label "Non-existent Email Label"./
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -479,7 +517,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises an error when label is found but no corresponding input is found", %{conn: conn} do
-      msg = ~r/Could not find element/
+      msg = ~r/Found label but can't find labeled element whose `id` matches/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -500,7 +538,6 @@ defmodule PhoenixTest.LiveTest do
     test "allows selecting option if a similar option exists", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> assert_has(".phx-connected")
       |> select("Race", option: "Orc")
       |> assert_has("#full-form option[value='orc']")
     end
@@ -519,6 +556,14 @@ defmodule PhoenixTest.LiveTest do
       |> select("Race", option: "Elf")
       |> click_button("Save Full Form")
       |> assert_has("#form-data", text: "race: elf")
+    end
+
+    test "select triggers phx-change on the input if it is defined", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> select("Select with change", option: "Option 1")
+      |> assert_has("#input-with-change-result", text: "_target: select-with-change")
+      |> assert_has("#input-with-change-result", text: "value: Option 1")
     end
 
     test "works for multiple select", %{conn: conn} do
@@ -544,7 +589,7 @@ defmodule PhoenixTest.LiveTest do
       conn
       |> visit("/live/index")
       |> within("#not-a-form", fn session ->
-        click(session, "select option", "Dog")
+        select(session, "Choose a pet:", option: "Dog")
       end)
       |> assert_has("#form-data", text: "selected: [dog]")
     end
@@ -553,9 +598,7 @@ defmodule PhoenixTest.LiveTest do
       conn
       |> visit("/live/index")
       |> within("#not-a-form", fn session ->
-        session
-        |> click("select option", "Dog")
-        |> click("select option", "Cat")
+        select(session, "Choose a pet:", option: ["Dog", "Cat"])
       end)
       |> assert_has("#form-data", text: "selected: [dog, cat]")
     end
@@ -623,6 +666,14 @@ defmodule PhoenixTest.LiveTest do
       |> check("Checkbox group 2")
       |> click_button("Save Full Form")
       |> assert_has("#form-data", text: "checkbox_group: [1, 2]")
+    end
+
+    test "check triggers phx-change on the input if it is defined", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> check("Checkbox 1")
+      |> assert_has("#input-with-change-result", text: "_target: checkbox-with-change")
+      |> assert_has("#input-with-change-result", text: "value: Checkbox 1")
     end
 
     test "handle checkbox name with '?'", %{conn: conn} do
@@ -710,8 +761,8 @@ defmodule PhoenixTest.LiveTest do
       |> visit("/live/index")
       |> within("#not-a-form", fn session ->
         session
-        |> click("internal:label=\"Second Breakfast\"")
-        |> click("internal:label=\"Second Breakfast\"")
+        |> check("Second Breakfast")
+        |> uncheck("Second Breakfast")
       end)
       |> refute_has("#form-data", text: "value: second-breakfast")
     end
@@ -791,11 +842,19 @@ defmodule PhoenixTest.LiveTest do
       |> assert_has("#form-data", text: "contact: mail")
     end
 
+    test "choose triggers phx-change on the input if it is defined", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> choose("Option 1")
+      |> assert_has("#input-with-change-result", text: "_target: radio-with-change")
+      |> assert_has("#input-with-change-result", text: "value: Option 1")
+    end
+
     test "works with a phx-click outside of a form", %{conn: conn} do
       conn
       |> visit("/live/index")
       |> within("#not-a-form", fn session ->
-        click(session, "internal:label=\"Huey\"")
+        choose(session, "Huey")
       end)
       |> assert_has("#form-data", text: "value: huey")
     end
@@ -1119,7 +1178,6 @@ defmodule PhoenixTest.LiveTest do
 
   describe "unwrap" do
     @describetag skip: "ignore"
-
     test "provides an escape hatch that gives access to the underlying view", %{conn: conn} do
       conn
       |> visit("/live/index")
@@ -1147,13 +1205,13 @@ defmodule PhoenixTest.LiveTest do
     test "it is set on visit", %{conn: conn} do
       session = visit(conn, "/live/index")
 
-      assert Driver.current_path(session) == "/live/index"
+      assert PhoenixTest.Driver.current_path(session) == "/live/index"
     end
 
     test "it is set on visit with query string", %{conn: conn} do
       session = visit(conn, "/live/index?foo=bar")
 
-      assert Driver.current_path(session) == "/live/index?foo=bar"
+      assert PhoenixTest.Driver.current_path(session) == "/live/index?foo=bar"
     end
 
     test "it is updated on href navigation", %{conn: conn} do
@@ -1162,7 +1220,7 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_link("Navigate to non-liveview")
 
-      assert Driver.current_path(session) == "/page/index?details=true&foo=bar"
+      assert PhoenixTest.Driver.current_path(session) == "/page/index?details=true&foo=bar"
     end
 
     @tag skip: "ignore: current_path is a point-in-time read, click doesn't wait for navigation"
@@ -1172,7 +1230,7 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_link("Navigate link")
 
-      assert Driver.current_path(session) == "/live/page_2?details=true&foo=bar"
+      assert PhoenixTest.Driver.current_path(session) == "/live/page_2?details=true&foo=bar"
     end
 
     @tag skip: "ignore: current_path is a point-in-time read, click doesn't wait for navigation"
@@ -1182,7 +1240,7 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_link("Patch link")
 
-      assert Driver.current_path(session) == "/live/index?details=true&foo=bar"
+      assert PhoenixTest.Driver.current_path(session) == "/live/index?details=true&foo=bar"
     end
 
     @tag skip: "ignore: current_path is a point-in-time read, click doesn't wait for navigation"
@@ -1192,7 +1250,7 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_button("Button with push navigation")
 
-      assert Driver.current_path(session) == "/live/page_2?foo=bar"
+      assert PhoenixTest.Driver.current_path(session) == "/live/page_2?foo=bar"
     end
 
     @tag skip: "ignore: current_path is a point-in-time read, click doesn't wait for navigation"
@@ -1202,7 +1260,16 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_button("Button with push patch")
 
-      assert Driver.current_path(session) == "/live/index?foo=bar"
+      assert PhoenixTest.Driver.current_path(session) == "/live/index?foo=bar"
+    end
+  end
+
+  describe "reload_page" do
+    test "preserves current path", %{conn: conn} do
+      conn
+      |> visit("/live/index")
+      |> reload_page()
+      |> assert_path("/live/index")
     end
   end
 
@@ -1210,7 +1277,6 @@ defmodule PhoenixTest.LiveTest do
     test "triggers phx-change validations", %{conn: conn} do
       conn
       |> visit("/live/index")
-      |> fill_in("Email", with: "test@email.com")
       |> fill_in("Email", with: nil)
       |> assert_has("#form-errors", text: "Errors present")
     end
@@ -1292,7 +1358,6 @@ defmodule PhoenixTest.LiveTest do
       conn
       |> visit("/live/index")
       |> click_button("Navigate and trigger action")
-      |> then(&(Process.sleep(1000) && &1))
       |> assert_path("/live/page_2")
     end
 
@@ -1341,41 +1406,41 @@ defmodule PhoenixTest.LiveTest do
       conn
       |> visit("/live/async_page")
       |> click_button("Change h2")
-      |> assert_has("h2", text: "I've been changed!")
+      |> assert_has("h2", text: "I've been changed!", timeout: 100)
     end
 
     test "timeout waits for async assigns", %{conn: conn} do
       conn
       |> visit("/live/async_page")
-      |> assert_has("h1", text: "Title loaded async")
+      |> assert_has("h1", text: "Title loaded async", timeout: 350)
     end
 
     test "timeout handles async navigates", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async navigate!")
-      |> assert_has("h1", text: "LiveView page 2")
+      |> assert_has("h1", text: "LiveView page 2", timeout: 250)
     end
 
     test "timeout handles fast async navigates", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Navigate quickly")
-      |> assert_has("h1", text: "LiveView page 2")
+      |> assert_has("h1", text: "LiveView page 2", timeout: 150)
     end
 
     test "timeout handles redirects", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async redirect!")
-      |> assert_has("h1", text: "Main page")
+      |> assert_has("h1", text: "Main page", timeout: 250)
     end
 
     test "can handle multiple LiveViews (redirect one to another) with async behavior", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async navigate to async 2 page!")
-      |> assert_has("h1", text: "Another title loaded async")
+      |> assert_has("h1", text: "Another title loaded async", timeout: 250)
     end
   end
 
@@ -1390,35 +1455,36 @@ defmodule PhoenixTest.LiveTest do
       conn
       |> visit("/live/async_page")
       |> click_button("Change h2")
-      |> refute_has("h2", text: "Where we test LiveView's async behavior")
+      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 100)
     end
 
     test "timeout waits for async assigns", %{conn: conn} do
-      conn
-      |> visit("/live/async_page")
-      |> then(&(Process.sleep(1000) && &1))
-      |> assert_has("h1", text: "Title loaded async")
+      assert_raise AssertionError, ~r/Expected not to find/, fn ->
+        conn
+        |> visit("/live/async_page")
+        |> refute_has("h1", text: "Title loaded async", timeout: 250)
+      end
     end
 
     test "timeout handles async navigates", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async navigate!")
-      |> refute_has("h2", text: "Where we test LiveView's async behavior")
+      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 250)
     end
 
     test "timeout handles fast async navigates", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Navigate quickly")
-      |> refute_has("h2", text: "Where we test LiveView's async behavior")
+      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 150)
     end
 
     test "timeout handles redirects", %{conn: conn} do
       conn
       |> visit("/live/async_page")
       |> click_button("Async redirect!")
-      |> refute_has("h2", text: "Where we test LiveView's async behavior")
+      |> refute_has("h2", text: "Where we test LiveView's async behavior", timeout: 250)
     end
   end
 end

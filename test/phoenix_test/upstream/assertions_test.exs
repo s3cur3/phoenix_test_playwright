@@ -1,11 +1,16 @@
 defmodule PhoenixTest.AssertionsTest do
-  use PhoenixTest.Playwright.Case, async: true
+  use ExUnit.Case, async: true
 
   import PhoenixTest
   import PhoenixTest.TestHelpers
 
   alias ExUnit.AssertionError
+  alias PhoenixTest.Character
   alias PhoenixTest.Live
+
+  setup do
+    %{conn: Phoenix.ConnTest.build_conn()}
+  end
 
   describe "assert_has/2" do
     test "succeeds if single element is found with CSS selector", %{conn: conn} do
@@ -17,7 +22,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises an error if the element cannot be found at all", %{conn: conn} do
       conn = visit(conn, "/page/index")
 
-      msg = ~r/Could not find element "#nonexistent-id"/
+      msg = ~r/Could not find any elements with selector "#nonexistent-id"/
 
       assert_raise AssertionError, msg, fn ->
         assert_has(conn, "#nonexistent-id")
@@ -48,18 +53,26 @@ defmodule PhoenixTest.AssertionsTest do
       conn
       |> visit("/page/index")
       |> assert_has("h1", text: "Main page")
+      |> assert_has("h1", "Main page")
       |> assert_has("#title", text: "Main page")
+      |> assert_has("#title", "Main page")
       |> assert_has(".title", text: "Main page")
+      |> assert_has(".title", "Main page")
       |> assert_has("[data-role='title']", text: "Main page")
+      |> assert_has("[data-role='title']", "Main page")
     end
 
     test "succeeds if single element is found with CSS selector and text (Live)", %{conn: conn} do
       conn
       |> visit("/live/index")
       |> assert_has("h1", text: "LiveView main page")
+      |> assert_has("h1", "LiveView main page")
       |> assert_has("#title", text: "LiveView main page")
+      |> assert_has("#title", "LiveView main page")
       |> assert_has(".title", text: "LiveView main page")
+      |> assert_has(".title", "LiveView main page")
       |> assert_has("[data-role='title']", text: "LiveView main page")
+      |> assert_has("[data-role='title']", "LiveView main page")
     end
 
     test "succeeds if more than one element matches selector but text narrows it down", %{
@@ -68,18 +81,37 @@ defmodule PhoenixTest.AssertionsTest do
       conn
       |> visit("/page/index")
       |> assert_has("li", text: "Aragorn")
+      |> assert_has("li", "Aragorn")
+      |> assert_has("li", "Aragorn", exact: false)
+      |> assert_has("li", "Aragorn", exact: true)
     end
 
     test "succeeds if more than one element matches selector and text", %{conn: conn} do
       conn
       |> visit("/page/index")
       |> assert_has(".multiple_links", text: "Multiple links")
+      |> assert_has(".multiple_links", text: "Multiple links", count: 2)
+      |> assert_has(".multiple_links", "Multiple links")
+      |> assert_has(".multiple_links", "Multiple links", count: 2)
     end
 
     test "succeeds if text difference is only a matter of truncation", %{conn: conn} do
       conn
       |> visit("/page/index")
       |> assert_has(".has_extra_space", text: "Has extra space")
+    end
+
+    test "succeeds for non-binary text with Phoenix.HTML.Safe implementation", %{
+      conn: conn
+    } do
+      aragorn = %Character{name: "Aragorn"}
+
+      conn
+      |> visit("/page/index")
+      |> assert_has("li", text: aragorn)
+      |> assert_has("li", aragorn)
+      |> assert_has("li", aragorn, exact: false)
+      |> assert_has("li", aragorn, exact: true)
     end
 
     test "succeeds when a non-200 status code is returned", %{conn: conn} do
@@ -92,6 +124,12 @@ defmodule PhoenixTest.AssertionsTest do
       conn
       |> visit("/page/by_value")
       |> assert_has("input", value: "Frodo")
+    end
+
+    test "succeeds when asserting by non-binary value with Phoenix.HTML.Safe implementation", %{conn: conn} do
+      conn
+      |> visit("/page/by_value")
+      |> assert_has("input", value: %Character{name: "Frodo"})
     end
 
     test "succeeds when searching by value and implicit label", %{conn: conn} do
@@ -117,7 +155,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises an error if value cannot be found", %{conn: conn} do
       session = visit(conn, "/page/by_value")
 
-      msg = ~r/Could not find element.*input.*"does-not-exist"/
+      msg = ~r/Could not find any elements with selector "input" and value "does-not-exist"/
 
       assert_raise AssertionError, msg, fn ->
         assert_has(session, "input", value: "does-not-exist")
@@ -130,7 +168,7 @@ defmodule PhoenixTest.AssertionsTest do
       assert_has(session, "input", label: "Kingdoms", value: "Gondor")
       assert_has(session, "input", label: "Kingdoms", value: "Gondor", count: 2)
 
-      assert_raise AssertionError, ~r/Kingdoms.*Gondor/, fn ->
+      assert_raise AssertionError, ~r/with "input" and value "Gondor" with label "Kingdoms"/, fn ->
         assert_has(session, "input", label: "Kingdoms", value: "Gondor", count: 1)
       end
     end
@@ -138,7 +176,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises an error if label (with value) cannot be found", %{conn: conn} do
       session = visit(conn, "/page/by_value")
 
-      msg = ~r/Could not find.*input.*Halfling.*Frodo/
+      msg = ~r/with selector "input" and value "Frodo" with label "Halfling"/
 
       assert_raise AssertionError, msg, fn ->
         assert_has(session, "input", label: "Halfling", value: "Frodo")
@@ -148,7 +186,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises an error if value (with label) cannot be found", %{conn: conn} do
       session = visit(conn, "/page/by_value")
 
-      msg = ~r/Could not find.*Hobbit.*Sam"/
+      msg = ~r/with selector "input" and value "Sam" with label "Hobbit"/
 
       assert_raise AssertionError, msg, fn ->
         assert_has(session, "input", label: "Hobbit", value: "Sam")
@@ -158,7 +196,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises if user provides :text and :value options", %{conn: conn} do
       session = visit(conn, "/page/by_value")
 
-      assert_raise AssertionError, ~r/Could not find/, fn ->
+      assert_raise ArgumentError, ~r/Cannot provide both :text and :value/, fn ->
         assert_has(session, "div", text: "some text", value: "some value")
       end
     end
@@ -166,7 +204,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises an error if the element cannot be found at all", %{conn: conn} do
       conn = visit(conn, "/page/index")
 
-      msg = ~r/Could not find element.*#nonexistent-id/
+      msg = ~r/Could not find any elements with selector "#nonexistent-id"/
 
       assert_raise AssertionError, msg, fn ->
         assert_has(conn, "#nonexistent-id", text: "Main page")
@@ -180,7 +218,11 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Could not find element "h1".*"Super page"
+        Could not find any elements with selector "h1" and text "Super page".
+
+        Found these elements matching the selector "h1":
+
+        <h1 id="title" class="title" data-role="title">Main page</h1>
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -209,7 +251,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises if title does not match expected value (Static)", %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Page title does not match
+        Expected title to be "Not the title" but got "PhoenixTest is the best!"
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -222,7 +264,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises if title does not match expected value (Live)", %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Page title does not match
+        Expected title to be "Not the title" but got "PhoenixTest is the best!"
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -236,7 +278,7 @@ defmodule PhoenixTest.AssertionsTest do
          %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Page title does not match
+        Expected title to be "PhoenixTest" but got "PhoenixTest is the best!"
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -253,7 +295,15 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Could not find.*#multiple-items.*Frodo
+        Could not find any elements with selector "#multiple-items" and text "Frodo".
+
+        Found these elements matching the selector "#multiple-items":
+
+        <ul id="multiple-items">
+          <li>Aragorn</li>
+          <li>Legolas</li>
+          <li>Gimli</li>
+        </ul>
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -275,7 +325,9 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Could not find element
+        Expected 1 element with ".multiple_links".
+
+        But found 2:
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -288,7 +340,9 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Could not find element
+        Expected 2 elements with "h1".
+
+        But found 1:
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -306,7 +360,11 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises if `exact` text doesn't match", %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Could not find element "h1".*"Main"
+        Could not find any elements with selector "h1" and text "Main".
+
+        Found these elements matching the selector "h1":
+
+        <h1 id="title" class="title" data-role="title">Main page</h1>
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -326,13 +384,26 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises if it cannot find element at `at` position", %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Could not find element "#multiple-items li".*at: 2.*"Aragorn"
+        Could not find any elements with selector "#multiple-items li" and text "Aragorn" at position 2
         """)
 
       assert_raise AssertionError, msg, fn ->
         conn
         |> visit("/page/index")
         |> assert_has("#multiple-items li", at: 2, text: "Aragorn")
+      end
+    end
+
+    test "provides a clear error when trying to specify both text string arg and :text keyword arg", %{conn: conn} do
+      session = visit(conn, "/page/index")
+
+      msg =
+        "Cannot specify `text` as the third argument and `:text` as an option.\n\n" <>
+          "You might want to change it to:\n\n" <>
+          "assert_has(session, \"h1\", \"Main page\", exact: true, count: 1)\n"
+
+      assert_raise ArgumentError, msg, fn ->
+        assert_has(session, "h1", "Main page", text: "Other text", exact: true, count: 1)
       end
     end
   end
@@ -357,6 +428,7 @@ defmodule PhoenixTest.AssertionsTest do
       conn
       |> visit("/page/index")
       |> refute_has("title", text: "Not the title")
+      |> refute_has("title", "Not the title")
       |> refute_has("#something-else-to-test-pipe")
     end
 
@@ -365,14 +437,20 @@ defmodule PhoenixTest.AssertionsTest do
       |> visit("/page/index")
       |> refute_has("h1", count: 2)
       |> refute_has("h1", text: "Main page", count: 2)
+      |> refute_has("h1", "Main page", count: 2)
       |> refute_has(".multiple_links", count: 1)
       |> refute_has(".multiple_links", text: "Multiple links", count: 1)
+      |> refute_has(".multiple_links", "Multiple links", count: 1)
     end
 
     test "raises if element is found", %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Found element
+        Expected not to find any elements with selector "h1".
+
+        But found 1:
+
+        <h1 id="title" class="title" data-role="title">Main page</h1>
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -401,7 +479,9 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Found element ".multiple_links"
+        Expected not to find any elements with selector ".multiple_links".
+
+        But found 2:
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -414,7 +494,7 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Found element "h1"
+        Expected not to find 1 element with selector "h1".
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -427,7 +507,9 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Found element ".multiple_links"
+        Expected not to find 2 elements with selector ".multiple_links".
+
+        But found 2:
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -442,7 +524,9 @@ defmodule PhoenixTest.AssertionsTest do
       conn
       |> visit("/page/index")
       |> refute_has("title", text: "Not the title")
+      |> refute_has("title", "Not the title")
       |> refute_has("title", text: "Not this title either")
+      |> refute_has("title", "Not this title either")
     end
 
     @tag skip: "investigate"
@@ -450,7 +534,9 @@ defmodule PhoenixTest.AssertionsTest do
       conn
       |> visit("/live/index")
       |> refute_has("title", text: "Not the title")
+      |> refute_has("title", "Not the title")
       |> refute_has("title", text: "Not this title either")
+      |> refute_has("title", "Not this title either")
     end
 
     @tag skip: "investigate"
@@ -458,6 +544,7 @@ defmodule PhoenixTest.AssertionsTest do
       conn
       |> visit("/live/index")
       |> refute_has("title", text: "PhoenixTest is the", exact: true)
+      |> refute_has("title", "PhoenixTest is the", exact: true)
     end
 
     @tag skip: "investigate"
@@ -471,6 +558,12 @@ defmodule PhoenixTest.AssertionsTest do
         conn
         |> visit("/page/index")
         |> refute_has("title", text: "PhoenixTest is the best!")
+      end
+
+      assert_raise AssertionError, msg, fn ->
+        conn
+        |> visit("/page/index")
+        |> refute_has("title", "PhoenixTest is the best!")
       end
     end
 
@@ -486,24 +579,38 @@ defmodule PhoenixTest.AssertionsTest do
         |> visit("/live/index")
         |> refute_has("title", text: "PhoenixTest is the best!")
       end
+
+      assert_raise AssertionError, msg, fn ->
+        conn
+        |> visit("/live/index")
+        |> refute_has("title", "PhoenixTest is the best!")
+      end
     end
 
     test "succeeds if no element is found with CSS selector and text (Static)", %{conn: conn} do
       conn
       |> visit("/page/index")
       |> refute_has("h1", text: "Not main page")
+      |> refute_has("h1", "Not main page")
       |> refute_has("h2", text: "Main page")
+      |> refute_has("h2", "Main page")
       |> refute_has("#incorrect-id", text: "Main page")
+      |> refute_has("#incorrect-id", "Main page")
       |> refute_has("#title", text: "Not main page")
+      |> refute_has("#title", "Not main page")
     end
 
     test "succeeds if no element is found with CSS selector and text (Live)", %{conn: conn} do
       conn
       |> visit("/live/index")
       |> refute_has("h1", text: "Not main page")
+      |> refute_has("h1", "Not main page")
       |> refute_has("h2", text: "Main page")
+      |> refute_has("h2", "Main page")
       |> refute_has("#incorrect-id", text: "Main page")
+      |> refute_has("#incorrect-id", "Main page")
       |> refute_has("#title", text: "Not main page")
+      |> refute_has("#title", "Not main page")
     end
 
     test "raises an error if one element is found", %{conn: conn} do
@@ -511,11 +618,19 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Found element
+        Expected not to find any elements with selector "#title" and text "Main page".
+
+        But found 1:
+
+        <h1 id="title" class="title" data-role="title">Main page</h1>
         """)
 
       assert_raise AssertionError, msg, fn ->
         refute_has(conn, "#title", text: "Main page")
+      end
+
+      assert_raise AssertionError, msg, fn ->
+        refute_has(conn, "#title", "Main page")
       end
     end
 
@@ -524,11 +639,20 @@ defmodule PhoenixTest.AssertionsTest do
 
       msg =
         ignore_whitespace("""
-        Found element
+        Expected not to find any elements with selector ".multiple_links" and text "Multiple links".
+
+        But found 2:
+
+        <a class="multiple_links" href="/page/page_3">Multiple links</a>
+        <a class="multiple_links" href="/page/page_4">Multiple links</a>
         """)
 
       assert_raise AssertionError, msg, fn ->
         refute_has(conn, ".multiple_links", text: "Multiple links")
+      end
+
+      assert_raise AssertionError, msg, fn ->
+        refute_has(conn, ".multiple_links", "Multiple links")
       end
     end
 
@@ -536,12 +660,17 @@ defmodule PhoenixTest.AssertionsTest do
       conn
       |> visit("/page/index")
       |> refute_has("h1", text: "Main", exact: true)
+      |> refute_has("h1", "Main", exact: true)
     end
 
     test "raises if `exact` text makes refutation false", %{conn: conn} do
       msg =
         ignore_whitespace("""
-        Found element "h1".*"Main"
+        Expected not to find any elements with selector "h1" and text "Main".
+
+        But found 1:
+
+        <h1 id="title" class="title" data-role="title">Main page</h1>
         """)
 
       assert_raise AssertionError, msg, fn ->
@@ -549,6 +678,13 @@ defmodule PhoenixTest.AssertionsTest do
         |> visit("/page/index")
         |> refute_has("h1", text: "Main", exact: false)
       end
+    end
+
+    test "accepts non-binary text with Phoenix.HTML.Safe implementation", %{conn: conn} do
+      conn
+      |> visit("/page/index")
+      |> refute_has("h1", text: :Main, exact: true)
+      |> refute_has("h1", :Main, exact: true)
     end
 
     test "accepts an `at` option (without text) to refute on a specific element", %{conn: conn} do
@@ -587,6 +723,12 @@ defmodule PhoenixTest.AssertionsTest do
       |> refute_has("input", value: "not-frodo")
     end
 
+    test "can refute by non-binary value with Phoenix.HTML.Safe implementation", %{conn: conn} do
+      conn
+      |> visit("/page/by_value")
+      |> refute_has("input", value: %Character{name: "not-frodo"})
+    end
+
     test "can refute by value and implicit label", %{conn: conn} do
       conn
       |> visit("/page/by_value")
@@ -604,7 +746,7 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises an error if value is found", %{conn: conn} do
       session = visit(conn, "/page/by_value")
 
-      msg = ~r/Found.*input.*Frodo/
+      msg = ~r/not to find any elements with selector "input" and value "Frodo"/
 
       assert_raise AssertionError, msg, fn ->
         refute_has(session, "input", value: "Frodo")
@@ -616,7 +758,7 @@ defmodule PhoenixTest.AssertionsTest do
 
       refute_has(session, "input", label: "Kingdoms", value: "Gondor", count: 1)
 
-      assert_raise AssertionError, ~r/input.*Kingdoms.*Gondor/, fn ->
+      assert_raise AssertionError, ~r/with selector "input" and value "Gondor" with label "Kingdoms"/, fn ->
         refute_has(session, "input", label: "Kingdoms", value: "Gondor")
       end
     end
@@ -624,19 +766,23 @@ defmodule PhoenixTest.AssertionsTest do
     test "raises an error if label and value are found", %{conn: conn} do
       session = visit(conn, "/page/by_value")
 
-      msg = ~r/input.*Hobbit.*Frodo/
+      msg = ~r/with selector "input" and value "Frodo" with label "Hobbit"/
 
       assert_raise AssertionError, msg, fn ->
         refute_has(session, "input", label: "Hobbit", value: "Frodo")
       end
     end
 
-    @tag skip: "investigate"
-    test "raises if user provides :text and :value options", %{conn: conn} do
+    test "provides a clear error when trying to specify both text string arg and :text keyword arg", %{conn: conn} do
       session = visit(conn, "/page/index")
 
-      assert_raise ArgumentError, ~r/Cannot provide both :text and :value/, fn ->
-        refute_has(session, "div", text: "some text", value: "some value")
+      msg =
+        "Cannot specify `text` as the third argument and `:text` as an option.\n\n" <>
+          "You might want to change it to:\n\n" <>
+          "refute_has(session, \"h1\", \"Main page\", exact: true, count: 1)\n"
+
+      assert_raise ArgumentError, msg, fn ->
+        refute_has(session, "h1", "Main page", text: "Other text", exact: true, count: 1)
       end
     end
   end

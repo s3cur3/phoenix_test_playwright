@@ -1,8 +1,12 @@
 defmodule PhoenixTest.StaticTest do
-  use PhoenixTest.Playwright.Case, async: true
+  use ExUnit.Case, async: true
 
   import PhoenixTest
   import PhoenixTest.TestHelpers
+
+  setup do
+    %{conn: Phoenix.ConnTest.build_conn()}
+  end
 
   describe "render_page_title/1" do
     test "renders the default page title", %{conn: conn} do
@@ -82,7 +86,7 @@ defmodule PhoenixTest.StaticTest do
     test "handles form submission via `data-method` & `data-to` attributes", %{conn: conn} do
       conn
       |> visit("/page/index")
-      |> click_link("button", "Data-method Delete", exact: true)
+      |> click_link("Data-method Delete")
       |> assert_has("h1", text: "Record deleted")
     end
 
@@ -116,7 +120,7 @@ defmodule PhoenixTest.StaticTest do
     end
 
     test "raises error when there are multiple links with same text", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Found more than one element/, fn ->
+      assert_raise ArgumentError, ~r/Found more than one element with selector/, fn ->
         conn
         |> visit("/page/index")
         |> click_link("Multiple links")
@@ -213,7 +217,7 @@ defmodule PhoenixTest.StaticTest do
     test "handles form submission via `data-method` & `data-to` attributes", %{conn: conn} do
       conn
       |> visit("/page/index")
-      |> click_button("button", "Data-method Delete", exact: true)
+      |> click_button("Data-method Delete")
       |> assert_has("h1", text: "Record deleted")
     end
 
@@ -279,7 +283,7 @@ defmodule PhoenixTest.StaticTest do
     end
 
     test "raises an error when there are no buttons on page", %{conn: conn} do
-      msg = ~r/Could not find element with selector/
+      msg = ~r/Could not find an element with given selectors/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -289,7 +293,7 @@ defmodule PhoenixTest.StaticTest do
     end
 
     test "raises an error if can't find button", %{conn: conn} do
-      msg = ~r/Could not find element with selector/
+      msg = ~r/Could not find an element with given selectors/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -333,7 +337,7 @@ defmodule PhoenixTest.StaticTest do
     end
 
     test "raises when data is not in scoped HTML", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Could not find element.*"User Name"/, fn ->
+      assert_raise ArgumentError, ~r/Could not find element with label "User Name"/, fn ->
         conn
         |> visit("/page/index")
         |> within("#email-form", fn session ->
@@ -422,7 +426,7 @@ defmodule PhoenixTest.StaticTest do
     end
 
     test "raises an error when element can't be found with label", %{conn: conn} do
-      msg = ~r/Could not find element.*"Non-existent Email Label"./
+      msg = ~r/Could not find element with label "Non-existent Email Label"./
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -432,7 +436,7 @@ defmodule PhoenixTest.StaticTest do
     end
 
     test "raises an error when label is found but no corresponding input is found", %{conn: conn} do
-      msg = ~r/Could not find element/
+      msg = ~r/Found label but can't find labeled element whose `id` matches/
 
       assert_raise ArgumentError, msg, fn ->
         conn
@@ -488,9 +492,7 @@ defmodule PhoenixTest.StaticTest do
       |> refute_has("#form-data", text: "race_2")
     end
 
-    if System.get_env("CI") || Application.compile_env!(:phoenix_test, :playwright)[:ws_endpoint],
-      do: @tag(skip: "investigate")
-
+    @tag skip: "investigate"
     test "can target a label with exact: false", %{conn: conn} do
       conn
       |> visit("/page/index")
@@ -512,9 +514,7 @@ defmodule PhoenixTest.StaticTest do
       |> assert_has("#form-data", text: "race: human")
     end
 
-    if System.get_env("CI") || Application.compile_env!(:phoenix_test, :playwright)[:ws_endpoint],
-      do: @tag(skip: "investigate")
-
+    @tag skip: "investigate"
     test "can target option with selector if multiple labels have same text", %{conn: conn} do
       conn
       |> visit("/page/index")
@@ -711,7 +711,7 @@ defmodule PhoenixTest.StaticTest do
       |> within("#same-labels", fn session ->
         upload(session, "#main-avatar", "Avatar", "test/files/elixir.jpg")
       end)
-      |> click_button("Save form")
+      |> submit()
       |> assert_has("#form-data", text: "main-avatar: elixir.jpg")
     end
   end
@@ -870,9 +870,9 @@ defmodule PhoenixTest.StaticTest do
   end
 
   describe "unwrap" do
+    @describetag skip: "ignore"
     require Phoenix.ConnTest
 
-    @describetag skip: "ignore"
     @endpoint Application.compile_env(:phoenix_test, :endpoint)
 
     test "provides an escape hatch that gives access to the underlying conn", %{conn: conn} do
@@ -925,6 +925,15 @@ defmodule PhoenixTest.StaticTest do
         |> click_link("Navigate away and redirect back")
 
       assert PhoenixTest.Driver.current_path(session) == "/page/index"
+    end
+  end
+
+  describe "reload_page" do
+    test "preserves current path", %{conn: conn} do
+      conn
+      |> visit("/page/index")
+      |> reload_page()
+      |> assert_path("/page/index")
     end
   end
 

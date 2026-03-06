@@ -40,6 +40,19 @@ defmodule PhoenixTest.WebApp.IndexLive do
 
     <button phx-click="show-tab">Show tab</button>
 
+    <a
+      href="/page/delete_record"
+      data-method="delete"
+      data-to="/page/delete_record"
+      data-csrf="sometoken"
+    >
+      Data-method Delete
+    </a>
+
+    <button data-method="delete" data-to="/page/delete_record" data-csrf="sometoken">
+      Data-method Delete
+    </button>
+
     <div id="button-with-id-1">
       <button phx-click="show-tab">Duplicate button with wrapped id</button>
     </div>
@@ -134,6 +147,8 @@ defmodule PhoenixTest.WebApp.IndexLive do
       Save Owner Form
     </button>
 
+    <button type="button" phx-click={JS.toggle()} disabled>Disabled button 1</button>
+
     <form id="nested-form" phx-submit="save-form">
       <label for="user-name">User Name</label>
       <input id="user-name" name="user[name]" />
@@ -160,7 +175,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <button type="button" phx-click={JS.toggle()}>Non submit button</button>
     </form>
 
-    <.form for={@form_data} id="full-form" phx-submit="save-form" phx-change="upload-change">
+    <form id="full-form" phx-submit="save-form" phx-change="upload-change">
       <label for="first_name">First Name</label>
       <input id="first_name" name="first_name" />
 
@@ -240,7 +255,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <.live_file_input upload={@uploads.avatar} />
 
       <button type="submit" name="full_form_button" value="save">Save Full Form</button>
-    </.form>
+    </form>
 
     <form id="redirect-form" phx-submit="save-redirect-form">
       <label for="redirect-form-name">Name</label>
@@ -320,7 +335,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <input id="email-on-change" name="email" />
     </form>
 
-    <.form for={%{}} id="complex-labels" phx-change="change-form" phx-submit="save-form">
+    <form id="complex-labels" phx-change="change-form" phx-submit="save-form">
       <label for="complex-name">
         Name <span>*</span>
       </label>
@@ -352,9 +367,9 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <.live_file_input upload={@uploads.avatar_2} />
 
       <button type="submit">Save</button>
-    </.form>
+    </form>
 
-    <.form for={%{}} id="same-labels" phx-submit="save-form" phx-change="change-form">
+    <form id="same-labels" phx-submit="save-form" phx-change="change-form">
       <fieldset name="like-elixir">
         <legend>Do you like Elixir:</legend>
 
@@ -439,7 +454,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <button type="submit">
         Submit Form
       </button>
-    </.form>
+    </form>
 
     <form id="changes-hidden-input-form" phx-change="set-hidden-race">
       <input type="hidden" name="hidden_race" value={@hidden_input_race} />
@@ -448,7 +463,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <label>Name for hidden <input type="name" name="name" /></label>
     </form>
 
-    <div id="not-a-form" phx-update="ignore">
+    <div id="not-a-form">
       <fieldset>
         <legend>Select a maintenance drone:</legend>
 
@@ -531,8 +546,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
 
     <button phx-click="trigger-multiple-forms">Trigger multiple</button>
 
-    <.form
-      for={%{}}
+    <form
       id="redirect-and-trigger-form"
       phx-change="patch-and-trigger-form"
       phx-trigger-action={@redirect_and_trigger_submit}
@@ -544,7 +558,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       </label>
       <button phx-click="redirect-and-trigger-form">Redirect and trigger action</button>
       <button phx-click="navigate-and-trigger-form">Navigate and trigger action</button>
-    </.form>
+    </form>
 
     <form id="conditional-inputs" phx-change="save-form" phx-submit="save-form">
       <label>
@@ -608,6 +622,64 @@ defmodule PhoenixTest.WebApp.IndexLive do
         {if(@checked_keys["def"], do: "Checked", else: "Unchecked")}
       </span>
     </div>
+
+    <form phx-change="dummy-change">
+      <label for="input-with-change">Input with change</label>
+      <input
+        id="input-with-change"
+        name="input-with-change"
+        phx-change="input-changed"
+      />
+      
+    <!-- Radio inputs -->
+      <input
+        type="radio"
+        id="radio-input-choice-1"
+        name="radio-with-change"
+        value="Option 1"
+        phx-change="input-changed"
+      />
+      <label for="radio-input-choice-1">Option 1</label>
+
+      <input
+        type="radio"
+        id="radio-input-choice-2"
+        name="radio-with-change"
+        value="Option 2"
+        phx-change="input-changed"
+      />
+      <label for="radio-input-choice-2">Option 2</label>
+      
+    <!-- Checkboxes -->
+      <label for="checkbox-input-checkbox-1">Checkbox 1</label>
+      <input
+        id="checkbox-input-checkbox-1"
+        type="checkbox"
+        name="checkbox-with-change"
+        value="Checkbox 1"
+        phx-change="input-changed"
+      />
+
+      <label for="checkbox-input-checkbox-2">Checkbox 2</label>
+      <input
+        id="checkbox-input-checkbox-2"
+        type="checkbox"
+        name="checkbox-with-change"
+        value="Checkbox 2"
+        phx-change="input-changed"
+      />
+      
+    <!-- Select -->
+      <label for="select-with-change">Select with change</label>
+      <select id="select-with-change" name="select-with-change" phx-change="input-changed">
+        <option value="Option 1">Option 1</option>
+        <option value="Option 2">Option 2</option>
+      </select>
+    </form>
+
+    <div :if={@input_change_data} id="input-with-change-result">
+      _target: {@input_change_data.target} value: {@input_change_data.value}
+    </div>
     """
   end
 
@@ -636,6 +708,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
       |> assign(:trigger_multiple_submit, false)
       |> assign(:redirect_and_trigger_submit, false)
       |> assign(:upload_change_triggered, false)
+      |> assign(:input_change_data, nil)
       |> allow_upload(:avatar, accept: ~w(.jpg .jpeg))
       |> allow_upload(:avatar_2, accept: ~w(.jpg .jpeg))
       |> allow_upload(:avatar_3, accept: ~w(.jpg .jpeg))
@@ -800,8 +873,8 @@ defmodule PhoenixTest.WebApp.IndexLive do
   def handle_event("select-pet", %{"value" => value}, socket) do
     form_data =
       case socket.assigns.form_data do
-        %{"selected" => values} -> %{"selected" => values ++ [value]}
-        %{} -> %{"selected" => [value]}
+        %{selected: values} -> %{selected: values ++ [value]}
+        %{} -> %{selected: [value]}
       end
 
     socket
@@ -859,6 +932,13 @@ defmodule PhoenixTest.WebApp.IndexLive do
       :noreply,
       assign(socket, :upload_change_triggered, true)
     }
+  end
+
+  def handle_event("input-changed", params, socket) do
+    # disregard the input name. We are only interested in the event target and the sent value
+    [{_, target}, {_input_name, value} | _rest] = Map.to_list(params)
+
+    {:noreply, assign(socket, :input_change_data, %{target: target, value: value})}
   end
 
   def handle_event("toggle-checkbox-phx-value", %{"id" => id}, socket) do
