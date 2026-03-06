@@ -161,7 +161,7 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def reload_page(conn, opts \\ []) do
-    tap(conn, &({:ok, _} = Page.reload(&1.page_id, opts |> ensure_timeout())))
+    tap(conn, &({:ok, _} = Page.reload(&1.page_id, ensure_timeout(opts))))
   end
 
   @doc """

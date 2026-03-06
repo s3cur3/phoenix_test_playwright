@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
+## [0.13.0] 2026-03-06
+### Added
+- Support phoenix_test [v0.10.0](https://hexdocs.pm/phoenix_test/changelog.html#0-10-0)
+  - Add `PhoenixTest.Playwright.reload_page/2`
+
 ## [0.12.1] 2026-02-23
 ### Added
 - Recommend `browser_pool: false` when using `ws_endpoint` (remote server has a single pre-launched browser). Commit [60f4b6f]
