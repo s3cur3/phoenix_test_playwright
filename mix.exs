@@ -42,7 +42,7 @@ defmodule PhoenixTestPlaywright.MixProject do
       {:ex_doc, "~> 0.37", only: :dev, runtime: false},
       {:phoenix, "~> 1.7"},
       {:phoenix_live_view, "~> 1.0"},
-      {:phoenix_test, "~> 0.8", runtime: false},
+      {:phoenix_test, "~> 0.10", runtime: false},
       {:plug_cowboy, "~> 2.7", only: :test, runtime: false},
       {:phoenix_ecto, "~> 4.5", optional: true},
       {:ecto_sql, "~> 3.10", optional: true},
@@ -54,7 +54,7 @@ defmodule PhoenixTestPlaywright.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:makeup_diff, "~> 0.1", only: :dev},
       {:nimble_options, "~> 1.1"},
-      {:playwright_ex, "~> 0.4"}
+      {:playwright_ex, "~> 0.5"}
     ]
   end
 

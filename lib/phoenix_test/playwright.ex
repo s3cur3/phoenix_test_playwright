@@ -159,6 +159,11 @@ defmodule PhoenixTest.Playwright do
     tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, opts |> ensure_timeout() |> Keyword.put(:url, path))))
   end
 
+  @doc false
+  def reload_page(conn, opts \\ []) do
+    tap(conn, &({:ok, _} = Page.reload(&1.page_id, opts |> ensure_timeout())))
+  end
+
   @doc """
   Add cookies to the browser context, using `Plug.Conn.put_resp_cookie/3`
 
@@ -889,6 +894,7 @@ defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
   alias PhoenixTest.Playwright
 
   defdelegate visit(conn, path), to: Playwright
+  defdelegate reload_page(conn), to: Playwright
   defdelegate render_page_title(conn), to: Playwright
   defdelegate render_html(conn), to: Playwright
   defdelegate within(conn, selector, fun), to: PhoenixTest.SessionHelpers
