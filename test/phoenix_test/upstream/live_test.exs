@@ -16,7 +16,7 @@ defmodule PhoenixTest.LiveTest do
       title =
         conn
         |> visit("/live/index")
-        |> PhoenixTest.Driver.render_page_title()
+        |> Driver.render_page_title()
 
       assert title == "PhoenixTest is the best!"
     end
@@ -27,7 +27,7 @@ defmodule PhoenixTest.LiveTest do
         conn
         |> visit("/live/index")
         |> click_button("Change page title")
-        |> PhoenixTest.Driver.render_page_title()
+        |> Driver.render_page_title()
 
       assert title == "Title changed!"
     end
@@ -1205,13 +1205,13 @@ defmodule PhoenixTest.LiveTest do
     test "it is set on visit", %{conn: conn} do
       session = visit(conn, "/live/index")
 
-      assert PhoenixTest.Driver.current_path(session) == "/live/index"
+      assert Driver.current_path(session) == "/live/index"
     end
 
     test "it is set on visit with query string", %{conn: conn} do
       session = visit(conn, "/live/index?foo=bar")
 
-      assert PhoenixTest.Driver.current_path(session) == "/live/index?foo=bar"
+      assert Driver.current_path(session) == "/live/index?foo=bar"
     end
 
     test "it is updated on href navigation", %{conn: conn} do
@@ -1220,7 +1220,7 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_link("Navigate to non-liveview")
 
-      assert PhoenixTest.Driver.current_path(session) == "/page/index?details=true&foo=bar"
+      assert Driver.current_path(session) == "/page/index?details=true&foo=bar"
     end
 
     @tag skip: "ignore: current_path is a point-in-time read, click doesn't wait for navigation"
@@ -1230,7 +1230,7 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_link("Navigate link")
 
-      assert PhoenixTest.Driver.current_path(session) == "/live/page_2?details=true&foo=bar"
+      assert Driver.current_path(session) == "/live/page_2?details=true&foo=bar"
     end
 
     @tag skip: "ignore: current_path is a point-in-time read, click doesn't wait for navigation"
@@ -1240,7 +1240,7 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_link("Patch link")
 
-      assert PhoenixTest.Driver.current_path(session) == "/live/index?details=true&foo=bar"
+      assert Driver.current_path(session) == "/live/index?details=true&foo=bar"
     end
 
     @tag skip: "ignore: current_path is a point-in-time read, click doesn't wait for navigation"
@@ -1250,7 +1250,7 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_button("Button with push navigation")
 
-      assert PhoenixTest.Driver.current_path(session) == "/live/page_2?foo=bar"
+      assert Driver.current_path(session) == "/live/page_2?foo=bar"
     end
 
     @tag skip: "ignore: current_path is a point-in-time read, click doesn't wait for navigation"
@@ -1260,7 +1260,7 @@ defmodule PhoenixTest.LiveTest do
         |> visit("/live/index")
         |> click_button("Button with push patch")
 
-      assert PhoenixTest.Driver.current_path(session) == "/live/index?foo=bar"
+      assert Driver.current_path(session) == "/live/index?foo=bar"
     end
   end
 

@@ -870,9 +870,9 @@ defmodule PhoenixTest.StaticTest do
   end
 
   describe "unwrap" do
-    @describetag skip: "ignore"
     require Phoenix.ConnTest
 
+    @describetag skip: "ignore"
     @endpoint Application.compile_env(:phoenix_test, :endpoint)
 
     test "provides an escape hatch that gives access to the underlying conn", %{conn: conn} do

@@ -400,7 +400,7 @@ defmodule PhoenixTest.AssertionsTest do
       msg =
         "Cannot specify `text` as the third argument and `:text` as an option.\n\n" <>
           "You might want to change it to:\n\n" <>
-          "assert_has(session, \"h1\", \"Main page\", exact: true, count: 1)\n"
+          ~s{assert_has(session, "h1", "Main page", exact: true, count: 1)\n}
 
       assert_raise ArgumentError, msg, fn ->
         assert_has(session, "h1", "Main page", text: "Other text", exact: true, count: 1)
@@ -779,7 +779,7 @@ defmodule PhoenixTest.AssertionsTest do
       msg =
         "Cannot specify `text` as the third argument and `:text` as an option.\n\n" <>
           "You might want to change it to:\n\n" <>
-          "refute_has(session, \"h1\", \"Main page\", exact: true, count: 1)\n"
+          ~s{refute_has(session, "h1", "Main page", exact: true, count: 1)\n}
 
       assert_raise ArgumentError, msg, fn ->
         refute_has(session, "h1", "Main page", text: "Other text", exact: true, count: 1)
