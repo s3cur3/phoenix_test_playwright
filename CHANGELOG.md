@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). -->
 
+## [0.14.0] 2026-05-05
+### Added
+- Support phoenix_test [v0.11.1](https://hexdocs.pm/phoenix_test/changelog.html#0-11-1). Commit [f60d668]
+  - Add `assert_download/2`. Commit [244a0f5]
+- `PhoenixTest.Playwright.evaluate/3-4`: support function expressions via `is_function: true` and pass arguments via `arg`. Commit [2730ab5]
+- Support multiple sessions in `async: false` suites. Commit [270d1c2], [@rubysolo]
+
 ## [0.13.0] 2026-03-06
 ### Added
 - Support phoenix_test [v0.10.0](https://hexdocs.pm/phoenix_test/changelog.html#0-10-0)
@@ -197,7 +204,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [@peaceful-james]: https://github.com/peaceful-james
 [@nathanl]: https://github.com/nathanl
 [@carsoncall]: https://github.com/carsoncall
+[@rubysolo]: https://github.com/rubysolo
 
+[f60d668]: https://github.com/ftes/phoenix_test_playwright/commit/f60d668
+[244a0f5]: https://github.com/ftes/phoenix_test_playwright/commit/244a0f5
+[2730ab5]: https://github.com/ftes/phoenix_test_playwright/commit/2730ab5
+[270d1c2]: https://github.com/ftes/phoenix_test_playwright/commit/270d1c2
 [3b54699]: https://github.com/ftes/phoenix_test_playwright/commit/3b54699
 [5ff530]: https://github.com/ftes/phoenix_test_playwright/commit/5ff530
 [becf5e]: https://github.com/ftes/phoenix_test_playwright/commit/becf5e
