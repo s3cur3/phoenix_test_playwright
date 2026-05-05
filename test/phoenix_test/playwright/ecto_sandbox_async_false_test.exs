@@ -21,6 +21,7 @@ defmodule PhoenixTest.Playwright.EctoSandboxAsyncFalseTest do
 
     describe "delay: #{delay_ms}ms requires ecto_sandbox_stop_owner_delay to prevent 'is still using a connection from owner' errors" do
       @describetag ecto_sandbox_stop_owner_delay: delay_ms + 100
+      @describetag :capture_log
 
       setup %{conn: conn} do
         [conn: visit(conn, "/pw/live/ecto?delay_ms=#{@delay_ms}")]

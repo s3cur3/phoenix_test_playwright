@@ -55,7 +55,7 @@ defmodule Mix.Tasks.PhoenixTestPlaywright.Test.Websocket do
 
     # Set base_url so container can reach the Phoenix server
     docker_host = docker_host_address()
-    port = Application.get_env(:phoenix_test_playwright, PhoenixTest.Endpoint)[:http][:port]
+    port = Application.get_env(:phoenix_test_playwright, PhoenixTest.WebApp.Endpoint)[:http][:port]
     System.put_env("BASE_URL", "http://#{docker_host}:#{port}")
 
     Mix.Task.run("test", args ++ ["--exclude", "skip_websocket"])

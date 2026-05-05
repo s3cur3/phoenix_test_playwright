@@ -247,7 +247,7 @@ defmodule PhoenixTest.PlaywrightTest do
       cookie = [value: %{secret: "monty_python"}]
 
       conn
-      |> add_session_cookie(cookie, PhoenixTest.Endpoint.session_options())
+      |> add_session_cookie(cookie, PhoenixTest.WebApp.Endpoint.session_options())
       |> visit("/pw/session")
       |> assert_has("#session", text: "secret: monty_python")
     end

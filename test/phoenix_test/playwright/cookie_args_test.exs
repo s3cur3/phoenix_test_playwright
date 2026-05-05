@@ -38,7 +38,7 @@ defmodule PhoenixTest.Playwright.CookieArgsTest do
   describe "from_session_options/1" do
     test "returns a map of valid args for Playwright's addCookies method" do
       cookie = [value: %{secret: "monty_python"}]
-      session_options = PhoenixTest.Endpoint.session_options()
+      session_options = PhoenixTest.WebApp.Endpoint.session_options()
 
       assert CookieArgs.from_session_options(cookie, session_options) == %{
                name: "_phoenix_key",

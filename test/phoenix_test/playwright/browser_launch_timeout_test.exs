@@ -11,6 +11,7 @@ defmodule PhoenixTest.Playwright.BrowserLaunchTimeoutTest do
   @error_message "You may need to increase the :browser_launch_timeout option"
 
   describe "browser pool launch" do
+    @tag :capture_log
     test "produces a helpful error when browser_launch_timeout is too small" do
       Process.flag(:trap_exit, true)
       pool = :"pool_timeout_test_#{System.unique_integer([:positive])}"

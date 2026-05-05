@@ -1,7 +1,7 @@
 defmodule PhoenixTest.WebApp.PageController do
   use Phoenix.Controller, formats: [html: "View"]
 
-  plug(:put_layout, html: {PhoenixTest.WebApp.LayoutView, :app})
+  plug(:put_layout, {PhoenixTest.WebApp.LayoutView, :app})
 
   def show(conn, %{"redirect_to" => path}) do
     conn
@@ -41,9 +41,19 @@ defmodule PhoenixTest.WebApp.PageController do
     |> redirect(to: "/page/index")
   end
 
+  def redirect_with_status(conn, %{"status" => status, "to" => path}) do
+    conn
+    |> put_resp_header("location", path)
+    |> send_resp(String.to_integer(status), "")
+  end
+
   def unauthorized(conn, _) do
     conn
     |> put_status(:unauthorized)
     |> render("unauthorized.html")
+  end
+
+  def download(conn, _) do
+    send_download(conn, {:file, "test/files/elixir.jpg"})
   end
 end

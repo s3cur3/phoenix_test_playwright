@@ -1,5 +1,3 @@
-**IMPORTANT**: before you do anything else, run the `beans prime` command and heed its output.
-
 ## Dev
 
 - Use tool versions from `.tool-versions`; prefer `mise exec -- <command>` (for example `mise exec -- mix check`).

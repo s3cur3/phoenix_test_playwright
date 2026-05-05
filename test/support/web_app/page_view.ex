@@ -277,6 +277,21 @@ defmodule PhoenixTest.WebApp.PageView do
       <button type="submit">Save</button>
     </form>
 
+    <form id="array-checkbox-form" method="post" action="/page/create_record">
+      <input type="hidden" name="items[]" value="" />
+
+      <label for="array-item-one">One</label>
+      <input id="array-item-one" type="checkbox" name="items[]" value="one" checked />
+
+      <label for="array-item-two">Two</label>
+      <input id="array-item-two" type="checkbox" name="items[]" value="two" checked />
+
+      <label for="array-item-three">Three</label>
+      <input id="array-item-three" type="checkbox" name="items[]" value="three" />
+
+      <button type="submit">Save Array Checkbox Form</button>
+    </form>
+
     <form id="same-labels" action="/page/create_record" method="post">
       <fieldset>
         <legend>Do you like Elixir:</legend>
@@ -394,6 +409,31 @@ defmodule PhoenixTest.WebApp.PageView do
       <label>
         Kingdoms <input type="text" name="kingdom" value="Gondor" />
       </label>
+
+      <label for="race">Race</label>
+      <select id="race" name="race">
+        <option value="human">Human</option>
+        <option value="elf" selected>Elf</option>
+        <option value="dwarf">Dwarf</option>
+      </select>
+
+      <label for="region">Region</label>
+      <select id="region" name="region">
+        <option value="shire">Shire</option>
+        <option value="rivendell">Rivendell</option>
+      </select>
+
+      <label>
+        Frodo <input class="user" type="checkbox" name="users[]" value="frodo" checked />
+      </label>
+      <label>
+        Sam <input class="user" type="checkbox" name="users[]" value="sam" />
+      </label>
+
+      <label for="merry-checkbox">
+        Merry
+      </label>
+      <input id="merry-checkbox" class="user" type="checkbox" name="users[]" value="merry" checked />
     </form>
     """
   end

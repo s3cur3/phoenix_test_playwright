@@ -1,4 +1,4 @@
-alias PhoenixTest.Endpoint
+alias PhoenixTest.WebApp.Endpoint
 
 ExUnit.start(capture_log: false)
 

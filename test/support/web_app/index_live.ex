@@ -12,6 +12,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
     <.link navigate="/live/page_2?details=true&foo=bar">Navigate link</.link>
     <.link patch="/live/index?details=true&foo=bar">Patch link</.link>
     <.link href="/page/index?details=true&foo=bar">Navigate to non-liveview</.link>
+    <.link navigate="/page/index">Navigate with navigate to dead view</.link>
 
     <.link class="multiple_links" href="/live/page_3">Multiple links</.link>
     <.link class="multiple_links" href="/live/page_4">Multiple links</.link>
@@ -76,7 +77,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
 
     <form id="email-form" phx-change="validate-email" phx-submit="save-form">
       <label for="email">Email</label>
-      <input id="email" name="email" value={assigns[:email]} />
+      <input id="email" name="email" value={assigns[:email] || "prefilled@example.com"} />
       <button>Save Email</button>
     </form>
     <button phx-click="reset-email-form">Reset</button>
@@ -177,61 +178,111 @@ defmodule PhoenixTest.WebApp.IndexLive do
 
     <form id="full-form" phx-submit="save-form" phx-change="upload-change">
       <label for="first_name">First Name</label>
-      <input id="first_name" name="first_name" />
+      <input id="first_name" name="first_name" value={field_value(@form_data, "first_name")} />
 
       <label for="date">Date</label>
-      <input type="date" id="date" name="date" />
+      <input type="date" id="date" name="date" value={field_value(@form_data, "date")} />
 
       <input type="hidden" name="admin" value="off" />
       <label for="admin">Admin</label>
-      <input id="admin" type="checkbox" name="admin" value="on" />
+      <input
+        id="admin"
+        type="checkbox"
+        name="admin"
+        value="on"
+        checked={checked_value?(@form_data, "admin", "on")}
+      />
 
       <input type="hidden" name="subscribe?" value="off" />
       <label for="subscribe">Subscribe</label>
-      <input id="subscribe" type="checkbox" name="subscribe?" value="on" />
+      <input
+        id="subscribe"
+        type="checkbox"
+        name="subscribe?"
+        value="on"
+        checked={checked_value?(@form_data, "subscribe?", "on")}
+      />
 
       <label for="level">Level (number)</label>
       <input id="level" type="number" name="level" value="7" />
 
       <label for="race">Race</label>
       <select id="race" name="race">
-        <option value="human">Human</option>
-        <option value="elf">Elf</option>
-        <option value="dwarf">Dwarf</option>
-        <option value="orc">Orc</option>
-        <option value="other_orc">Other Orc</option>
+        <option value="human" selected={field_value(@form_data, "race", "human") == "human"}>
+          Human
+        </option>
+        <option value="elf" selected={field_value(@form_data, "race", "human") == "elf"}>Elf</option>
+        <option value="dwarf" selected={field_value(@form_data, "race", "human") == "dwarf"}>
+          Dwarf
+        </option>
+        <option value="orc" selected={field_value(@form_data, "race", "human") == "orc"}>Orc</option>
+        <option value="other_orc" selected={field_value(@form_data, "race", "human") == "other_orc"}>
+          Other Orc
+        </option>
       </select>
 
       <label for="race_2">Race 2</label>
       <select multiple id="race_2" name="race_2[]">
-        <option value="human">Human</option>
-        <option value="elf">Elf</option>
-        <option value="dwarf">Dwarf</option>
-        <option value="orc">Orc</option>
+        <option value="human" selected={checked_value?(@form_data, "race_2", "human")}>Human</option>
+        <option value="elf" selected={checked_value?(@form_data, "race_2", "elf")}>Elf</option>
+        <option value="dwarf" selected={checked_value?(@form_data, "race_2", "dwarf")}>Dwarf</option>
+        <option value="orc" selected={checked_value?(@form_data, "race_2", "orc")}>Orc</option>
       </select>
 
       <label>
-        <input type="checkbox" name="checkbox_group[]" value="1" checked />
+        <input
+          type="checkbox"
+          name="checkbox_group[]"
+          value="1"
+          checked={checked_value?(@form_data, "checkbox_group", "1", ["1"])}
+        />
         Checkbox group 1 (initially checked)
       </label>
-      <label><input type="checkbox" name="checkbox_group[]" value="2" /> Checkbox group 2</label>
+      <label>
+        <input
+          type="checkbox"
+          name="checkbox_group[]"
+          value="2"
+          checked={checked_value?(@form_data, "checkbox_group", "2", ["1"])}
+        /> Checkbox group 2
+      </label>
 
       <fieldset>
         <legend>Please select your preferred contact method:</legend>
         <div>
-          <input type="radio" id="email_choice" name="contact" value="email" />
+          <input
+            type="radio"
+            id="email_choice"
+            name="contact"
+            value="email"
+            checked={field_value(@form_data, "contact", "mail") == "email"}
+          />
           <label for="email_choice">Email Choice</label>
-          <input type="radio" id="phone_choice" name="contact" value="phone" />
+          <input
+            type="radio"
+            id="phone_choice"
+            name="contact"
+            value="phone"
+            checked={field_value(@form_data, "contact", "mail") == "phone"}
+          />
           <label for="phone_choice">Phone Choice</label>
-          <input type="radio" id="mail_choice" name="contact" value="mail" checked />
+          <input
+            type="radio"
+            id="mail_choice"
+            name="contact"
+            value="mail"
+            checked={field_value(@form_data, "contact", "mail") == "mail"}
+          />
           <label for="mail_choice">Mail Choice</label>
         </div>
       </fieldset>
 
       <label for="notes">Notes</label>
-      <textarea id="notes" name="notes" rows="5" cols="33">
-        Prefilled notes
-      </textarea>
+      <textarea id="notes" name="notes" rows="5" cols="33">{field_value(
+          @form_data,
+          "notes",
+          "Prefilled notes"
+        )}</textarea>
 
       <label for="wrapped-notes">
         Wrapped notes <textarea name="wrapped-notes" rows="5" cols="33">
@@ -345,21 +396,39 @@ defmodule PhoenixTest.WebApp.IndexLive do
         Human <span>*</span>
       </label>
       <input type="hidden" name="human" value="no" />
-      <input type="checkbox" id="complex-human" name="human" value="yes" />
+      <input
+        type="checkbox"
+        id="complex-human"
+        name="human"
+        value="yes"
+        checked={@form_data["human"] == "yes"}
+      />
 
       <label for="complex-animals">Choose a pet: <span>*</span></label>
       <select id="complex-animals" name="pet">
-        <option value="dog">Dog</option>
-        <option value="cat">Cat</option>
+        <option value="dog" selected={field_value(@form_data, "pet") == "dog"}>Dog</option>
+        <option value="cat" selected={field_value(@form_data, "pet") == "cat"}>Cat</option>
       </select>
 
       <fieldset>
         <legend>Book or movie?</legend>
 
-        <input type="radio" id="complex-book" name="book-or-movie" value="book" />
+        <input
+          type="radio"
+          id="complex-book"
+          name="book-or-movie"
+          value="book"
+          checked={field_value(@form_data, "book-or-movie") == "book"}
+        />
         <label for="complex-book">Book <span>*</span></label>
 
-        <input type="radio" id="complex-movie" name="book-or-movie" value="movie" />
+        <input
+          type="radio"
+          id="complex-movie"
+          name="book-or-movie"
+          value="movie"
+          checked={field_value(@form_data, "book-or-movie") == "movie"}
+        />
         <label for="complex-movie">Movie <span>*</span></label>
       </fieldset>
 
@@ -367,6 +436,39 @@ defmodule PhoenixTest.WebApp.IndexLive do
       <.live_file_input upload={@uploads.avatar_2} />
 
       <button type="submit">Save</button>
+    </form>
+
+    <form id="array-checkbox-form" phx-change="change-form" phx-submit="change-form">
+      <input type="hidden" name="items[]" value="" />
+
+      <label for="array-item-one">One</label>
+      <input
+        id="array-item-one"
+        type="checkbox"
+        name="items[]"
+        value="one"
+        checked={checked_value?(@form_data, "items", "one", ["one", "two"])}
+      />
+
+      <label for="array-item-two">Two</label>
+      <input
+        id="array-item-two"
+        type="checkbox"
+        name="items[]"
+        value="two"
+        checked={checked_value?(@form_data, "items", "two", ["one", "two"])}
+      />
+
+      <label for="array-item-three">Three</label>
+      <input
+        id="array-item-three"
+        type="checkbox"
+        name="items[]"
+        value="three"
+        checked={checked_value?(@form_data, "items", "three", ["one", "two"])}
+      />
+
+      <button type="submit">Save Array Checkbox Form</button>
     </form>
 
     <form id="same-labels" phx-submit="save-form" phx-change="change-form">
@@ -411,12 +513,24 @@ defmodule PhoenixTest.WebApp.IndexLive do
         <legend>Do you like Elixir?</legend>
         <label for="like-elixir">Yes</label>
         <input type="hidden" name="like-elixir" value="no" />
-        <input type="checkbox" name="like-elixir" id="like-elixir" value="yes" />
+        <input
+          type="checkbox"
+          name="like-elixir"
+          id="like-elixir"
+          value="yes"
+          checked={checked_value?(@form_data, "like-elixir", "yes")}
+        />
 
         <legend>Do you like Erlang</legend>
         <label for="like-erlang">Yes</label>
         <input type="hidden" name="like-erlang" value="no" />
-        <input type="checkbox" name="like-erlang" id="like-erlang" value="yes" />
+        <input
+          type="checkbox"
+          name="like-erlang"
+          id="like-erlang"
+          value="yes"
+          checked={checked_value?(@form_data, "like-erlang", "yes")}
+        />
       </fieldset>
 
       <fieldset>
@@ -424,20 +538,36 @@ defmodule PhoenixTest.WebApp.IndexLive do
 
         <label for="select-favorite-character">Character</label>
         <select id="select-favorite-character" name="favorite-character">
-          <option value="Frodo">Frodo</option>
-          <option value="Sam">Sam</option>
-          <option value="Pippin">Pippin</option>
-          <option value="Merry">Merry</option>
+          <option value="Frodo" selected={field_value(@form_data, "favorite-character") == "Frodo"}>
+            Frodo
+          </option>
+          <option value="Sam" selected={field_value(@form_data, "favorite-character") == "Sam"}>
+            Sam
+          </option>
+          <option value="Pippin" selected={field_value(@form_data, "favorite-character") == "Pippin"}>
+            Pippin
+          </option>
+          <option value="Merry" selected={field_value(@form_data, "favorite-character") == "Merry"}>
+            Merry
+          </option>
         </select>
       </fieldset>
 
       <fieldset>
         <label for="select-least-favorite-character">Character</label>
         <select id="select-least-favorite-character" name="least-favorite-character">
-          <option value="Frodo">Frodo</option>
-          <option value="Sam">Sam</option>
-          <option value="Pippin">Pippin</option>
-          <option value="Merry">Merry</option>
+          <option value="Frodo" selected={field_value(@form_data, "least-favorite-character") == "Frodo"}>
+            Frodo
+          </option>
+          <option value="Sam" selected={field_value(@form_data, "least-favorite-character") == "Sam"}>
+            Sam
+          </option>
+          <option value="Pippin" selected={field_value(@form_data, "least-favorite-character") == "Pippin"}>
+            Pippin
+          </option>
+          <option value="Merry" selected={field_value(@form_data, "least-favorite-character") == "Merry"}>
+            Merry
+          </option>
         </select>
       </fieldset>
 
@@ -468,7 +598,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
         <legend>Select a maintenance drone:</legend>
 
         <div>
-          <input phx-click="select-drone" type="radio" id="huey" name="drone" value="huey" checked />
+          <input phx-click="select-drone" type="radio" id="huey" name="drone" value="huey" />
           <label for="huey">Huey</label>
         </div>
 
@@ -562,7 +692,12 @@ defmodule PhoenixTest.WebApp.IndexLive do
 
     <form id="conditional-inputs" phx-change="save-form" phx-submit="save-form">
       <label>
-        <input name="hide_to_remove" type="checkbox" value="on" /> Hide to remove
+        <input
+          name="hide_to_remove"
+          type="checkbox"
+          value="on"
+          checked={checked_value?(@form_data, "hide_to_remove", "on")}
+        /> Hide to remove
       </label>
       <label :if={@form_data["hide_to_remove"] != "on"}>
         To remove <input name="to_remove" type="text" />
@@ -630,7 +765,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
         name="input-with-change"
         phx-change="input-changed"
       />
-      
+
     <!-- Radio inputs -->
       <input
         type="radio"
@@ -649,7 +784,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
         phx-change="input-changed"
       />
       <label for="radio-input-choice-2">Option 2</label>
-      
+
     <!-- Checkboxes -->
       <label for="checkbox-input-checkbox-1">Checkbox 1</label>
       <input
@@ -668,7 +803,7 @@ defmodule PhoenixTest.WebApp.IndexLive do
         value="Checkbox 2"
         phx-change="input-changed"
       />
-      
+
     <!-- Select -->
       <label for="select-with-change">Select with change</label>
       <select id="select-with-change" name="select-with-change" phx-change="input-changed">
@@ -884,9 +1019,15 @@ defmodule PhoenixTest.WebApp.IndexLive do
   end
 
   def handle_event("toggle-second-breakfast", params, socket) do
+    form_data =
+      case socket.assigns.form_data do
+        %{"value" => "second-breakfast"} -> %{}
+        _ -> params
+      end
+
     socket
-    |> assign(:form_saved, true)
-    |> assign(:form_data, params)
+    |> assign(:form_saved, map_size(form_data) > 0)
+    |> assign(:form_data, form_data)
     |> then(&{:noreply, &1})
   end
 
@@ -927,10 +1068,12 @@ defmodule PhoenixTest.WebApp.IndexLive do
     }
   end
 
-  def handle_event("upload-change", _params, socket) do
+  def handle_event("upload-change", params, socket) do
     {
       :noreply,
-      assign(socket, :upload_change_triggered, true)
+      socket
+      |> assign(:form_data, Map.merge(socket.assigns.form_data, params))
+      |> assign(:upload_change_triggered, true)
     }
   end
 
@@ -967,5 +1110,23 @@ defmodule PhoenixTest.WebApp.IndexLive do
     Enum.map_join(values, "\n", fn {nested_key, value} ->
       render_input_data("#{key}:#{nested_key}", value)
     end)
+  end
+
+  defp field_value(form_data, key, default \\ nil) do
+    Map.get(form_data, key, default)
+  end
+
+  defp checked_value?(form_data, key, value, default \\ []) do
+    form_data
+    |> form_values(key, default)
+    |> Enum.member?(value)
+  end
+
+  defp form_values(form_data, key, default) do
+    case Map.fetch(form_data, key) do
+      {:ok, values} when is_list(values) -> values
+      {:ok, value} -> [value]
+      :error -> default
+    end
   end
 end

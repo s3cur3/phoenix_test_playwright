@@ -1,17 +1,19 @@
-defmodule PhoenixTest.Router do
-  @moduledoc """
-  Copied from https://github.com/germsel/phoenix_test
-
-  This support file helps run upstream tests against the Playwright driver to ensure continued compatability with the `pheonix_test` API.
-  It is copied regularly.
-
-  This file should be changed as little as possible, to make future updates easy.
-  """
+defmodule PhoenixTest.WebApp.Router do
   use Phoenix.Router
 
   import Phoenix.LiveView.Router
 
   alias PhoenixTest.WebApp.LayoutView
+
+  # pipeline :setup_session do
+  #   plug(Plug.Session,
+  #     store: :cookie,
+  #     key: "_phoenix_test_key",
+  #     signing_salt: "/VADsdfSfdMnp5"
+  #   )
+
+  #   plug(:fetch_session)
+  # end
 
   pipeline :browser do
     plug(:accepts, ["html"])
@@ -46,10 +48,12 @@ defmodule PhoenixTest.Router do
     post("/page/create_record", PageController, :create)
     put("/page/update_record", PageController, :update)
     delete("/page/delete_record", PageController, :delete)
+    get("/page/redirect_with_status", PageController, :redirect_with_status)
     get("/page/unauthorized", PageController, :unauthorized)
     get("/page/redirect_to_static", PageController, :redirect_to_static)
     post("/page/redirect_to_liveview", PageController, :redirect_to_liveview)
     post("/page/redirect_to_static", PageController, :redirect_to_static)
+    get("/page/download", PageController, :download)
     get("/page/:page", PageController, :show)
 
     live_session :live_pages, layout: {LayoutView, :app} do
@@ -58,9 +62,12 @@ defmodule PhoenixTest.Router do
       live("/live/page_2", Page2Live)
       live("/live/async_page", AsyncPageLive)
       live("/live/async_page_2", AsyncPage2Live)
+      live("/live/ordinal_inputs", OrdinalInputsLive)
       live("/live/dynamic_form", DynamicFormLive)
       live("/live/simple_ordinal_inputs", SimpleOrdinalInputsLive)
+      live("/live/dynamic_inputs_add_remove", DynamicInputsAddRemoveLive)
       live("/live/nested", NestedLive)
+      live("/live/conditional_form", ConditionalFormLive)
     end
 
     scope "/auth" do

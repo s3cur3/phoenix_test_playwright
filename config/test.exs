@@ -1,6 +1,7 @@
 import Config
 
 alias PhoenixTest.Playwright.Repo
+alias PhoenixTest.WebApp.Endpoint
 
 config :esbuild,
   version: "0.25.9",
@@ -13,7 +14,7 @@ config :esbuild,
 config :logger, level: :error
 
 config :phoenix_test,
-  endpoint: PhoenixTest.Endpoint,
+  endpoint: Endpoint,
   otp_app: :phoenix_test_playwright,
   playwright: [
     assets_dir: "priv/static/assets",
@@ -28,7 +29,7 @@ config :phoenix_test,
     ]
   ]
 
-config :phoenix_test_playwright, PhoenixTest.Endpoint,
+config :phoenix_test_playwright, Endpoint,
   server: true,
   http: [port: 4002],
   live_view: [signing_salt: "112345678212345678312345678412"],

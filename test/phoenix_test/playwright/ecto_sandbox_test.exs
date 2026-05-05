@@ -4,6 +4,8 @@ defmodule PhoenixTest.Playwright.EctoSandboxTest do
   for delay_ms <- [0, 100] do
     @delay_ms delay_ms
     describe "delay: #{delay_ms}ms does not require ecto_sandbox_stop_owner_delay" do
+      @describetag :capture_log
+
       setup %{conn: conn} do
         [conn: visit(conn, "/pw/live/ecto?delay_ms=#{@delay_ms}")]
       end
