@@ -23,9 +23,8 @@ defmodule PhoenixTest.Playwright do
   alias PhoenixTest.Playwright.Config
   alias PhoenixTest.Playwright.CookieArgs
   alias PhoenixTest.Playwright.EventListener
+  alias PlaywrightEx.Artifact
   alias PlaywrightEx.BrowserContext
-  alias PlaywrightEx.ChannelResponse
-  alias PlaywrightEx.Connection
   alias PlaywrightEx.Dialog
   alias PlaywrightEx.Frame
   alias PlaywrightEx.Page
@@ -561,66 +560,15 @@ defmodule PhoenixTest.Playwright do
   end
 
   defp download_artifact(artifact_guid) do
-    connection = PlaywrightEx.Supervisor.Connection
-
-    if Connection.remote?(connection) do
-      download_artifact_stream(connection, artifact_guid)
-    else
-      download_artifact_path(connection, artifact_guid)
-    end
-  end
-
-  defp download_artifact_path(connection, artifact_guid) do
-    connection
-    |> Connection.send(%{guid: artifact_guid, method: :path_after_finished, params: %{}}, timeout())
-    |> ChannelResponse.unwrap(& &1.value)
-    |> case do
-      {:ok, path} -> path
-      {:error, error} -> raise ExUnit.AssertionError, message: "Download failed: #{download_error_message(error)}"
-    end
-  end
-
-  defp download_artifact_stream(connection, artifact_guid) do
     path = Path.join(System.tmp_dir!(), "phoenix-test-download-#{System.unique_integer([:positive])}")
 
-    with {:ok, %{stream: %{guid: stream_guid}}} <-
-           connection
-           |> Connection.send(%{guid: artifact_guid, method: :save_as_stream, params: %{}}, timeout())
-           |> ChannelResponse.unwrap(& &1),
-         :ok <- stream_to_file(connection, stream_guid, path),
-         {:ok, _} <- close_stream(connection, stream_guid) do
-      path
-    else
-      {:error, error} -> raise ExUnit.AssertionError, message: "Download failed: #{download_error_message(error)}"
+    case Artifact.save_as(artifact_guid, path, timeout: timeout()) do
+      :ok ->
+        path
+
+      {:error, error} ->
+        raise ExUnit.AssertionError, message: "Download failed: #{download_error_message(error)}"
     end
-  end
-
-  defp stream_to_file(connection, stream_guid, path) do
-    File.open!(path, [:write, :binary], fn file ->
-      read_stream_to_file(connection, stream_guid, file)
-    end)
-  end
-
-  defp read_stream_to_file(connection, stream_guid, file) do
-    case connection
-         |> Connection.send(%{guid: stream_guid, method: :read, params: %{size: 1024 * 1024}}, timeout())
-         |> ChannelResponse.unwrap(& &1) do
-      {:ok, %{binary: ""}} ->
-        :ok
-
-      {:ok, %{binary: chunk}} ->
-        IO.binwrite(file, Base.decode64!(chunk))
-        read_stream_to_file(connection, stream_guid, file)
-
-      {:error, _} = error ->
-        error
-    end
-  end
-
-  defp close_stream(connection, stream_guid) do
-    connection
-    |> Connection.send(%{guid: stream_guid, method: :close, params: %{}}, timeout())
-    |> ChannelResponse.unwrap(& &1)
   end
 
   defp download_error_message(%{message: message}), do: message
