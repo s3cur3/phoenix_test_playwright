@@ -1,7 +1,7 @@
 defmodule PhoenixTest.WebApp.PageController do
   use Phoenix.Controller, formats: [html: "View"]
 
-  plug(:put_layout, {PhoenixTest.WebApp.LayoutView, :app})
+  plug(:put_layout, html: {PhoenixTest.WebApp.LayoutView, :app})
 
   def show(conn, %{"redirect_to" => path}) do
     conn
