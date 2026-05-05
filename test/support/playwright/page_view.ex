@@ -14,6 +14,13 @@ defmodule PhoenixTest.Playwright.PageView do
     """
   end
 
+  def render("download_link.html", assigns) do
+    ~H"""
+    <h1>Download link</h1>
+    <a href="/pw/download">Download image</a>
+    """
+  end
+
   def render("js_script_console_error.html", assigns) do
     ~H"""
     <script type="text/javascript">

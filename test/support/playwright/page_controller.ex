@@ -9,6 +9,14 @@ defmodule PhoenixTest.Playwright.PageController do
     render(conn, "longer_than_viewport.html")
   end
 
+  def download(conn, _) do
+    send_download(conn, {:file, "test/files/elixir.jpg"})
+  end
+
+  def download_link(conn, _) do
+    render(conn, "download_link.html")
+  end
+
   def js_script_console_error(conn, _) do
     render(conn, "js_script_console_error.html")
   end

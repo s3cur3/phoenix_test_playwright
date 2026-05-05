@@ -34,6 +34,8 @@ defmodule PhoenixTest.WebApp.Router do
 
     live("/live", Live)
     live("/live/ecto", EctoLive)
+    get("/download", PageController, :download)
+    get("/download-link", PageController, :download_link)
     get("/other", PageController, :other)
     get("/longer-than-viewport", PageController, :longer_than_viewport)
     get("/cookies", PageController, :cookies)

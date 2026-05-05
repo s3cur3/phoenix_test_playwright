@@ -96,6 +96,19 @@ defmodule PhoenixTest.PlaywrightTest do
     end
   end
 
+  describe "assert_download/2" do
+    test "asserts a download triggered by clicking a link", %{conn: conn} do
+      conn
+      |> visit("/pw/download-link")
+      |> click_link("Download image")
+      |> assert_download(fn file ->
+        assert file.name == "elixir.jpg"
+        assert file.mime_type == "image/jpeg"
+        assert file.content == File.read!("test/files/elixir.jpg")
+      end)
+    end
+  end
+
   describe "evaluate/2" do
     test "evaluates JavaScript and returns the session", %{conn: conn} do
       conn
