@@ -23,6 +23,7 @@ defmodule PhoenixTest.Playwright do
   alias PhoenixTest.Playwright.Config
   alias PhoenixTest.Playwright.CookieArgs
   alias PhoenixTest.Playwright.EventListener
+  alias PhoenixTest.Playwright.EventRecorder
   alias PlaywrightEx.Artifact
   alias PlaywrightEx.BrowserContext
   alias PlaywrightEx.Dialog
@@ -39,6 +40,7 @@ defmodule PhoenixTest.Playwright do
     :frame_id,
     :tracing_id,
     :dialog_listener_pid,
+    :download_recorder_pid,
     :last_input_selector,
     within: :none
   ]
@@ -57,14 +59,13 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def build(%{context_id: context_id, page_id: page_id, frame_id: frame_id, tracing_id: tracing_id, config: config}) do
-    start_download_listener(page_id)
-
     %__MODULE__{
       context_id: context_id,
       page_id: page_id,
       frame_id: frame_id,
       tracing_id: tracing_id,
-      dialog_listener_pid: start_dialog_listener(page_id, config[:accept_dialogs])
+      dialog_listener_pid: start_dialog_listener(page_id, config[:accept_dialogs]),
+      download_recorder_pid: start_download_recorder(page_id)
     }
   end
 
@@ -75,12 +76,10 @@ defmodule PhoenixTest.Playwright do
     ExUnit.Callbacks.start_supervised!({EventListener, args}, id: "#{page_id}-dialog-listener")
   end
 
-  defp start_download_listener(page_id) do
-    test_pid = self()
+  defp start_download_recorder(page_id) do
     filter = &match?(%{method: :download}, &1)
-    callback = &send(test_pid, {:download, &1.params})
-    args = %{guid: page_id, filter: filter, callback: callback}
-    ExUnit.Callbacks.start_supervised!({EventListener, args}, id: "#{page_id}-download-listener")
+    args = %{guid: page_id, filter: filter}
+    ExUnit.Callbacks.start_supervised!({EventRecorder, args}, id: "#{page_id}-download-recorder")
   end
 
   @retry_interval to_timeout(millisecond: 10)
@@ -537,8 +536,8 @@ defmodule PhoenixTest.Playwright do
 
   def assert_download(conn, filename_or_fun) do
     download =
-      receive do
-        {:download, params} ->
+      case EventRecorder.pop(conn.download_recorder_pid, timeout()) do
+        {:ok, %{params: params}} ->
           path = download_artifact(params.artifact.guid)
 
           %PhoenixTest.FileDownload{
@@ -546,8 +545,8 @@ defmodule PhoenixTest.Playwright do
             name: params.suggested_filename,
             content: File.read!(path)
           }
-      after
-        timeout() ->
+
+        {:error, :timeout} ->
           flunk("No download detected")
       end
 
