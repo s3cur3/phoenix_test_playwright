@@ -410,27 +410,6 @@ end
 def within_iframe(conn, selector \\ "iframe", fun) when is_function(fun, 1) do
   within(conn, "#{selector} >> internal:control=enter-frame", fun)
 end
-
-# |> assert_download("Wonderwall.pdf", &click_button(&1, "Download PDF"))
-def assert_download(conn, filename, fun) do
-  test_pid = self()
-
-  conn
-  |> unwrap(fn %{page_id: page_id} ->
-    spawn_link(fn ->
-      PlaywrightEx.subscribe(page_id)
-
-      receive do
-        {:playwright_msg, %{method: :download, params: params}} ->
-          send(test_pid, {:download, params.suggested_filename})
-      end
-    end)
-  end)
-  |> fun.()
-  |> unwrap(fn _ ->
-    assert_receive {:download, ^filename}, 500
-  end)
-end
 ```
 
 

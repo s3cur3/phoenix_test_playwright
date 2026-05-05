@@ -1014,7 +1014,6 @@ defmodule PhoenixTest.StaticTest do
   end
 
   describe "assert_download" do
-    @describetag skip: "not-implemented"
     test "asserts on file name", %{conn: conn} do
       conn
       |> visit("/page/download")

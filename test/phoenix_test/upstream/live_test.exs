@@ -1604,7 +1604,6 @@ defmodule PhoenixTest.LiveTest do
   end
 
   describe "assert_download" do
-    @describetag skip: "not-implemented"
     test "asserts on file name", %{conn: conn} do
       conn
       |> visit("/page/download")
@@ -1612,7 +1611,7 @@ defmodule PhoenixTest.LiveTest do
     end
 
     test "raises on live page", %{conn: conn} do
-      assert_raise ArgumentError, ~r/Phoenix\.Controller/, fn ->
+      assert_raise AssertionError, ~r/No download/, fn ->
         conn
         |> visit("/live/index")
         |> assert_download("elixir.jpg")

@@ -24,6 +24,8 @@ defmodule PhoenixTest.Playwright do
   alias PhoenixTest.Playwright.CookieArgs
   alias PhoenixTest.Playwright.EventListener
   alias PlaywrightEx.BrowserContext
+  alias PlaywrightEx.ChannelResponse
+  alias PlaywrightEx.Connection
   alias PlaywrightEx.Dialog
   alias PlaywrightEx.Frame
   alias PlaywrightEx.Page
@@ -56,6 +58,8 @@ defmodule PhoenixTest.Playwright do
 
   @doc false
   def build(%{context_id: context_id, page_id: page_id, frame_id: frame_id, tracing_id: tracing_id, config: config}) do
+    start_download_listener(page_id)
+
     %__MODULE__{
       context_id: context_id,
       page_id: page_id,
@@ -70,6 +74,14 @@ defmodule PhoenixTest.Playwright do
     callback = &if(auto_accept?, do: {:ok, _} = Dialog.accept(&1.params.guid, timeout: timeout()))
     args = %{guid: page_id, filter: filter, callback: callback}
     ExUnit.Callbacks.start_supervised!({EventListener, args}, id: "#{page_id}-dialog-listener")
+  end
+
+  defp start_download_listener(page_id) do
+    test_pid = self()
+    filter = &match?(%{method: :download}, &1)
+    callback = &send(test_pid, {:download, &1.params})
+    args = %{guid: page_id, filter: filter, callback: callback}
+    ExUnit.Callbacks.start_supervised!({EventListener, args}, id: "#{page_id}-download-listener")
   end
 
   @retry_interval to_timeout(millisecond: 10)
@@ -156,7 +168,14 @@ defmodule PhoenixTest.Playwright do
   @spec visit(t(), String.t(), [unquote(NimbleOptions.option_typespec(@visit_opts_schema))]) :: t()
   def visit(conn, path, opts) do
     opts = NimbleOptions.validate!(opts, @visit_opts_schema)
-    tap(conn, &({:ok, _} = Frame.goto(&1.frame_id, opts |> ensure_timeout() |> Keyword.put(:url, path))))
+
+    tap(
+      conn,
+      &case Frame.goto(&1.frame_id, opts |> ensure_timeout() |> Keyword.put(:url, path)) do
+        {:ok, _} -> :ok
+        {:error, %{error: %{message: "Download is starting"}}} -> :ok
+      end
+    )
   end
 
   @doc false
@@ -516,6 +535,96 @@ defmodule PhoenixTest.Playwright do
     {:ok, found?} = Frame.expect(conn.frame_id, params)
     found?
   end
+
+  def assert_download(conn, filename_or_fun) do
+    download =
+      receive do
+        {:download, params} ->
+          path = download_artifact(params.artifact.guid)
+
+          %PhoenixTest.FileDownload{
+            mime_type: MIME.from_path(params.suggested_filename),
+            name: params.suggested_filename,
+            content: File.read!(path)
+          }
+      after
+        timeout() ->
+          flunk("No download detected")
+      end
+
+    case filename_or_fun do
+      filename when is_binary(filename) -> assert download.name == filename
+      fun when is_function(fun, 1) -> fun.(download)
+    end
+
+    conn
+  end
+
+  defp download_artifact(artifact_guid) do
+    connection = PlaywrightEx.Supervisor.Connection
+
+    if Connection.remote?(connection) do
+      download_artifact_stream(connection, artifact_guid)
+    else
+      download_artifact_path(connection, artifact_guid)
+    end
+  end
+
+  defp download_artifact_path(connection, artifact_guid) do
+    connection
+    |> Connection.send(%{guid: artifact_guid, method: :path_after_finished, params: %{}}, timeout())
+    |> ChannelResponse.unwrap(& &1.value)
+    |> case do
+      {:ok, path} -> path
+      {:error, error} -> raise ExUnit.AssertionError, message: "Download failed: #{download_error_message(error)}"
+    end
+  end
+
+  defp download_artifact_stream(connection, artifact_guid) do
+    path = Path.join(System.tmp_dir!(), "phoenix-test-download-#{System.unique_integer([:positive])}")
+
+    with {:ok, %{stream: %{guid: stream_guid}}} <-
+           connection
+           |> Connection.send(%{guid: artifact_guid, method: :save_as_stream, params: %{}}, timeout())
+           |> ChannelResponse.unwrap(& &1),
+         :ok <- stream_to_file(connection, stream_guid, path),
+         {:ok, _} <- close_stream(connection, stream_guid) do
+      path
+    else
+      {:error, error} -> raise ExUnit.AssertionError, message: "Download failed: #{download_error_message(error)}"
+    end
+  end
+
+  defp stream_to_file(connection, stream_guid, path) do
+    File.open!(path, [:write, :binary], fn file ->
+      read_stream_to_file(connection, stream_guid, file)
+    end)
+  end
+
+  defp read_stream_to_file(connection, stream_guid, file) do
+    case connection
+         |> Connection.send(%{guid: stream_guid, method: :read, params: %{size: 1024 * 1024}}, timeout())
+         |> ChannelResponse.unwrap(& &1) do
+      {:ok, %{binary: ""}} ->
+        :ok
+
+      {:ok, %{binary: chunk}} ->
+        IO.binwrite(file, Base.decode64!(chunk))
+        read_stream_to_file(connection, stream_guid, file)
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp close_stream(connection, stream_guid) do
+    connection
+    |> Connection.send(%{guid: stream_guid, method: :close, params: %{}}, timeout())
+    |> ChannelResponse.unwrap(& &1)
+  end
+
+  defp download_error_message(%{message: message}), do: message
+  defp download_error_message(error), do: inspect(error)
 
   @doc """
   Handle browser dialogs (`alert()`, `confirm()`, `prompt()`) while executing the inner function.
@@ -943,6 +1052,8 @@ defimpl PhoenixTest.Driver, for: PhoenixTest.Playwright do
   defdelegate assert_has(conn, selector, opts), to: Playwright
   defdelegate refute_has(conn, selector), to: Playwright
   defdelegate refute_has(conn, selector, opts), to: Playwright
+
+  defdelegate assert_download(conn, filename_or_fun), to: Playwright
 
   defdelegate assert_path(conn, path), to: Playwright
   defdelegate assert_path(conn, path, opts), to: Playwright
